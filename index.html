@@ -22,6 +22,8 @@
         }
         canvas {
             margin-top: 20px;
+            max-width: 400px; /* ปรับขนาดกราฟให้เล็กลง */
+            max-height: 400px; /* ปรับขนาดกราฟให้เล็กลง */
         }
     </style>
     <!-- เพิ่มการโหลดไลบรารี Chart.js -->
@@ -31,7 +33,7 @@
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
 
     <!-- เพิ่ม canvas สำหรับกราฟ -->
-    <canvas id="myChart" width="400" height="200"></canvas>
+    <canvas id="myChart" width="400" height="400"></canvas>
 
     <table id="data-table">
         <thead>
@@ -198,7 +200,10 @@
                             tooltip: {
                                 callbacks: {
                                     label: function(tooltipItem) {
-                                        return tooltipItem.label + ': ' + tooltipItem.raw;
+                                        const total = tooltipItem.dataset.data.reduce((acc, value) => acc + value, 0);
+                                        const value = tooltipItem.raw;
+                                        const percentage = ((value / total) * 100).toFixed(2);
+                                        return `${tooltipItem.label}: ${value} (${percentage}%)`;
                                     }
                                 }
                             }
