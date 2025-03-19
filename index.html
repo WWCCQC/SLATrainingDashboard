@@ -76,25 +76,18 @@
                 // Insert data into the table
                 const tbody = document.querySelector("#data-table tbody");
                 rows.slice(1).forEach(row => { // Skip the first row (headers)
-                    const dateAJ = new Date(row.c[columnIndices.AJ]?.v || '');
-                    const dateAK = new Date(row.c[columnIndices.AK]?.v || '');
-                    const yearAJ = dateAJ.getFullYear();
-                    const yearAK = dateAK.getFullYear();
-                    
-                    if (yearAJ === 2025 || yearAK === 2025) {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${row.c[columnIndices.D]?.v || ''}</td>
-                            <td>${row.c[columnIndices.G]?.v || ''}</td>
-                            <td>${row.c[columnIndices.H]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AH]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AJ]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AK]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AL]?.v || ''}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${row.c[columnIndices.D]?.v || ''}</td>
+                        <td>${row.c[columnIndices.G]?.v || ''}</td>
+                        <td>${row.c[columnIndices.H]?.v || ''}</td>
+                        <td>${row.c[columnIndices.AH]?.v || ''}</td>
+                        <td>${row.c[columnIndices.AI]?.v || ''}</td>
+                        <td>${row.c[columnIndices.AJ]?.v || ''}</td>
+                        <td>${row.c[columnIndices.AK]?.v || ''}</td>
+                        <td>${row.c[columnIndices.AL]?.v || ''}</td>
+                    `;
+                    tbody.appendChild(tr);
                 });
             })
             .catch(error => console.error("Error fetching data:", error));
