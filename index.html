@@ -26,8 +26,9 @@
             max-height: 400px; /* ปรับขนาดกราฟให้เล็กลง */
         }
     </style>
-    <!-- เพิ่มการโหลดไลบรารี Chart.js -->
+    <!-- เพิ่มการโหลดไลบรารี Chart.js และ chartjs-plugin-datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 </head>
 <body>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
@@ -206,9 +207,30 @@
                                         return `${tooltipItem.label}: ${value} (${percentage}%)`;
                                     }
                                 }
+                            },
+                            datalabels: {
+                                formatter: (value, ctx) => {
+                                    const total = ctx.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
+                                    const percentage = ((value / total) * 100).toFixed(2);
+                                    return `${value} (${percentage}%)`;
+                                },
+                                color: '#000',
+                                anchor: 'end',
+                                align: 'start',
+                                offset: -10,
+                                borderWidth: 2,
+                                borderColor: '#fff',
+                                borderRadius: 25,
+                                backgroundColor: (ctx) => {
+                                    return ctx.dataset.backgroundColor;
+                                },
+                                font: {
+                                    weight: 'bold'
+                                }
                             }
                         }
-                    }
+                    },
+                    plugins: [ChartDataLabels]
                 });
             })
             .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
