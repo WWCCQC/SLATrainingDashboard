@@ -45,7 +45,7 @@
     <script>
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
-
+    
         // Fetch data from Google Sheets
         fetch(sheetUrl)
             .then(response => response.text())
@@ -53,11 +53,10 @@
                 // Extract JSON from the response
                 const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                 const jsonData = JSON.parse(jsonString);
-
+    
                 // Get rows and columns from the JSON
                 const rows = jsonData.table.rows;
-                const cols = jsonData.table.cols;
-
+    
                 // Map column indices to their names
                 const columnIndices = {
                     D: 3,  // Column D (index 3)
@@ -69,12 +68,20 @@
                     AK: 36, // Column AK (index 36)
                     AL: 37  // Column AL (index 37)
                 };
-
+    
+                // Insert column headers from Row A
+                const thead = document.querySelector("#data-table thead tr");
+                Object.keys(columnIndices).forEach(key => {
+                    const th = document.createElement("th");
+                    th.textContent = rows[0].c[columnIndices[key]]?.v || key; // Use Row A for headers
+                    thead.appendChild(th);
+                });
+    
                 // Insert data into the table
                 const tbody = document.querySelector("#data-table tbody");
-                rows.forEach(row => {
+                rows.slice(1).forEach(row => { // Skip the first row (headers)
                     const tr = document.createElement("tr");
-
+    
                     tr.innerHTML = `
                         <td>${row.c[columnIndices.D]?.v || ''}</td>
                         <td>${row.c[columnIndices.G]?.v || ''}</td>
