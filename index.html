@@ -215,9 +215,9 @@
                                     return `${value} (${percentage}%)`;
                                 },
                                 color: '#000',
-                                anchor: 'end',
-                                align: 'start',
-                                offset: -10,
+                                anchor: 'center',
+                                align: 'center',
+                                offset: 0,
                                 borderWidth: 2,
                                 borderColor: '#fff',
                                 borderRadius: 25,
@@ -226,7 +226,9 @@
                                 },
                                 font: {
                                     weight: 'bold'
-                                }
+                                },
+                                clamp: true,
+                                clip: false
                             }
                         }
                     },
