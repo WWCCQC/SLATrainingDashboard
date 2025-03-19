@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>แดชบอร์ด</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>Dashboard Data from Google Sheets (2025 Only)</h1>
+    <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
     <table id="data-table">
         <thead>
             <tr>
@@ -39,89 +39,90 @@
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
 
-        // Function to parse the Date(YYYY,MM,DD) string and return the year
+        // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
         function getYearFromGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) {
-                return null; // Return null if the date is invalid
+                return null; // คืนค่า null ถ้าวันที่ไม่ถูกต้อง
             }
 
-            // Extract the numbers from Date(YYYY,MM,DD)
+            // ดึงตัวเลขจาก Date(YYYY,MM,DD)
             const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
             if (!matches) {
-                return null; // Return null if the format doesn't match
+                return null; // คืนค่า null ถ้ารูปแบบไม่ตรง
             }
 
-            return parseInt(matches[1], 10); // Return the year (e.g., 2024 or 2025)
+            return parseInt(matches[1], 10); // คืนค่าเฉพาะปี (เช่น 2024 หรือ 2025)
         }
 
-        // Function to parse the Date(YYYY,MM,DD) string and convert to a readable date
+        // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็นวันที่ที่อ่านได้
         function parseGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) {
-                return ''; // Return empty string if the date is invalid
+                return ''; // คืนค่าสตริงว่างถ้าวันที่ไม่ถูกต้อง
             }
 
-            // Extract the numbers from Date(YYYY,MM,DD)
+            // ดึงตัวเลขจาก Date(YYYY,MM,DD)
             const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
             if (!matches) {
-                return ''; // Return empty string if the format doesn't match
+                return ''; // คืนค่าสตริงว่างถ้ารูปแบบไม่ตรง
             }
 
-            const year = parseInt(matches[1], 10); // e.g., 2024
-            const month = parseInt(matches[2], 10); // e.g., 3 (April, since JavaScript months are 0-based)
-            const day = parseInt(matches[3], 10); // e.g., 30
+            const year = parseInt(matches[1], 10); // เช่น 2024
+            const month = parseInt(matches[2], 10); // เช่น 3 (เมษายน เพราะ JavaScript เริ่มนับเดือนที่ 0)
+            const day = parseInt(matches[3], 10); // เช่น 30
 
-            // Create a Date object (JavaScript months are 0-based, so no need to subtract 1 from the month)
+            // สร้างออบเจกต์ Date (เดือนใน JavaScript เริ่มที่ 0 ดังนั้นไม่ต้องปรับ month)
             const date = new Date(year, month, day);
 
-            // Format the date as DD/MM/YYYY
+            // แปลงเป็นรูปแบบ DD/MM/YYYY
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
         }
 
-        // Fetch data from Google Sheets
+        // ดึงข้อมูลจาก Google Sheets
         fetch(sheetUrl)
             .then(response => response.text())
             .then(data => {
-                // Extract JSON from the response
+                // ดึง JSON จาก response
                 const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                 const jsonData = JSON.parse(jsonString);
 
-                // Get rows and columns from the JSON
+                // ดึงแถวและคอลัมน์จาก JSON
                 const rows = jsonData.table.rows;
 
-                // Map column indices to their names
+                // แมปดัชนีของคอลัมน์กับชื่อ
                 const columnIndices = {
-                    D: 3,  // Column D (index 3)
-                    G: 6,  // Column G (index 6)
-                    H: 7,  // Column H (index 7)
-                    AH: 33, // Column AH (index 33)
-                    AI: 34, // Column AI (index 34)
-                    AJ: 35, // Column AJ (index 35)
-                    AK: 36, // Column AK (index 36)
-                    AL: 37  // Column AL (index 37)
+                    D: 3,  // คอลัมน์ D (ดัชนี 3)
+                    G: 6,  // คอลัมน์ G (ดัชนี 6)
+                    H: 7,  // คอลัมน์ H (ดัชนี 7)
+                    AH: 33, // คอลัมน์ AH (ดัชนี 33)
+                    AI: 34, // คอลัมน์ AI (ดัชนี 34)
+                    AJ: 35, // คอลัมน์ AJ (ดัชนี 35)
+                    AK: 36, // คอลัมน์ AK (ดัชนี 36)
+                    AL: 37  // คอลัมน์ AL (ดัชนี 37)
                 };
 
-                // Clear existing headers
+                // ล้างส่วนหัวตารางที่มีอยู่
                 const thead = document.querySelector("#data-table thead tr");
                 thead.innerHTML = '';
 
-                // Insert column headers from Row A
+                // เพิ่มส่วนหัวของคอลัมน์จากแถวแรก (Row 1)
                 Object.keys(columnIndices).forEach(key => {
                     const th = document.createElement("th");
-                    th.textContent = rows[0].c[columnIndices[key]]?.v || key; // Use Row A for headers
+                    // ดึงชื่อคอลัมน์จากแถวแรก ถ้าไม่มีชื่อจะเป็นค่าว่าง (ไม่ใช้ key เป็นค่าเริ่มต้น)
+                    th.textContent = rows[0].c[columnIndices[key]]?.v || '';
                     thead.appendChild(th);
                 });
 
-                // Insert data into the table, but only for rows where AJ's year is 2025
+                // เพิ่มข้อมูลลงในตาราง เฉพาะแถวที่ปีใน AJ เป็น 2025
                 const tbody = document.querySelector("#data-table tbody");
-                rows.slice(1).forEach(row => { // Skip the first row (headers)
-                    // Get the year from column AJ
+                rows.slice(1).forEach(row => { // ข้ามแถวแรก (ส่วนหัว)
+                    // ดึงปีจากคอลัมน์ AJ
                     const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
 
-                    // Only include rows where the year in AJ is 2025
+                    // เพิ่มเฉพาะแถวที่ปีใน AJ เป็น 2025
                     if (yearAJ === 2025) {
                         const tr = document.createElement("tr");
 
-                        // Parse the date for columns AJ and AK
+                        // แปลงวันที่สำหรับคอลัมน์ AJ และ AK
                         const dateAJ = parseGoogleSheetDate(row.c[columnIndices.AJ]?.v);
                         const dateAK = parseGoogleSheetDate(row.c[columnIndices.AK]?.v);
 
@@ -131,15 +132,15 @@
                             <td>${row.c[columnIndices.H]?.v || ''}</td>
                             <td>${row.c[columnIndices.AH]?.v || ''}</td>
                             <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                            <td>${dateAJ}</td> <!-- Formatted date for AJ -->
-                            <td>${dateAK}</td> <!-- Formatted date for AK -->
+                            <td>${dateAJ}</td> <!-- วันที่ที่แปลงแล้วสำหรับ AJ -->
+                            <td>${dateAK}</td> <!-- วันที่ที่แปลงแล้วสำหรับ AK -->
                             <td>${row.c[columnIndices.AL]?.v || ''}</td>
                         `;
                         tbody.appendChild(tr);
                     }
                 });
             })
-            .catch(error => console.error("Error fetching data:", error));
+            .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
     </script>
 </body>
 </html>
