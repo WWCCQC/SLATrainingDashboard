@@ -89,8 +89,8 @@
                             <td>${row.c[columnIndices.H]?.v || ''}</td>
                             <td>${row.c[columnIndices.AH]?.v || ''}</td>
                             <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AJ]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AK]?.v || ''}</td>
+                            <td>${dateAJ.toLocaleDateString() || ''}</td>
+                            <td>${dateAK.toLocaleDateString() || ''}</td>
                             <td>${row.c[columnIndices.AL]?.v || ''}</td>
                         `;
                         tbody.appendChild(tr);
