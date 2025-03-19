@@ -35,62 +35,88 @@
         </tbody>
     </table>
 
-    <script>
-        // URL for Google Sheets JSON
-        const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
-    
-        // Fetch data from Google Sheets
-        fetch(sheetUrl)
-            .then(response => response.text())
-            .then(data => {
-                // Extract JSON from the response
-                const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
-                const jsonData = JSON.parse(jsonString);
-    
-                // Get rows and columns from the JSON
-                const rows = jsonData.table.rows;
-    
-                // Map column indices to their names
-                const columnIndices = {
-                    D: 3,  // Column D (index 3)
-                    G: 6,  // Column G (index 6)
-                    H: 7,  // Column H (index 7)
-                    AH: 33, // Column AH (index 33)
-                    AI: 34, // Column AI (index 34)
-                    AJ: 35, // Column AJ (index 35)
-                    AK: 36, // Column AK (index 36)
-                    AL: 37  // Column AL (index 37)
-                };
-    
-                // Clear existing headers
-                const thead = document.querySelector("#data-table thead tr");
-                thead.innerHTML = '';
-    
-                // Insert column headers from Row A
-                Object.keys(columnIndices).forEach(key => {
-                    const th = document.createElement("th");
-                    th.textContent = rows[0].c[columnIndices[key]]?.v || key; // Use Row A for headers
-                    thead.appendChild(th);
-                });
-    
-                // Insert data into the table
-                const tbody = document.querySelector("#data-table tbody");
-                rows.slice(1).forEach(row => { // Skip the first row (headers)
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `
-                        <td>${row.c[columnIndices.D]?.v || ''}</td>
-                        <td>${row.c[columnIndices.G]?.v || ''}</td>
-                        <td>${row.c[columnIndices.H]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AH]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AJ]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AK]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AL]?.v || ''}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            })
-            .catch(error => console.error("Error fetching data:", error));
-    </script>
+    // URL for Google Sheets JSON
+const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+
+// Function to parse the Date(YYYY,MM,DD) string and convert to a readable date
+function parseGoogleSheetDate(dateString) {
+    if (!dateString || !dateString.startsWith("Date(")) {
+        return ''; // Return empty string if the date is invalid
+    }
+
+    // Extract the numbers from Date(YYYY,MM,DD)
+    const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+    if (!matches) {
+        return ''; // Return empty string if the format doesn't match
+    }
+
+    const year = parseInt(matches[1], 10); // e.g., 2024
+    const month = parseInt(matches[2], 10); // e.g., 3 (April, since JavaScript months are 0-based)
+    const day = parseInt(matches[3], 10); // e.g., 30
+
+    // Create a Date object (JavaScript months are 0-based, so no need to subtract 1 from the month)
+    const date = new Date(year, month, day);
+
+    // Format the date as DD/MM/YYYY (or any format you prefer)
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+}
+
+// Fetch data from Google Sheets
+fetch(sheetUrl)
+    .then(response => response.text())
+    .then(data => {
+        // Extract JSON from the response
+        const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
+        const jsonData = JSON.parse(jsonString);
+
+        // Get rows and columns from the JSON
+        const rows = jsonData.table.rows;
+
+        // Map column indices to their names
+        const columnIndices = {
+            D: 3,  // Column D (index 3)
+            G: 6,  // Column G (index 6)
+            H: 7,  // Column H (index 7)
+            AH: 33, // Column AH (index 33)
+            AI: 34, // Column AI (index 34)
+            AJ: 35, // Column AJ (index 35)
+            AK: 36, // Column AK (index 36)
+            AL: 37  // Column AL (index 37)
+        };
+
+        // Clear existing headers
+        const thead = document.querySelector("#data-table thead tr");
+        thead.innerHTML = '';
+
+        // Insert column headers from Row A
+        Object.keys(columnIndices).forEach(key => {
+            const th = document.createElement("th");
+            th.textContent = rows[0].c[columnIndices[key]]?.v || key; // Use Row A for headers
+            thead.appendChild(th);
+        });
+
+        // Insert data into the table
+        const tbody = document.querySelector("#data-table tbody");
+        rows.slice(1).forEach(row => { // Skip the first row (headers)
+            const tr = document.createElement("tr");
+
+            // Parse the date for columns AJ and AK
+            const dateAJ = parseGoogleSheetDate(row.c[columnIndices.AJ]?.v);
+            const dateAK = parseGoogleSheetDate(row.c[columnIndices.AK]?.v);
+
+            tr.innerHTML = `
+                <td>${row.c[columnIndices.D]?.v || ''}</td>
+                <td>${row.c[columnIndices.G]?.v || ''}</td>
+                <td>${row.c[columnIndices.H]?.v || ''}</td>
+                <td>${row.c[columnIndices.AH]?.v || ''}</td>
+                <td>${row.c[columnIndices.AI]?.v || ''}</td>
+                <td>${dateAJ}</td> <!-- Formatted date for AJ -->
+                <td>${dateAK}</td> <!-- Formatted date for AK -->
+                <td>${row.c[columnIndices.AL]?.v || ''}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    })
+    .catch(error => console.error("Error fetching data:", error));
 </body>
 </html>
