@@ -26,16 +26,7 @@
     <h1>Dashboard Data from Google Sheets</h1>
     <table id="data-table">
         <thead>
-            <tr>
-                <th>Column D</th>
-                <th>Column G</th>
-                <th>Column H</th>
-                <th>Column AH</th>
-                <th>Column AI</th>
-                <th>Column AJ</th>
-                <th>Column AK</th>
-                <th>Column AL</th>
-            </tr>
+            <!-- Headers will be inserted here -->
         </thead>
         <tbody>
             <!-- Data will be inserted here -->
@@ -70,9 +61,27 @@
                     AL: 37  // Column AL (index 37)
                 };
 
+                // Function to convert date string to formatted date
+                function formatDate(dateStr) {
+                    if (!dateStr) return '';
+                    const date = new Date(dateStr);
+                    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+                }
+
+                // Insert headers from row A
+                const headerRow = rows[0].c.map((cell, index) => cell.v || `Column ${String.fromCharCode(65 + index)}`);
+                const thead = document.querySelector("#data-table thead");
+                const headerTr = document.createElement("tr");
+                headerRow.forEach(header => {
+                    const th = document.createElement("th");
+                    th.textContent = header;
+                    headerTr.appendChild(th);
+                });
+                thead.appendChild(headerTr);
+
                 // Insert data into the table
                 const tbody = document.querySelector("#data-table tbody");
-                rows.forEach(row => {
+                rows.slice(1).forEach(row => { // Start from second row to skip header
                     const tr = document.createElement("tr");
 
                     tr.innerHTML = `
@@ -81,8 +90,8 @@
                         <td>${row.c[columnIndices.H]?.v || ''}</td>
                         <td>${row.c[columnIndices.AH]?.v || ''}</td>
                         <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AJ]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AK]?.v || ''}</td>
+                        <td>${formatDate(row.c[columnIndices.AJ]?.v)}</td>
+                        <td>${formatDate(row.c[columnIndices.AK]?.v)}</td>
                         <td>${row.c[columnIndices.AL]?.v || ''}</td>
                     `;
                     tbody.appendChild(tr);
