@@ -20,7 +20,12 @@
         th {
             background-color: #f4f4f4;
         }
+        canvas {
+            margin-top: 20px;
+        }
     </style>
+    <!-- เพิ่มการโหลดไลบรารี Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
@@ -34,6 +39,9 @@
             <!-- Data will be inserted here -->
         </tbody>
     </table>
+
+    <!-- เพิ่ม canvas สำหรับกราฟ -->
+    <canvas id="myChart" width="400" height="200"></canvas>
 
     <script>
         // URL for Google Sheets JSON
@@ -114,6 +122,7 @@
 
                 // เพิ่มข้อมูลลงในตาราง เฉพาะแถวที่ปีใน AJ เป็น 2025
                 const tbody = document.querySelector("#data-table tbody");
+                const chartData = []; // เก็บข้อมูลสำหรับกราฟ
                 rows.slice(1).forEach(row => { // ข้ามแถวแรก (ส่วนหัว)
                     // ดึงปีจากคอลัมน์ AJ
                     const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
@@ -137,6 +146,35 @@
                             <td>${row.c[columnIndices.AL]?.v || ''}</td>
                         `;
                         tbody.appendChild(tr);
+
+                        // เพิ่มข้อมูลลงใน chartData
+                        chartData.push({
+                            label: row.c[columnIndices.D]?.v || '',
+                            value: row.c[columnIndices.AL]?.v || 0
+                        });
+                    }
+                });
+
+                // สร้างกราฟ
+                const ctx = document.getElementById('myChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.map(data => data.label),
+                        datasets: [{
+                            label: 'ข้อมูลจากคอลัมน์ AL',
+                            data: chartData.map(data => data.value),
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
                     }
                 });
             })
