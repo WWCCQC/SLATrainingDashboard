@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>Dashboard Data from Google Sheets</h1>
+    <h1>Dashboard Data from Google Sheets (2025 Only)</h1>
     <table id="data-table">
         <thead>
             <tr>
@@ -38,6 +38,21 @@
     <script>
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+
+        // Function to parse the Date(YYYY,MM,DD) string and return the year
+        function getYearFromGoogleSheetDate(dateString) {
+            if (!dateString || !dateString.startsWith("Date(")) {
+                return null; // Return null if the date is invalid
+            }
+
+            // Extract the numbers from Date(YYYY,MM,DD)
+            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (!matches) {
+                return null; // Return null if the format doesn't match
+            }
+
+            return parseInt(matches[1], 10); // Return the year (e.g., 2024 or 2025)
+        }
 
         // Function to parse the Date(YYYY,MM,DD) string and convert to a readable date
         function parseGoogleSheetDate(dateString) {
@@ -96,26 +111,32 @@
                     thead.appendChild(th);
                 });
 
-                // Insert data into the table
+                // Insert data into the table, but only for rows where AJ's year is 2025
                 const tbody = document.querySelector("#data-table tbody");
                 rows.slice(1).forEach(row => { // Skip the first row (headers)
-                    const tr = document.createElement("tr");
+                    // Get the year from column AJ
+                    const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
 
-                    // Parse the date for columns AJ and AK
-                    const dateAJ = parseGoogleSheetDate(row.c[columnIndices.AJ]?.v);
-                    const dateAK = parseGoogleSheetDate(row.c[columnIndices.AK]?.v);
+                    // Only include rows where the year in AJ is 2025
+                    if (yearAJ === 2025) {
+                        const tr = document.createElement("tr");
 
-                    tr.innerHTML = `
-                        <td>${row.c[columnIndices.D]?.v || ''}</td>
-                        <td>${row.c[columnIndices.G]?.v || ''}</td>
-                        <td>${row.c[columnIndices.H]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AH]?.v || ''}</td>
-                        <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                        <td>${dateAJ}</td> <!-- Formatted date for AJ -->
-                        <td>${dateAK}</td> <!-- Formatted date for AK -->
-                        <td>${row.c[columnIndices.AL]?.v || ''}</td>
-                    `;
-                    tbody.appendChild(tr);
+                        // Parse the date for columns AJ and AK
+                        const dateAJ = parseGoogleSheetDate(row.c[columnIndices.AJ]?.v);
+                        const dateAK = parseGoogleSheetDate(row.c[columnIndices.AK]?.v);
+
+                        tr.innerHTML = `
+                            <td>${row.c[columnIndices.D]?.v || ''}</td>
+                            <td>${row.c[columnIndices.G]?.v || ''}</td>
+                            <td>${row.c[columnIndices.H]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AH]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AI]?.v || ''}</td>
+                            <td>${dateAJ}</td> <!-- Formatted date for AJ -->
+                            <td>${dateAK}</td> <!-- Formatted date for AK -->
+                            <td>${row.c[columnIndices.AL]?.v || ''}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
                 });
             })
             .catch(error => console.error("Error fetching data:", error));
