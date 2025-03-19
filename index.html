@@ -29,6 +29,10 @@
 </head>
 <body>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
+
+    <!-- เพิ่ม canvas สำหรับกราฟ -->
+    <canvas id="myChart" width="400" height="200"></canvas>
+
     <table id="data-table">
         <thead>
             <tr>
@@ -39,9 +43,6 @@
             <!-- Data will be inserted here -->
         </tbody>
     </table>
-
-    <!-- เพิ่ม canvas สำหรับกราฟ -->
-    <canvas id="myChart" width="400" height="200"></canvas>
 
     <script>
         // URL for Google Sheets JSON
@@ -102,6 +103,7 @@
                     G: 6,  // คอลัมน์ G (ดัชนี 6)
                     H: 7,  // คอลัมน์ H (ดัชนี 7)
                     I: 8,  // คอลัมน์ I (ดัชนี 8)
+                    N: 13, // คอลัมน์ N (ดัชนี 13)
                     AH: 33, // คอลัมน์ AH (ดัชนี 33)
                     AI: 34, // คอลัมน์ AI (ดัชนี 34)
                     AJ: 35, // คอลัมน์ AJ (ดัชนี 35)
@@ -123,7 +125,7 @@
 
                 // เพิ่มข้อมูลลงในตาราง เฉพาะแถวที่ปีใน AJ เป็น 2025
                 const tbody = document.querySelector("#data-table tbody");
-                const chartData = []; // เก็บข้อมูลสำหรับกราฟ
+                const chartData = {}; // เก็บข้อมูลสำหรับกราฟ
                 rows.slice(1).forEach(row => { // ข้ามแถวแรก (ส่วนหัว)
                     // ดึงปีจากคอลัมน์ AJ
                     const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
@@ -141,6 +143,7 @@
                             <td>${row.c[columnIndices.G]?.v || ''}</td>
                             <td>${row.c[columnIndices.H]?.v || ''}</td>
                             <td>${row.c[columnIndices.I]?.v || ''}</td>
+                            <td>${row.c[columnIndices.N]?.v || ''}</td>
                             <td>${row.c[columnIndices.AH]?.v || ''}</td>
                             <td>${row.c[columnIndices.AI]?.v || ''}</td>
                             <td>${dateAJ}</td> <!-- วันที่ที่แปลงแล้วสำหรับ AJ -->
@@ -150,31 +153,54 @@
                         tbody.appendChild(tr);
 
                         // เพิ่มข้อมูลลงใน chartData
-                        chartData.push({
-                            label: row.c[columnIndices.D]?.v || '',
-                            value: row.c[columnIndices.AL]?.v || 0
-                        });
+                        const status = row.c[columnIndices.AI]?.v || 'อื่นๆ';
+                        if (!chartData[status]) {
+                            chartData[status] = 0;
+                        }
+                        chartData[status]++;
                     }
                 });
 
                 // สร้างกราฟ
                 const ctx = document.getElementById('myChart').getContext('2d');
                 new Chart(ctx, {
-                    type: 'bar',
+                    type: 'pie',
                     data: {
-                        labels: chartData.map(data => data.label),
+                        labels: Object.keys(chartData),
                         datasets: [{
-                            label: 'ข้อมูลจากคอลัมน์ AL',
-                            data: chartData.map(data => data.value),
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
+                            label: 'อัตราส่วนจากคอลัมน์ AI',
+                            data: Object.values(chartData),
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(153, 102, 255, 0.2)',
+                                'rgba(255, 159, 64, 0.2)'
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                                'rgba(153, 102, 255, 1)',
+                                'rgba(255, 159, 64, 1)'
+                            ],
                             borderWidth: 1
                         }]
                     },
                     options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return tooltipItem.label + ': ' + tooltipItem.raw;
+                                    }
+                                }
                             }
                         }
                     }
