@@ -70,7 +70,7 @@
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
 
     // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
-    const thaiYear = now.getFullYear() + 543;
+    const thaiYear = now.getFullYear() + 543 + 25; // เพิ่ม 25 ปีเพื่อให้เป็น พ.ศ. 2068
     const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
 
     currentDateElement.textContent = `วันที่: ${thaiDate}`;
