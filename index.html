@@ -99,9 +99,14 @@
                 tbody.innerHTML = '';
 
                 // สร้างส่วนหัวตาราง
+                const columnHeaders = {
+                    D: "D", G: "G", H: "H", I: "I", N: "N", AH: "AH", AI: "AI", AJ: "AJ", AK: "AK", AL: "AL",
+                    AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week"
+                };
+
                 Object.keys(columnIndices).forEach(key => {
                     const th = document.createElement("th");
-                    th.textContent = rows[0].c[columnIndices[key]]?.v || '';
+                    th.textContent = columnHeaders[key] || '';
                     thead.appendChild(th);
                 });
 
