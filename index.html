@@ -93,6 +93,11 @@
                         D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
                     };
 
+                    const columnHeaders = {
+                        AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week",
+                        D: "D", G: "G", H: "H", I: "I", N: "N", AH: "AH", AI: "AI", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
+                    };
+
                     const thead = document.querySelector("#data-table thead tr");
                     const tbody = document.querySelector("#data-table tbody");
                     thead.innerHTML = '';
@@ -101,7 +106,7 @@
                     // สร้างส่วนหัวตาราง
                     Object.keys(columnIndices).forEach(key => {
                         const th = document.createElement("th");
-                        th.textContent = rows[0].c[columnIndices[key]]?.v || '';
+                        th.textContent = rows[0].c[columnIndices[key]]?.v || columnHeaders[key];
                         thead.appendChild(th);
                     });
 
