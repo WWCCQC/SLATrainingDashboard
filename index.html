@@ -229,15 +229,21 @@
                     let overallGrandTotal = 0;
 
                     const areaTotals = {
-                        "RSM1_BMA-West": 0,
-                        "RSM2_BMA-East": 0,
-                        "RSM3_UPC-East": 0,
-                        "RSM4_UPC-NOR": 0,
-                        "RSM5_UPC-NOE1": 0,
-                        "RSM6_UPC-NOE2": 0,
-                        "RSM7_UPC-CEW": 0,
-                        "RSM8_UPC-SOU": 0
+                        "RSM1_BMA-West": {},
+                        "RSM2_BMA-East": {},
+                        "RSM3_UPC-East": {},
+                        "RSM4_UPC-NOR": {},
+                        "RSM5_UPC-NOE1": {},
+                        "RSM6_UPC-NOE2": {},
+                        "RSM7_UPC-CEW": {},
+                        "RSM8_UPC-SOU": {}
                     };
+
+                    Object.keys(areaTotals).forEach(area => {
+                        statuses.forEach(status => {
+                            areaTotals[area][status] = 0;
+                        });
+                    });
 
                     Object.keys(areaMonthMap).sort().forEach(area => {
                         // เพิ่มแถวสำหรับชื่อพื้นที่
@@ -273,6 +279,7 @@
                                     td.textContent = count || '';
                                     rowTotal += count;
                                     grandTotalByStatus[status] += count;
+                                    areaTotals[area][status] += count;
                                     tr.appendChild(td);
                                 });
 
@@ -296,7 +303,7 @@
 
                         statuses.forEach(status => {
                             const td = document.createElement('td');
-                            td.textContent = ''; // ไม่แสดงผลรวมราย Status ในแถวนี้
+                            td.textContent = areaTotals[area][status] || '';
                             trAreaTotal.appendChild(td);
                         });
 
@@ -306,11 +313,6 @@
                         tdAreaTotal.className = 'area-total';
                         trAreaTotal.appendChild(tdAreaTotal);
                         pivotBody.appendChild(trAreaTotal);
-
-                        // เก็บผลรวมของแต่ละพื้นที่
-                        if (areaTotals[area] !== undefined) {
-                            areaTotals[area] += areaTotal;
-                        }
                     });
 
                     // เพิ่มแถว Grand Total
