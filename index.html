@@ -70,7 +70,7 @@
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
 
     // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
-    const thaiYear = now.getFullYear() + 543 + 25; // เพิ่ม 25 ปีเพื่อให้เป็น พ.ศ. 2068
+    const thaiYear = now.getFullYear() + 543;
     const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
 
     currentDateElement.textContent = `วันที่: ${thaiDate}`;
@@ -87,8 +87,10 @@
                 const jsonData = JSON.parse(jsonString);
                 const rows = jsonData.table.rows;
 
+                // เพิ่มคอลัมน์ AA, AB, AC, AN
                 const columnIndices = {
-                    D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
+                    D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37,
+                    AA: 26, AB: 27, AC: 28, AN: 39
                 };
 
                 const thead = document.querySelector("#data-table thead tr");
@@ -119,6 +121,10 @@
                             <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
                             <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
                             <td>${row.c[columnIndices.AL]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AA]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AB]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AC]?.v || ''}</td>
+                            <td>${row.c[columnIndices.AN]?.v || ''}</td>
                         `;
                         tbody.appendChild(tr);
                     }
