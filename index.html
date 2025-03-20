@@ -25,13 +25,29 @@
             max-width: 400px; /* ปรับขนาดกราฟให้เล็กลง */
             max-height: 400px; /* ปรับขนาดกราฟให้เล็กลง */
         }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .controls button {
+            margin-right: 10px;
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
     </style>
     <!-- เพิ่มการโหลดไลบรารี Chart.js และ chartjs-plugin-datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
+    <p id="current-date"></p>
+
+    <div class="controls">
+        <button id="refresh-button">รีเฟรชข้อมูล</button>
+        <button id="download-button">ดาวน์โหลด</button>
+    </div>
 
     <!-- เพิ่ม canvas สำหรับกราฟ -->
     <canvas id="myChart" width="400" height="400"></canvas>
@@ -48,99 +64,50 @@
     </table>
 
     <script>
-        // URL for Google Sheets JSON
-        const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+    // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
+    const currentDateElement = document.getElementById('current-date');
+    const now = new Date();
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
 
-        // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
-        function getYearFromGoogleSheetDate(dateString) {
-            if (!dateString || !dateString.startsWith("Date(")) {
-                return null; // คืนค่า null ถ้าวันที่ไม่ถูกต้อง
-            }
+    // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
+    const thaiYear = now.getFullYear() + 543;
+    const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
 
-            // ดึงตัวเลขจาก Date(YYYY,MM,DD)
-            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-            if (!matches) {
-                return null; // คืนค่า null ถ้ารูปแบบไม่ตรง
-            }
+    currentDateElement.textContent = `วันที่: ${thaiDate}`;
 
-            return parseInt(matches[1], 10); // คืนค่าเฉพาะปี (เช่น 2024 หรือ 2025)
-        }
+    // URL for Google Sheets JSON
+    const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
 
-        // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็นวันที่ที่อ่านได้
-        function parseGoogleSheetDate(dateString) {
-            if (!dateString || !dateString.startsWith("Date(")) {
-                return ''; // คืนค่าสตริงว่างถ้าวันที่ไม่ถูกต้อง
-            }
-
-            // ดึงตัวเลขจาก Date(YYYY,MM,DD)
-            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-            if (!matches) {
-                return ''; // คืนค่าสตริงว่างถ้ารูปแบบไม่ตรง
-            }
-
-            const year = parseInt(matches[1], 10); // เช่น 2024
-            const month = parseInt(matches[2], 10); // เช่น 3 (เมษายน เพราะ JavaScript เริ่มนับเดือนที่ 0)
-            const day = parseInt(matches[3], 10); // เช่น 30
-
-            // สร้างออบเจกต์ Date (เดือนใน JavaScript เริ่มที่ 0 ดังนั้นไม่ต้องปรับ month)
-            const date = new Date(year, month, day);
-
-            // แปลงเป็นรูปแบบ DD/MM/YYYY
-            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
-        }
-
-        // ดึงข้อมูลจาก Google Sheets
+    // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
+    function fetchDataAndUpdateTable() {
         fetch(sheetUrl)
             .then(response => response.text())
             .then(data => {
-                // ดึง JSON จาก response
                 const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                 const jsonData = JSON.parse(jsonString);
-
-                // ดึงแถวและคอลัมน์จาก JSON
                 const rows = jsonData.table.rows;
 
-                // แมปดัชนีของคอลัมน์กับชื่อ
                 const columnIndices = {
-                    D: 3,  // คอลัมน์ D (ดัชนี 3)
-                    G: 6,  // คอลัมน์ G (ดัชนี 6)
-                    H: 7,  // คอลัมน์ H (ดัชนี 7)
-                    I: 8,  // คอลัมน์ I (ดัชนี 8)
-                    N: 13, // คอลัมน์ N (ดัชนี 13)
-                    AH: 33, // คอลัมน์ AH (ดัชนี 33)
-                    AI: 34, // คอลัมน์ AI (ดัชนี 34)
-                    AJ: 35, // คอลัมน์ AJ (ดัชนี 35)
-                    AK: 36, // คอลัมน์ AK (ดัชนี 36)
-                    AL: 37  // คอลัมน์ AL (ดัชนี 37)
+                    D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
                 };
 
-                // ล้างส่วนหัวตารางที่มีอยู่
                 const thead = document.querySelector("#data-table thead tr");
+                const tbody = document.querySelector("#data-table tbody");
                 thead.innerHTML = '';
+                tbody.innerHTML = '';
 
-                // เพิ่มส่วนหัวของคอลัมน์จากแถวแรก (Row 1)
+                // สร้างส่วนหัวตาราง
                 Object.keys(columnIndices).forEach(key => {
                     const th = document.createElement("th");
-                    // ดึงชื่อคอลัมน์จากแถวแรก ถ้าไม่มีชื่อจะเป็นค่าว่าง (ไม่ใช้ key เป็นค่าเริ่มต้น)
                     th.textContent = rows[0].c[columnIndices[key]]?.v || '';
                     thead.appendChild(th);
                 });
 
-                // เพิ่มข้อมูลลงในตาราง เฉพาะแถวที่ปีใน AJ เป็น 2025
-                const tbody = document.querySelector("#data-table tbody");
-                const chartData = {}; // เก็บข้อมูลสำหรับกราฟ
-                rows.slice(1).forEach(row => { // ข้ามแถวแรก (ส่วนหัว)
-                    // ดึงปีจากคอลัมน์ AJ
+                // สร้างข้อมูลในตาราง
+                rows.slice(1).forEach(row => {
                     const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
-
-                    // เพิ่มเฉพาะแถวที่ปีใน AJ เป็น 2025
                     if (yearAJ === 2025) {
                         const tr = document.createElement("tr");
-
-                        // แปลงวันที่สำหรับคอลัมน์ AJ และ AK
-                        const dateAJ = parseGoogleSheetDate(row.c[columnIndices.AJ]?.v);
-                        const dateAK = parseGoogleSheetDate(row.c[columnIndices.AK]?.v);
-
                         tr.innerHTML = `
                             <td>${row.c[columnIndices.D]?.v || ''}</td>
                             <td>${row.c[columnIndices.G]?.v || ''}</td>
@@ -149,93 +116,48 @@
                             <td>${row.c[columnIndices.N]?.v || ''}</td>
                             <td>${row.c[columnIndices.AH]?.v || ''}</td>
                             <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                            <td>${dateAJ}</td> <!-- วันที่ที่แปลงแล้วสำหรับ AJ -->
-                            <td>${dateAK}</td> <!-- วันที่ที่แปลงแล้วสำหรับ AK -->
+                            <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
+                            <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
                             <td>${row.c[columnIndices.AL]?.v || ''}</td>
                         `;
                         tbody.appendChild(tr);
-
-                        // เพิ่มข้อมูลลงใน chartData
-                        const status = row.c[columnIndices.AI]?.v || 'อื่นๆ';
-                        if (!chartData[status]) {
-                            chartData[status] = 0;
-                        }
-                        chartData[status]++;
                     }
-                });
-
-                // สร้างกราฟ
-                const ctx = document.getElementById('myChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: Object.keys(chartData),
-                        datasets: [{
-                            label: 'อัตราส่วนจากคอลัมน์ AI',
-                            data: Object.values(chartData),
-                            backgroundColor: [
-                                'rgba(255, 99, 132, 0.2)',
-                                'rgba(54, 162, 235, 0.2)',
-                                'rgba(255, 206, 86, 0.2)',
-                                'rgba(75, 192, 192, 0.2)',
-                                'rgba(153, 102, 255, 0.2)',
-                                'rgba(255, 159, 64, 0.2)'
-                            ],
-                            borderColor: [
-                                'rgba(255, 99, 132, 1)',
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(153, 102, 255, 1)',
-                                'rgba(255, 159, 64, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(tooltipItem) {
-                                        const total = tooltipItem.dataset.data.reduce((acc, value) => acc + value, 0);
-                                        const value = tooltipItem.raw;
-                                        const percentage = ((value / total) * 100).toFixed(2);
-                                        return `${tooltipItem.label}: ${value} (${percentage}%)`;
-                                    }
-                                }
-                            },
-                            datalabels: {
-                                formatter: (value, ctx) => {
-                                    const total = ctx.chart.data.datasets[0].data.reduce((acc, val) => acc + val, 0);
-                                    const percentage = ((value / total) * 100).toFixed(2);
-                                    return `${value} (${percentage}%)`;
-                                },
-                                color: '#000',
-                                anchor: 'center',
-                                align: 'center',
-                                offset: 0,
-                                borderWidth: 2,
-                                borderColor: '#fff',
-                                borderRadius: 25,
-                                backgroundColor: (ctx) => {
-                                    return ctx.dataset.backgroundColor;
-                                },
-                                font: {
-                                    weight: 'bold'
-                                },
-                                clamp: true,
-                                clip: false
-                            }
-                        }
-                    },
-                    plugins: [ChartDataLabels]
                 });
             })
             .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
+    }
+
+    // ฟังก์ชันเพื่อแปลงข้อมูลในตารางเป็น Excel และดาวน์โหลด
+    function downloadTableAsExcel() {
+        const table = document.getElementById('data-table');
+        const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+        XLSX.writeFile(workbook, 'data-table.xlsx');
+    }
+
+    // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
+    function getYearFromGoogleSheetDate(dateString) {
+        if (!dateString || !dateString.startsWith("Date(")) return null;
+        const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+        return matches ? parseInt(matches[1], 10) : null;
+    }
+
+    // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
+    function parseGoogleSheetDate(dateString) {
+        if (!dateString || !dateString.startsWith("Date(")) return '';
+        const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+        if (!matches) return '';
+        const year = parseInt(matches[1], 10);
+        const month = parseInt(matches[2], 10);
+        const day = parseInt(matches[3], 10);
+        return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
+    }
+
+    // เพิ่ม event listener ให้ปุ่ม
+    document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
+    document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+
+    // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
+    fetchDataAndUpdateTable();
     </script>
 </body>
 </html>
