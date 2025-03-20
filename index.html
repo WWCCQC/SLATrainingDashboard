@@ -46,7 +46,7 @@
             cursor: pointer;
         }
         .pivot-table {
-            margin-bottom: 30px;
+            margin-bottom: 10px; /* ลดช่องว่างระหว่างตารางสรุปกับตารางหลัก */
         }
         .header-container {
             background-color: #003366; /* สีน้ำเงินเข้ม */
@@ -91,10 +91,10 @@
     </table>
 
     <script>
-        // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
+        // แสดงวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
         const currentDateElement = document.getElementById('current-date');
         const now = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: 'numeric', minute: 'numeric', second: 'numeric' };
         const thaiYear = now.getFullYear() + 543;
         const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
         currentDateElement.textContent = `วันที่: ${thaiDate}`;
