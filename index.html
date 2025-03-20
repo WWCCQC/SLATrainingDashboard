@@ -12,7 +12,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
         }
         th, td {
             border: 1px solid #ddd;
@@ -44,35 +43,12 @@
 <body>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
     <p id="current-date"></p>
-
     <div class="controls">
         <button id="refresh-button">รีเฟรชข้อมูล</button>
         <button id="download-button">ดาวน์โหลด</button>
     </div>
-
     <!-- เพิ่ม canvas สำหรับกราฟ -->
     <canvas id="myChart" width="400" height="400"></canvas>
-
-    <!-- ตารางสรุปข้อมูล -->
-    <table id="summary-table">
-        <thead>
-            <tr>
-                <th>พื้นที่</th>
-                <th>เดือนอบรม</th>
-                <th>เอกสารยังไม่ครบ</th>
-                <th>ขึ้นทะเบียนเรียบร้อย</th>
-                <th>ช่างลาออก</th>
-                <th>ตัวแทนยังไม่ส่งขึ้นทะเบียน</th>
-                <th>ติดประวัติอาชญากรรม</th>
-                <th>อยู่ระหว่างอบรมปฏิบัติ</th>
-                <th>Grand Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            <!-- Summary data will be inserted here -->
-        </tbody>
-    </table>
-
     <table id="data-table">
         <thead>
             <tr>
@@ -83,22 +59,17 @@
             <!-- Data will be inserted here -->
         </tbody>
     </table>
-
     <script>
         // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
         const currentDateElement = document.getElementById('current-date');
         const now = new Date();
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-
         // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
         const thaiYear = now.getFullYear() + 543;
         const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
-
         currentDateElement.textContent = `วันที่: ${thaiDate}`;
-
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
-
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
             fetch(sheetUrl)
@@ -107,113 +78,64 @@
                     const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                     const jsonData = JSON.parse(jsonString);
                     const rows = jsonData.table.rows;
-
                     // เพิ่มคอลัมน์ AA, AB, AC, AN
                     const columnIndices = {
                         AA: 26, AB: 27, AC: 28, AN: 39, // คอลัมน์ที่ย้ายมาอยู่ต้นตาราง
                         D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
                     };
-
                     const columnHeaders = {
                         AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week",
                         D: "D", G: "G", H: "H", I: "I", N: "N", AH: "AH", AI: "AI", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
                     };
-
                     const thead = document.querySelector("#data-table thead tr");
                     const tbody = document.querySelector("#data-table tbody");
-                    const summaryTbody = document.querySelector("#summary-table tbody");
                     thead.innerHTML = '';
                     tbody.innerHTML = '';
-                    summaryTbody.innerHTML = '';
-
                     // สร้างส่วนหัวตาราง
                     Object.keys(columnIndices).forEach(key => {
                         const th = document.createElement("th");
                         th.textContent = rows[0].c[columnIndices[key]]?.v || columnHeaders[key];
                         thead.appendChild(th);
                     });
-
                     // สร้างข้อมูลในตาราง
-                    const summaryData = {};
                     rows.slice(1).forEach(row => {
                         const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
                         if (yearAJ === 2025) {
-                            const area = row.c[columnIndices.AA]?.v || '';
-                            const trainingMonth = row.c[columnIndices.AC]?.v || '';
-                            const key = `${area}-${trainingMonth}`;
-
-                            if (!summaryData[key]) {
-                                summaryData[key] = {
-                                    area,
-                                    trainingMonth,
-                                    incompleteDocs: 0,
-                                    registered: 0,
-                                    resigned: 0,
-                                    notSubmitted: 0,
-                                    criminalRecord: 0,
-                                    inTraining: 0,
-                                    total: 0
-                                };
-                            }
-
-                            summaryData[key].incompleteDocs += parseInt(row.c[columnIndices.D]?.v || 0);
-                            summaryData[key].registered += parseInt(row.c[columnIndices.G]?.v || 0);
-                            summaryData[key].resigned += parseInt(row.c[columnIndices.H]?.v || 0);
-                            summaryData[key].notSubmitted += parseInt(row.c[columnIndices.I]?.v || 0);
-                            summaryData[key].criminalRecord += parseInt(row.c[columnIndices.N]?.v || 0);
-                            summaryData[key].inTraining += parseInt(row.c[columnIndices.AH]?.v || 0);
-                            summaryData[key].total += parseInt(row.c[columnIndices.AL]?.v || 0);
-
                             const tr = document.createElement("tr");
                             tr.innerHTML = `
-                                <td>${area}</td>
-                                <td>${trainingMonth}</td>
+                                <td>${row.c[columnIndices.AA]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AB]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AC]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AN]?.v || ''}</td>
                                 <td>${row.c[columnIndices.D]?.v || ''}</td>
                                 <td>${row.c[columnIndices.G]?.v || ''}</td>
                                 <td>${row.c[columnIndices.H]?.v || ''}</td>
                                 <td>${row.c[columnIndices.I]?.v || ''}</td>
                                 <td>${row.c[columnIndices.N]?.v || ''}</td>
                                 <td>${row.c[columnIndices.AH]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AI]?.v || ''}</td>
+                                <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
+                                <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
                                 <td>${row.c[columnIndices.AL]?.v || ''}</td>
                             `;
                             tbody.appendChild(tr);
                         }
                     });
-
-                    // สร้างข้อมูลสรุป
-                    Object.values(summaryData).forEach(summary => {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${summary.area}</td>
-                            <td>${summary.trainingMonth}</td>
-                            <td>${summary.incompleteDocs}</td>
-                            <td>${summary.registered}</td>
-                            <td>${summary.resigned}</td>
-                            <td>${summary.notSubmitted}</td>
-                            <td>${summary.criminalRecord}</td>
-                            <td>${summary.inTraining}</td>
-                            <td>${summary.total}</td>
-                        `;
-                        summaryTbody.appendChild(tr);
-                    });
                 })
                 .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
         }
-
         // ฟังก์ชันเพื่อแปลงข้อมูลในตารางเป็น Excel และดาวน์โหลด
         function downloadTableAsExcel() {
             const table = document.getElementById('data-table');
             const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
             XLSX.writeFile(workbook, 'data-table.xlsx');
         }
-
         // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
         function getYearFromGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return null;
             const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
             return matches ? parseInt(matches[1], 10) : null;
         }
-
         // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
         function parseGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return '';
@@ -224,11 +146,9 @@
             const day = parseInt(matches[3], 10);
             return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
         }
-
         // เพิ่ม event listener ให้ปุ่ม
         document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
         document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
-
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
         fetchDataAndUpdateTable();
     </script>
