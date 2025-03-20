@@ -12,18 +12,29 @@
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 20px;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
+            text-align: center;
         }
         th {
             background-color: #f4f4f4;
         }
+        .pivot-table th, .pivot-table td {
+            background-color: #e6f3ff; /* สีพื้นหลังเหมือนในภาพ */
+        }
+        .pivot-table th:first-child, .pivot-table td:first-child {
+            background-color: #d9ead3; /* สีเขียวอ่อนสำหรับคอลัมน์แรก */
+        }
+        .grand-total th, .grand-total td {
+            background-color: #b7e1cd; /* สีเขียวเข้มสำหรับแถว Grand Total */
+        }
         canvas {
             margin-top: 20px;
-            max-width: 400px; /* ปรับขนาดกราฟให้เล็กลง */
-            max-height: 400px; /* ปรับขนาดกราฟให้เล็กลง */
+            max-width: 400px;
+            max-height: 400px;
         }
         .controls {
             margin-bottom: 20px;
@@ -34,8 +45,10 @@
             font-size: 14px;
             cursor: pointer;
         }
+        .pivot-table {
+            margin-bottom: 30px;
+        }
     </style>
-    <!-- เพิ่มการโหลดไลบรารี Chart.js และ chartjs-plugin-datalabels -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -47,29 +60,36 @@
         <button id="refresh-button">รีเฟรชข้อมูล</button>
         <button id="download-button">ดาวน์โหลด</button>
     </div>
-    <!-- เพิ่ม canvas สำหรับกราฟ -->
+
+    <!-- เพิ่มตาราง Pivot Table -->
+    <h2>ตารางสรุป (Pivot Table)</h2>
+    <table id="pivot-table" class="pivot-table">
+        <thead>
+            <tr id="pivot-header"></tr>
+        </thead>
+        <tbody id="pivot-body"></tbody>
+    </table>
+
     <canvas id="myChart" width="400" height="400"></canvas>
     <table id="data-table">
         <thead>
-            <tr>
-                <!-- Column headers will be inserted here -->
-            </tr>
+            <tr></tr>
         </thead>
-        <tbody>
-            <!-- Data will be inserted here -->
-        </tbody>
+        <tbody></tbody>
     </table>
+
     <script>
         // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
         const currentDateElement = document.getElementById('current-date');
         const now = new Date();
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-        // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
         const thaiYear = now.getFullYear() + 543;
         const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
         currentDateElement.textContent = `วันที่: ${thaiDate}`;
+
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
             fetch(sheetUrl)
@@ -78,29 +98,44 @@
                     const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                     const jsonData = JSON.parse(jsonString);
                     const rows = jsonData.table.rows;
-                    // เพิ่มคอลัมน์ AA, AB, AC, AN
+
+                    // กำหนดดัชนีคอลัมน์
                     const columnIndices = {
-                        AA: 26, AB: 27, AC: 28, AN: 39, // คอลัมน์ที่ย้ายมาอยู่ต้นตาราง
-                        D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
+                        AA: 26, AB: 27, AC: 28, AN: 39, // Filters: พื้นที่, รอบวันที่, เดือนอบรม, week
+                        D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37, // คอลัมน์ในตารางหลัก
+                        Status: 33 // Status อันดับ (AH)
                     };
+
                     const columnHeaders = {
                         AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week",
-                        D: "D", G: "G", H: "H", I: "I", N: "N", AH: "AH", AI: "AI", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
+                        D: "D", G: "G", H: "H", I: "I", N: "N", AH: "Status อันดับ", AI: "AI", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
                     };
+
+                    // อัปเดตตารางหลัก
                     const thead = document.querySelector("#data-table thead tr");
                     const tbody = document.querySelector("#data-table tbody");
                     thead.innerHTML = '';
                     tbody.innerHTML = '';
-                    // สร้างส่วนหัวตาราง
+
+                    // สร้างส่วนหัวตารางหลัก
                     Object.keys(columnIndices).forEach(key => {
-                        const th = document.createElement("th");
-                        th.textContent = rows[0].c[columnIndices[key]]?.v || columnHeaders[key];
-                        thead.appendChild(th);
+                        if (key !== 'Status') { // ข้าม Status เพราะใช้ใน Pivot Table
+                            const th = document.createElement("th");
+                            th.textContent = rows[0].c[columnIndices[key]]?.v || columnHeaders[key];
+                            thead.appendChild(th);
+                        }
                     });
-                    // สร้างข้อมูลในตาราง
+
+                    // เก็บข้อมูลสำหรับ Pivot Table
+                    const pivotData = {};
+                    const statusValues = new Set();
+                    const areaRoundMap = {};
+
+                    // กรองข้อมูลและเก็บข้อมูลสำหรับ Pivot Table
                     rows.slice(1).forEach(row => {
                         const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
                         if (yearAJ === 2025) {
+                            // เพิ่มข้อมูลในตารางหลัก
                             const tr = document.createElement("tr");
                             tr.innerHTML = `
                                 <td>${row.c[columnIndices.AA]?.v || ''}</td>
@@ -119,23 +154,161 @@
                                 <td>${row.c[columnIndices.AL]?.v || ''}</td>
                             `;
                             tbody.appendChild(tr);
+
+                            // เก็บข้อมูลสำหรับ Pivot Table
+                            const area = row.c[columnIndices.AA]?.v || 'ไม่ระบุ';
+                            const roundDate = row.c[columnIndices.AB]?.v || 'ไม่ระบุ';
+                            const status = row.c[columnIndices.AH]?.v || 'ไม่ระบุ';
+
+                            // เพิ่ม Status ลงใน Set เพื่อใช้เป็นคอลัมน์
+                            statusValues.add(status);
+
+                            // เก็บข้อมูลสำหรับการจัดกลุ่ม
+                            if (!areaRoundMap[area]) {
+                                areaRoundMap[area] = new Set();
+                            }
+                            areaRoundMap[area].add(roundDate);
+
+                            // สร้างคีย์สำหรับ Pivot Table (พื้นที่ + รอบวันที่)
+                            const pivotKey = `${area} - ${roundDate}`;
+                            if (!pivotData[pivotKey]) {
+                                pivotData[pivotKey] = {};
+                            }
+                            pivotData[pivotKey][status] = (pivotData[pivotKey][status] || 0) + 1;
                         }
                     });
+
+                    // สร้างตาราง Pivot Table
+                    const pivotHeader = document.getElementById('pivot-header');
+                    const pivotBody = document.getElementById('pivot-body');
+                    pivotHeader.innerHTML = '';
+                    pivotBody.innerHTML = '';
+
+                    // สร้างส่วนหัวของ Pivot Table
+                    const thAreaRound = document.createElement('th');
+                    thAreaRound.textContent = 'Row Labels';
+                    pivotHeader.appendChild(thAreaRound);
+
+                    const statuses = Array.from(statusValues).sort();
+                    statuses.forEach(status => {
+                        const th = document.createElement('th');
+                        th.textContent = status;
+                        pivotHeader.appendChild(th);
+                    });
+
+                    const thGrandTotal = document.createElement('th');
+                    thGrandTotal.textContent = 'Grand Total';
+                    pivotHeader.appendChild(thGrandTotal);
+
+                    // สร้างแถวข้อมูลใน Pivot Table
+                    let grandTotalByStatus = {};
+                    statuses.forEach(status => grandTotalByStatus[status] = 0);
+                    let overallGrandTotal = 0;
+
+                    Object.keys(areaRoundMap).sort().forEach(area => {
+                        // เพิ่มแถวสำหรับชื่อพื้นที่
+                        const trArea = document.createElement('tr');
+                        const tdArea = document.createElement('td');
+                        tdArea.textContent = area;
+                        tdArea.style.fontWeight = 'bold';
+                        trArea.appendChild(tdArea);
+
+                        // เพิ่มช่องว่างสำหรับคอลัมน์ Status และ Grand Total
+                        statuses.forEach(() => {
+                            const tdEmpty = document.createElement('td');
+                            trArea.appendChild(tdEmpty);
+                        });
+                        const tdEmptyTotal = document.createElement('td');
+                        trArea.appendChild(tdEmptyTotal);
+                        pivotBody.appendChild(trArea);
+
+                        // เพิ่มแถวสำหรับรอบวันที่
+                        let areaTotal = 0;
+                        Array.from(areaRoundMap[area]).sort().forEach(roundDate => {
+                            const pivotKey = `${area} - ${roundDate}`;
+                            const tr = document.createElement('tr');
+                            const tdKey = document.createElement('td');
+                            tdKey.textContent = roundDate;
+                            tr.appendChild(tdKey);
+
+                            let rowTotal = 0;
+                            statuses.forEach(status => {
+                                const td = document.createElement('td');
+                                const count = pivotData[pivotKey]?.[status] || 0;
+                                td.textContent = count || '';
+                                rowTotal += count;
+                                grandTotalByStatus[status] += count;
+                                tr.appendChild(td);
+                            });
+
+                            const tdRowTotal = document.createElement('td');
+                            tdRowTotal.textContent = rowTotal;
+                            tr.appendChild(tdRowTotal);
+                            pivotBody.appendChild(tr);
+
+                            areaTotal += rowTotal;
+                            overallGrandTotal += rowTotal;
+                        });
+
+                        // เพิ่มแถวรวมสำหรับแต่ละพื้นที่
+                        const trAreaTotal = document.createElement('tr');
+                        const tdAreaTotalLabel = document.createElement('td');
+                        tdAreaTotalLabel.textContent = `${area} Total`;
+                        tdAreaTotalLabel.style.fontWeight = 'bold';
+                        trAreaTotal.appendChild(tdAreaTotalLabel);
+
+                        statuses.forEach(status => {
+                            const td = document.createElement('td');
+                            const count = pivotData[`${area} - ${roundDate}`]?.[status] || 0;
+                            td.textContent = pivotData[`${area} - ${roundDate}`]?.[status] ? count : '';
+                            trAreaTotal.appendChild(td);
+                        });
+
+                        const tdAreaTotal = document.createElement('td');
+                        tdAreaTotal.textContent = areaTotal;
+                        tdAreaTotal.style.fontWeight = 'bold';
+                        trAreaTotal.appendChild(tdAreaTotal);
+                        pivotBody.appendChild(trAreaTotal);
+                    });
+
+                    // เพิ่มแถว Grand Total
+                    const trGrandTotal = document.createElement('tr');
+                    trGrandTotal.className = 'grand-total';
+                    const tdGrandTotalLabel = document.createElement('td');
+                    tdGrandTotalLabel.textContent = 'Grand Total';
+                    tdGrandTotalLabel.style.fontWeight = 'bold';
+                    trGrandTotal.appendChild(tdGrandTotalLabel);
+
+                    statuses.forEach(status => {
+                        const td = document.createElement('td');
+                        td.textContent = grandTotalByStatus[status];
+                        td.style.fontWeight = 'bold';
+                        trGrandTotal.appendChild(td);
+                    });
+
+                    const tdOverallGrandTotal = document.createElement('td');
+                    tdOverallGrandTotal.textContent = overallGrandTotal;
+                    tdOverallGrandTotal.style.fontWeight = 'bold';
+                    trGrandTotal.appendChild(tdOverallGrandTotal);
+                    pivotBody.appendChild(trGrandTotal);
                 })
                 .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
         }
-        // ฟังก์ชันเพื่อแปลงข้อมูลในตารางเป็น Excel และดาวน์โหลด
+
+        // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
         function downloadTableAsExcel() {
             const table = document.getElementById('data-table');
             const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
             XLSX.writeFile(workbook, 'data-table.xlsx');
         }
+
         // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
         function getYearFromGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return null;
             const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
             return matches ? parseInt(matches[1], 10) : null;
         }
+
         // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
         function parseGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return '';
@@ -146,9 +319,11 @@
             const day = parseInt(matches[3], 10);
             return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
         }
+
         // เพิ่ม event listener ให้ปุ่ม
         document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
         document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
         fetchDataAndUpdateTable();
     </script>
