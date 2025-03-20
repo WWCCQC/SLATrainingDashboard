@@ -129,7 +129,7 @@
                     // เก็บข้อมูลสำหรับ Pivot Table
                     const pivotData = {};
                     const statusValues = new Set();
-                    const areaRoundMap = {};
+                    const areaMonthMap = {};
 
                     // กรองข้อมูลและเก็บข้อมูลสำหรับ Pivot Table
                     rows.slice(1).forEach(row => {
@@ -157,20 +157,20 @@
 
                             // เก็บข้อมูลสำหรับ Pivot Table
                             const area = row.c[columnIndices.AA]?.v || 'ไม่ระบุ';
-                            const roundDate = row.c[columnIndices.AB]?.v || 'ไม่ระบุ';
+                            const trainingMonth = row.c[columnIndices.AC]?.v || 'ไม่ระบุ'; // เปลี่ยนจาก AB เป็น AC (เดือนอบรม)
                             const status = row.c[columnIndices.AH]?.v || 'ไม่ระบุ';
 
                             // เพิ่ม Status ลงใน Set เพื่อใช้เป็นคอลัมน์
                             statusValues.add(status);
 
                             // เก็บข้อมูลสำหรับการจัดกลุ่ม
-                            if (!areaRoundMap[area]) {
-                                areaRoundMap[area] = new Set();
+                            if (!areaMonthMap[area]) {
+                                areaMonthMap[area] = new Set();
                             }
-                            areaRoundMap[area].add(roundDate);
+                            areaMonthMap[area].add(trainingMonth);
 
-                            // สร้างคีย์สำหรับ Pivot Table (พื้นที่ + รอบวันที่)
-                            const pivotKey = `${area} - ${roundDate}`;
+                            // สร้างคีย์สำหรับ Pivot Table (พื้นที่ + เดือนอบรม)
+                            const pivotKey = `${area} - ${trainingMonth}`;
                             if (!pivotData[pivotKey]) {
                                 pivotData[pivotKey] = {};
                             }
@@ -185,9 +185,9 @@
                     pivotBody.innerHTML = '';
 
                     // สร้างส่วนหัวของ Pivot Table
-                    const thAreaRound = document.createElement('th');
-                    thAreaRound.textContent = 'Row Labels';
-                    pivotHeader.appendChild(thAreaRound);
+                    const thAreaMonth = document.createElement('th');
+                    thAreaMonth.textContent = 'Row Labels';
+                    pivotHeader.appendChild(thAreaMonth);
 
                     const statuses = Array.from(statusValues).sort();
                     statuses.forEach(status => {
@@ -205,7 +205,7 @@
                     statuses.forEach(status => grandTotalByStatus[status] = 0);
                     let overallGrandTotal = 0;
 
-                    Object.keys(areaRoundMap).sort().forEach(area => {
+                    Object.keys(areaMonthMap).sort().forEach(area => {
                         // เพิ่มแถวสำหรับชื่อพื้นที่
                         const trArea = document.createElement('tr');
                         const tdArea = document.createElement('td');
@@ -222,13 +222,13 @@
                         trArea.appendChild(tdEmptyTotal);
                         pivotBody.appendChild(trArea);
 
-                        // เพิ่มแถวสำหรับรอบวันที่
+                        // เพิ่มแถวสำหรับเดือนอบรม
                         let areaTotal = 0;
-                        Array.from(areaRoundMap[area]).sort().forEach(roundDate => {
-                            const pivotKey = `${area} - ${roundDate}`;
+                        Array.from(areaMonthMap[area]).sort().forEach(trainingMonth => {
+                            const pivotKey = `${area} - ${trainingMonth}`;
                             const tr = document.createElement('tr');
                             const tdKey = document.createElement('td');
-                            tdKey.textContent = roundDate;
+                            tdKey.textContent = trainingMonth;
                             tr.appendChild(tdKey);
 
                             let rowTotal = 0;
@@ -250,7 +250,7 @@
                             overallGrandTotal += rowTotal;
                         });
 
-                        // เพิ่มแถวรวมสำหรับแต่ละพื้นที่
+                        // เพิ่มแถวผลรวมสำหรับแต่ละพื้นที่
                         const trAreaTotal = document.createElement('tr');
                         const tdAreaTotalLabel = document.createElement('td');
                         tdAreaTotalLabel.textContent = `${area} Total`;
@@ -259,8 +259,7 @@
 
                         statuses.forEach(status => {
                             const td = document.createElement('td');
-                            const count = pivotData[`${area} - ${roundDate}`]?.[status] || 0;
-                            td.textContent = pivotData[`${area} - ${roundDate}`]?.[status] ? count : '';
+                            td.textContent = pivotData[`${area} - ${Array.from(areaMonthMap[area]).sort()[0]}`]?.[status] ? grandTotalByStatus[status] : '';
                             trAreaTotal.appendChild(td);
                         });
 
