@@ -58,7 +58,7 @@
         <thead>
             <tr>
                 <th>พื้นที่</th>
-                <th>รอบวันที่</th>
+                <th>เดือนอบรม</th>
                 <th>เอกสารยังไม่ครบ</th>
                 <th>ขึ้นทะเบียนเรียบร้อย</th>
                 <th>ช่างลาออก</th>
@@ -139,13 +139,13 @@
                         const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
                         if (yearAJ === 2025) {
                             const area = row.c[columnIndices.AA]?.v || '';
-                            const roundDate = row.c[columnIndices.AB]?.v || '';
-                            const key = `${area}-${roundDate}`;
+                            const trainingMonth = row.c[columnIndices.AC]?.v || '';
+                            const key = `${area}-${trainingMonth}`;
 
                             if (!summaryData[key]) {
                                 summaryData[key] = {
                                     area,
-                                    roundDate,
+                                    trainingMonth,
                                     incompleteDocs: 0,
                                     registered: 0,
                                     resigned: 0,
@@ -167,18 +167,13 @@
                             const tr = document.createElement("tr");
                             tr.innerHTML = `
                                 <td>${area}</td>
-                                <td>${roundDate}</td>
-                                <td>${row.c[columnIndices.AC]?.v || ''}</td>
-                                <td>${row.c[columnIndices.AN]?.v || ''}</td>
+                                <td>${trainingMonth}</td>
                                 <td>${row.c[columnIndices.D]?.v || ''}</td>
                                 <td>${row.c[columnIndices.G]?.v || ''}</td>
                                 <td>${row.c[columnIndices.H]?.v || ''}</td>
                                 <td>${row.c[columnIndices.I]?.v || ''}</td>
                                 <td>${row.c[columnIndices.N]?.v || ''}</td>
                                 <td>${row.c[columnIndices.AH]?.v || ''}</td>
-                                <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                                <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
-                                <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
                                 <td>${row.c[columnIndices.AL]?.v || ''}</td>
                             `;
                             tbody.appendChild(tr);
@@ -190,7 +185,7 @@
                         const tr = document.createElement("tr");
                         tr.innerHTML = `
                             <td>${summary.area}</td>
-                            <td>${summary.roundDate}</td>
+                            <td>${summary.trainingMonth}</td>
                             <td>${summary.incompleteDocs}</td>
                             <td>${summary.registered}</td>
                             <td>${summary.resigned}</td>
