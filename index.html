@@ -64,111 +64,106 @@
     </table>
 
     <script>
-    // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
-    const currentDateElement = document.getElementById('current-date');
-    const now = new Date();
-    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+        // แสดงวันที่ปัจจุบันในรูปแบบประเทศไทย
+        const currentDateElement = document.getElementById('current-date');
+        const now = new Date();
+        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
 
-    // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
-    const thaiYear = now.getFullYear() + 543;
-    const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
+        // เพิ่ม 543 ปีให้กับปี ค.ศ. เพื่อแปลงเป็นปี พ.ศ.
+        const thaiYear = now.getFullYear() + 543;
+        const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
 
-    currentDateElement.textContent = `วันที่: ${thaiDate}`;
+        currentDateElement.textContent = `วันที่: ${thaiDate}`;
 
-    // URL for Google Sheets JSON
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+        // URL for Google Sheets JSON
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
 
-    // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
-    function fetchDataAndUpdateTable() {
-        fetch(sheetUrl)
-            .then(response => response.text())
-            .then(data => {
-                const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
-                const jsonData = JSON.parse(jsonString);
-                const rows = jsonData.table.rows;
+        // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
+        function fetchDataAndUpdateTable() {
+            fetch(sheetUrl)
+                .then(response => response.text())
+                .then(data => {
+                    const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
+                    const jsonData = JSON.parse(jsonString);
+                    const rows = jsonData.table.rows;
 
-                // เพิ่มคอลัมน์ AA, AB, AC, AN
-                const columnIndices = {
-                    D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37,
-                    AA: 26, AB: 27, AC: 28, AN: 39
-                };
+                    // เพิ่มคอลัมน์ AA, AB, AC, AN
+                    const columnIndices = {
+                        AA: 26, AB: 27, AC: 28, AN: 39, // คอลัมน์ที่ย้ายมาอยู่ต้นตาราง
+                        D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37
+                    };
 
-                const thead = document.querySelector("#data-table thead tr");
-                const tbody = document.querySelector("#data-table tbody");
-                thead.innerHTML = '';
-                tbody.innerHTML = '';
+                    const thead = document.querySelector("#data-table thead tr");
+                    const tbody = document.querySelector("#data-table tbody");
+                    thead.innerHTML = '';
+                    tbody.innerHTML = '';
 
-                // สร้างส่วนหัวตาราง
-                const columnHeaders = {
-                    D: "D", G: "G", H: "H", I: "I", N: "N", AH: "AH", AI: "AI", AJ: "AJ", AK: "AK", AL: "AL",
-                    AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week"
-                };
+                    // สร้างส่วนหัวตาราง
+                    Object.keys(columnIndices).forEach(key => {
+                        const th = document.createElement("th");
+                        th.textContent = rows[0].c[columnIndices[key]]?.v || '';
+                        thead.appendChild(th);
+                    });
 
-                Object.keys(columnIndices).forEach(key => {
-                    const th = document.createElement("th");
-                    th.textContent = columnHeaders[key] || '';
-                    thead.appendChild(th);
-                });
+                    // สร้างข้อมูลในตาราง
+                    rows.slice(1).forEach(row => {
+                        const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
+                        if (yearAJ === 2025) {
+                            const tr = document.createElement("tr");
+                            tr.innerHTML = `
+                                <td>${row.c[columnIndices.AA]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AB]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AC]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AN]?.v || ''}</td>
+                                <td>${row.c[columnIndices.D]?.v || ''}</td>
+                                <td>${row.c[columnIndices.G]?.v || ''}</td>
+                                <td>${row.c[columnIndices.H]?.v || ''}</td>
+                                <td>${row.c[columnIndices.I]?.v || ''}</td>
+                                <td>${row.c[columnIndices.N]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AH]?.v || ''}</td>
+                                <td>${row.c[columnIndices.AI]?.v || ''}</td>
+                                <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
+                                <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
+                                <td>${row.c[columnIndices.AL]?.v || ''}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        }
+                    });
+                })
+                .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
+        }
 
-                // สร้างข้อมูลในตาราง
-                rows.slice(1).forEach(row => {
-                    const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
-                    if (yearAJ === 2025) {
-                        const tr = document.createElement("tr");
-                        tr.innerHTML = `
-                            <td>${row.c[columnIndices.D]?.v || ''}</td>
-                            <td>${row.c[columnIndices.G]?.v || ''}</td>
-                            <td>${row.c[columnIndices.H]?.v || ''}</td>
-                            <td>${row.c[columnIndices.I]?.v || ''}</td>
-                            <td>${row.c[columnIndices.N]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AH]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AI]?.v || ''}</td>
-                            <td>${parseGoogleSheetDate(row.c[columnIndices.AJ]?.v)}</td>
-                            <td>${parseGoogleSheetDate(row.c[columnIndices.AK]?.v)}</td>
-                            <td>${row.c[columnIndices.AL]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AA]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AB]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AC]?.v || ''}</td>
-                            <td>${row.c[columnIndices.AN]?.v || ''}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
-                });
-            })
-            .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
-    }
+        // ฟังก์ชันเพื่อแปลงข้อมูลในตารางเป็น Excel และดาวน์โหลด
+        function downloadTableAsExcel() {
+            const table = document.getElementById('data-table');
+            const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+            XLSX.writeFile(workbook, 'data-table.xlsx');
+        }
 
-    // ฟังก์ชันเพื่อแปลงข้อมูลในตารางเป็น Excel และดาวน์โหลด
-    function downloadTableAsExcel() {
-        const table = document.getElementById('data-table');
-        const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-        XLSX.writeFile(workbook, 'data-table.xlsx');
-    }
+        // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
+        function getYearFromGoogleSheetDate(dateString) {
+            if (!dateString || !dateString.startsWith("Date(")) return null;
+            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+            return matches ? parseInt(matches[1], 10) : null;
+        }
 
-    // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
-    function getYearFromGoogleSheetDate(dateString) {
-        if (!dateString || !dateString.startsWith("Date(")) return null;
-        const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-        return matches ? parseInt(matches[1], 10) : null;
-    }
+        // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
+        function parseGoogleSheetDate(dateString) {
+            if (!dateString || !dateString.startsWith("Date(")) return '';
+            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (!matches) return '';
+            const year = parseInt(matches[1], 10);
+            const month = parseInt(matches[2], 10);
+            const day = parseInt(matches[3], 10);
+            return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
+        }
 
-    // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
-    function parseGoogleSheetDate(dateString) {
-        if (!dateString || !dateString.startsWith("Date(")) return '';
-        const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-        if (!matches) return '';
-        const year = parseInt(matches[1], 10);
-        const month = parseInt(matches[2], 10);
-        const day = parseInt(matches[3], 10);
-        return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
-    }
+        // เพิ่ม event listener ให้ปุ่ม
+        document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
+        document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
 
-    // เพิ่ม event listener ให้ปุ่ม
-    document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
-    document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
-
-    // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
-    fetchDataAndUpdateTable();
+        // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
+        fetchDataAndUpdateTable();
     </script>
 </body>
 </html>
