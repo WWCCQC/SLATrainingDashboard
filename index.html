@@ -103,12 +103,12 @@
                     const columnIndices = {
                         AA: 26, AB: 27, AC: 28, AN: 39, // Filters: พื้นที่, รอบวันที่, เดือนอบรม, week
                         D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37, // คอลัมน์ในตารางหลัก
-                        Status: 33 // Status อันดับ (AH)
+                        Status: 34 // เปลี่ยนจาก AH (Status อันดับ) เป็น AI (Status ล่าสุด)
                     };
 
                     const columnHeaders = {
                         AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week",
-                        D: "D", G: "G", H: "H", I: "I", N: "N", AH: "Status อันดับ", AI: "AI", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
+                        D: "D", G: "G", H: "H", I: "I", N: "N", AH: "Status อันดับ", AI: "Status ล่าสุด", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
                     };
 
                     // อัปเดตตารางหลัก
@@ -157,8 +157,8 @@
 
                             // เก็บข้อมูลสำหรับ Pivot Table
                             const area = row.c[columnIndices.AA]?.v || 'ไม่ระบุ';
-                            const trainingMonth = row.c[columnIndices.AC]?.v || 'ไม่ระบุ'; // เปลี่ยนจาก AB เป็น AC (เดือนอบรม)
-                            const status = row.c[columnIndices.AH]?.v || 'ไม่ระบุ';
+                            const trainingMonth = row.c[columnIndices.AC]?.v || 'ไม่ระบุ'; // ใช้ AC (เดือนอบรม)
+                            const status = row.c[columnIndices.Status]?.v || 'ไม่ระบุ'; // ใช้ Status ล่าสุด (AI)
 
                             // เพิ่ม Status ลงใน Set เพื่อใช้เป็นคอลัมน์
                             statusValues.add(status);
@@ -200,6 +200,9 @@
                     thGrandTotal.textContent = 'Grand Total';
                     pivotHeader.appendChild(thGrandTotal);
 
+                    // กำหนดลำดับเดือนอบรม
+                    const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
+
                     // สร้างแถวข้อมูลใน Pivot Table
                     let grandTotalByStatus = {};
                     statuses.forEach(status => grandTotalByStatus[status] = 0);
@@ -222,32 +225,34 @@
                         trArea.appendChild(tdEmptyTotal);
                         pivotBody.appendChild(trArea);
 
-                        // เพิ่มแถวสำหรับเดือนอบรม
+                        // เพิ่มแถวสำหรับเดือนอบรม ตามลำดับที่กำหนด
                         let areaTotal = 0;
-                        Array.from(areaMonthMap[area]).sort().forEach(trainingMonth => {
-                            const pivotKey = `${area} - ${trainingMonth}`;
-                            const tr = document.createElement('tr');
-                            const tdKey = document.createElement('td');
-                            tdKey.textContent = trainingMonth;
-                            tr.appendChild(tdKey);
+                        monthOrder.forEach(trainingMonth => {
+                            if (areaMonthMap[area].has(trainingMonth)) {
+                                const pivotKey = `${area} - ${trainingMonth}`;
+                                const tr = document.createElement('tr');
+                                const tdKey = document.createElement('td');
+                                tdKey.textContent = trainingMonth;
+                                tr.appendChild(tdKey);
 
-                            let rowTotal = 0;
-                            statuses.forEach(status => {
-                                const td = document.createElement('td');
-                                const count = pivotData[pivotKey]?.[status] || 0;
-                                td.textContent = count || '';
-                                rowTotal += count;
-                                grandTotalByStatus[status] += count;
-                                tr.appendChild(td);
-                            });
+                                let rowTotal = 0;
+                                statuses.forEach(status => {
+                                    const td = document.createElement('td');
+                                    const count = pivotData[pivotKey]?.[status] || 0;
+                                    td.textContent = count || '';
+                                    rowTotal += count;
+                                    grandTotalByStatus[status] += count;
+                                    tr.appendChild(td);
+                                });
 
-                            const tdRowTotal = document.createElement('td');
-                            tdRowTotal.textContent = rowTotal;
-                            tr.appendChild(tdRowTotal);
-                            pivotBody.appendChild(tr);
+                                const tdRowTotal = document.createElement('td');
+                                tdRowTotal.textContent = rowTotal;
+                                tr.appendChild(tdRowTotal);
+                                pivotBody.appendChild(tr);
 
-                            areaTotal += rowTotal;
-                            overallGrandTotal += rowTotal;
+                                areaTotal += rowTotal;
+                                overallGrandTotal += rowTotal;
+                            }
                         });
 
                         // เพิ่มแถวผลรวมสำหรับแต่ละพื้นที่
@@ -259,7 +264,7 @@
 
                         statuses.forEach(status => {
                             const td = document.createElement('td');
-                            td.textContent = pivotData[`${area} - ${Array.from(areaMonthMap[area]).sort()[0]}`]?.[status] ? grandTotalByStatus[status] : '';
+                            td.textContent = ''; // ไม่แสดงผลรวมราย Status ในแถวนี้
                             trAreaTotal.appendChild(td);
                         });
 
