@@ -48,14 +48,23 @@
         .pivot-table {
             margin-bottom: 30px;
         }
+        .date-container {
+            background-color: #e0f7fa; /* สีน้ำเงินอ่อน */
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 5px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+    <div class="date-container">
+        <p id="current-date"></p>
+    </div>
     <h1>ข้อมูลแดชบอร์ดจาก Google Sheets (เฉพาะปี 2025)</h1>
-    <p id="current-date"></p>
     <div class="controls">
         <button id="refresh-button">รีเฟรชข้อมูล</button>
         <button id="download-button">ดาวน์โหลด</button>
