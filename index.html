@@ -31,6 +31,9 @@
         .grand-total th, .grand-total td {
             background-color: #b7e1cd; /* สีเขียวเข้มสำหรับแถว Grand Total */
         }
+        .area-total {
+            color: #006400; /* สีเขียวเข้ม */
+        }
         canvas {
             margin-top: 20px;
             max-width: 400px;
@@ -91,13 +94,18 @@
     </table>
 
     <script>
-        // แสดงวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
-        const currentDateElement = document.getElementById('current-date');
-        const now = new Date();
-        const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: 'numeric', minute: 'numeric', second: 'numeric' };
-        const thaiYear = now.getFullYear() + 543;
-        const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
-        currentDateElement.textContent = `วันที่: ${thaiDate}`;
+        // ฟังก์ชันเพื่ออัปเดตวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
+        function updateCurrentDateTime() {
+            const currentDateElement = document.getElementById('current-date');
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', hour: 'numeric', minute: 'numeric', second: 'numeric' };
+            const thaiYear = now.getFullYear() + 543;
+            const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
+            currentDateElement.textContent = `วันที่: ${thaiDate}`;
+        }
+
+        // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
+        setInterval(updateCurrentDateTime, 1000);
 
         // URL for Google Sheets JSON
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
@@ -220,6 +228,17 @@
                     statuses.forEach(status => grandTotalByStatus[status] = 0);
                     let overallGrandTotal = 0;
 
+                    const areaTotals = {
+                        "RSM1_BMA-West": 0,
+                        "RSM2_BMA-East": 0,
+                        "RSM3_UPC-East": 0,
+                        "RSM4_UPC-NOR": 0,
+                        "RSM5_UPC-NOE1": 0,
+                        "RSM6_UPC-NOE2": 0,
+                        "RSM7_UPC-CEW": 0,
+                        "RSM8_UPC-SOU": 0
+                    };
+
                     Object.keys(areaMonthMap).sort().forEach(area => {
                         // เพิ่มแถวสำหรับชื่อพื้นที่
                         const trArea = document.createElement('tr');
@@ -272,6 +291,7 @@
                         const tdAreaTotalLabel = document.createElement('td');
                         tdAreaTotalLabel.textContent = `${area} Total`;
                         tdAreaTotalLabel.style.fontWeight = 'bold';
+                        tdAreaTotalLabel.className = 'area-total';
                         trAreaTotal.appendChild(tdAreaTotalLabel);
 
                         statuses.forEach(status => {
@@ -283,8 +303,14 @@
                         const tdAreaTotal = document.createElement('td');
                         tdAreaTotal.textContent = areaTotal;
                         tdAreaTotal.style.fontWeight = 'bold';
+                        tdAreaTotal.className = 'area-total';
                         trAreaTotal.appendChild(tdAreaTotal);
                         pivotBody.appendChild(trAreaTotal);
+
+                        // เก็บผลรวมของแต่ละพื้นที่
+                        if (areaTotals[area] !== undefined) {
+                            areaTotals[area] += areaTotal;
+                        }
                     });
 
                     // เพิ่มแถว Grand Total
@@ -342,6 +368,8 @@
 
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
         fetchDataAndUpdateTable();
+        // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
+        updateCurrentDateTime();
     </script>
 </body>
 </html>
