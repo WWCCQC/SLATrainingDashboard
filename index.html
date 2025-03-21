@@ -36,7 +36,7 @@
         }
         canvas {
             margin-top: 20px;
-            max-width: 400px;
+            max-width: 800px; /* เพิ่มขนาดกราฟ */
             max-height: 400px;
         }
         .controls {
@@ -61,6 +61,17 @@
             align-items: center;
             color: white;
         }
+        #chart-container {
+            position: relative;
+        }
+        #chart-label {
+            position: absolute;
+            top: -20px; /* ปรับตำแหน่งตามความเหมาะสม */
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
@@ -75,7 +86,10 @@
         <button id="refresh-button">รีเฟรชข้อมูล</button>
         <button id="download-button">ดาวน์โหลด</button>
     </div>
-
+    <div id="chart-container">
+        <div id="chart-label">Status การขึ้นทะเบียนช่างใหม่ประจำเดือน</div>
+        <canvas id="myChart" width="800" height="400"></canvas>
+    </div>
     <!-- เปลี่ยนชื่อหัวข้อของตาราง Pivot Table -->
     <h2>สถานะการอบรมช่างใหม่รายพื้นที่</h2>
     <table id="pivot-table" class="pivot-table">
@@ -84,15 +98,12 @@
         </thead>
         <tbody id="pivot-body"></tbody>
     </table>
-
-    <canvas id="myChart" width="400" height="400"></canvas>
     <table id="data-table">
         <thead>
             <tr></tr>
         </thead>
         <tbody></tbody>
     </table>
-
     <script>
         // ฟังก์ชันเพื่ออัปเดตวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
         function updateCurrentDateTime() {
@@ -103,13 +114,10 @@
             const thaiDate = now.toLocaleDateString('th-TH', options).replace(now.getFullYear(), thaiYear);
             currentDateElement.textContent = `วันที่: ${thaiDate}`;
         }
-
         // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
         setInterval(updateCurrentDateTime, 1000);
-
-        // URL for Google Sheets JSON
+        // URL for Google Sheets
         const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
-
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
             fetch(sheetUrl)
@@ -118,25 +126,21 @@
                     const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
                     const jsonData = JSON.parse(jsonString);
                     const rows = jsonData.table.rows;
-
                     // กำหนดดัชนีคอลัมน์
                     const columnIndices = {
-                        AA: 26, AB: 27, AC: 28, AN: 39, // Filters: พื้นที่, รอบวันที่, เดือนอบรม, week
+                        AA: 26, AB: 27, AC: 28, AN: 39, // Filters: พื้นที่, รอบวันที่, week
                         D: 3, G: 6, H: 7, I: 8, N: 13, AH: 33, AI: 34, AJ: 35, AK: 36, AL: 37, // คอลัมน์ในตารางหลัก
                         Status: 34 // เปลี่ยนจาก AH (Status อันดับ) เป็น AI (Status ล่าสุด)
                     };
-
                     const columnHeaders = {
                         AA: "พื้นที่", AB: "รอบวันที่", AC: "เดือนอบรม", AN: "week",
                         D: "D", G: "G", H: "H", I: "I", N: "N", AH: "Status อันดับ", AI: "Status ล่าสุด", AJ: "วันเริ่มต้น", AK: "วันสิ้นสุด", AL: "SLA"
                     };
-
                     // อัปเดตตารางหลัก
                     const thead = document.querySelector("#data-table thead tr");
                     const tbody = document.querySelector("#data-table tbody");
                     thead.innerHTML = '';
                     tbody.innerHTML = '';
-
                     // สร้างส่วนหัวตารางหลัก
                     Object.keys(columnIndices).forEach(key => {
                         if (key !== 'Status') { // ข้าม Status เพราะใช้ใน Pivot Table
@@ -145,12 +149,10 @@
                             thead.appendChild(th);
                         }
                     });
-
                     // เก็บข้อมูลสำหรับ Pivot Table
                     const pivotData = {};
                     const statusValues = new Set();
                     const areaMonthMap = {};
-
                     // กรองข้อมูลและเก็บข้อมูลสำหรับ Pivot Table
                     rows.slice(1).forEach(row => {
                         const yearAJ = getYearFromGoogleSheetDate(row.c[columnIndices.AJ]?.v);
@@ -174,21 +176,17 @@
                                 <td>${row.c[columnIndices.AL]?.v || ''}</td>
                             `;
                             tbody.appendChild(tr);
-
                             // เก็บข้อมูลสำหรับ Pivot Table
                             const area = row.c[columnIndices.AA]?.v || 'ไม่ระบุ';
                             const trainingMonth = row.c[columnIndices.AC]?.v || 'ไม่ระบุ'; // ใช้ AC (เดือนอบรม)
                             const status = row.c[columnIndices.Status]?.v || 'ไม่ระบุ'; // ใช้ Status ล่าสุด (AI)
-
                             // เพิ่ม Status ลงใน Set เพื่อใช้เป็นคอลัมน์
                             statusValues.add(status);
-
                             // เก็บข้อมูลสำหรับการจัดกลุ่ม
                             if (!areaMonthMap[area]) {
                                 areaMonthMap[area] = new Set();
                             }
                             areaMonthMap[area].add(trainingMonth);
-
                             // สร้างคีย์สำหรับ Pivot Table (พื้นที่ + เดือนอบรม)
                             const pivotKey = `${area} - ${trainingMonth}`;
                             if (!pivotData[pivotKey]) {
@@ -197,37 +195,30 @@
                             pivotData[pivotKey][status] = (pivotData[pivotKey][status] || 0) + 1;
                         }
                     });
-
                     // สร้างตาราง Pivot Table
                     const pivotHeader = document.getElementById('pivot-header');
                     const pivotBody = document.getElementById('pivot-body');
                     pivotHeader.innerHTML = '';
                     pivotBody.innerHTML = '';
-
                     // สร้างส่วนหัวของ Pivot Table
                     const thAreaMonth = document.createElement('th');
                     thAreaMonth.textContent = 'จำนวนช่าง(คน)';
                     pivotHeader.appendChild(thAreaMonth);
-
                     const statuses = Array.from(statusValues).sort();
                     statuses.forEach(status => {
                         const th = document.createElement('th');
                         th.textContent = status;
                         pivotHeader.appendChild(th);
                     });
-
                     const thGrandTotal = document.createElement('th');
                     thGrandTotal.textContent = 'Grand Total';
                     pivotHeader.appendChild(thGrandTotal);
-
                     // กำหนดลำดับเดือนอบรม
                     const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
-
                     // สร้างแถวข้อมูลใน Pivot Table
                     let grandTotalByStatus = {};
                     statuses.forEach(status => grandTotalByStatus[status] = 0);
                     let overallGrandTotal = 0;
-
                     const areaTotals = {
                         "RSM1_BMA-West": {},
                         "RSM2_BMA-East": {},
@@ -238,13 +229,11 @@
                         "RSM7_UPC-CEW": {},
                         "RSM8_UPC-SOU": {}
                     };
-
                     Object.keys(areaTotals).forEach(area => {
                         statuses.forEach(status => {
                             areaTotals[area][status] = 0;
                         });
                     });
-
                     Object.keys(areaMonthMap).sort().forEach(area => {
                         // เพิ่มแถวสำหรับชื่อพื้นที่
                         const trArea = document.createElement('tr');
@@ -252,7 +241,6 @@
                         tdArea.textContent = area;
                         tdArea.style.fontWeight = 'bold';
                         trArea.appendChild(tdArea);
-
                         // เพิ่มช่องว่างสำหรับคอลัมน์ Status และ Grand Total
                         statuses.forEach(() => {
                             const tdEmpty = document.createElement('td');
@@ -261,7 +249,6 @@
                         const tdEmptyTotal = document.createElement('td');
                         trArea.appendChild(tdEmptyTotal);
                         pivotBody.appendChild(trArea);
-
                         // เพิ่มแถวสำหรับเดือนอบรม ตามลำดับที่กำหนด
                         let areaTotal = 0;
                         monthOrder.forEach(trainingMonth => {
@@ -271,7 +258,6 @@
                                 const tdKey = document.createElement('td');
                                 tdKey.textContent = trainingMonth;
                                 tr.appendChild(tdKey);
-
                                 let rowTotal = 0;
                                 statuses.forEach(status => {
                                     const td = document.createElement('td');
@@ -282,17 +268,14 @@
                                     areaTotals[area][status] += count;
                                     tr.appendChild(td);
                                 });
-
                                 const tdRowTotal = document.createElement('td');
                                 tdRowTotal.textContent = rowTotal;
                                 tr.appendChild(tdRowTotal);
                                 pivotBody.appendChild(tr);
-
                                 areaTotal += rowTotal;
                                 overallGrandTotal += rowTotal;
                             }
                         });
-
                         // เพิ่มแถวผลรวมสำหรับแต่ละพื้นที่
                         const trAreaTotal = document.createElement('tr');
                         const tdAreaTotalLabel = document.createElement('td');
@@ -300,13 +283,11 @@
                         tdAreaTotalLabel.style.fontWeight = 'bold';
                         tdAreaTotalLabel.className = 'area-total';
                         trAreaTotal.appendChild(tdAreaTotalLabel);
-
                         statuses.forEach(status => {
                             const td = document.createElement('td');
                             td.textContent = areaTotals[area][status] || '';
                             trAreaTotal.appendChild(td);
                         });
-
                         const tdAreaTotal = document.createElement('td');
                         tdAreaTotal.textContent = areaTotal;
                         tdAreaTotal.style.fontWeight = 'bold';
@@ -314,7 +295,6 @@
                         trAreaTotal.appendChild(tdAreaTotal);
                         pivotBody.appendChild(trAreaTotal);
                     });
-
                     // เพิ่มแถว Grand Total
                     const trGrandTotal = document.createElement('tr');
                     trGrandTotal.className = 'grand-total';
@@ -322,37 +302,184 @@
                     tdGrandTotalLabel.textContent = 'Grand Total';
                     tdGrandTotalLabel.style.fontWeight = 'bold';
                     trGrandTotal.appendChild(tdGrandTotalLabel);
-
                     statuses.forEach(status => {
                         const td = document.createElement('td');
                         td.textContent = grandTotalByStatus[status];
                         td.style.fontWeight = 'bold';
                         trGrandTotal.appendChild(td);
                     });
-
                     const tdOverallGrandTotal = document.createElement('td');
                     tdOverallGrandTotal.textContent = overallGrandTotal;
                     tdOverallGrandTotal.style.fontWeight = 'bold';
                     trGrandTotal.appendChild(tdOverallGrandTotal);
                     pivotBody.appendChild(trGrandTotal);
+                    // สร้าง Stacked Column Chart
+                    const chartCanvas = document.getElementById('myChart').getContext('2d');
+                    const chartData = {
+                        labels: monthOrder,
+                        datasets: []
+                    };
+                    const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ"];
+                    const colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f', '#00a950', '#58595b', '#8549ba'];
+                    statusList.forEach((status, index) => {
+                        const dataset = {
+                            label: status,
+                            data: monthOrder.map(month => {
+                                let count = 0;
+                                Object.keys(areaMonthMap).forEach(area => {
+                                    const pivotKey = `${area} - ${month}`;
+                                    count += pivotData[pivotKey]?.[status] || 0;
+                                });
+                                return count;
+                            }),
+                            backgroundColor: colors[index % colors.length]
+                        };
+                        chartData.datasets.push(dataset);
+                    });
+                    const chart = new Chart(chartCanvas, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            plugins: {
+                                datalabels: {
+                                    anchor: 'end',
+                                    align: 'top',
+                                    formatter: Math.round,
+                                    font: {
+                                        weight: 'bold'
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true
+                                },
+                                y: {
+                                    stacked: true
+                                }
+                            },
+                            onClick: (event, elements) => {
+                                if (elements.length > 0) {
+                                    const clickedMonth = chart.data.labels[elements[0].index];
+                                    updateTables(clickedMonth);
+                                }
+                            }
+                        }
+                    });
+                    function updateTables(selectedMonth) {
+                        // Clear existing table data
+                        pivotBody.innerHTML = '';
+                        // Rebuild Pivot Table based on selected month
+                        let grandTotalByStatus = {};
+                        statuses.forEach(status => grandTotalByStatus[status] = 0);
+                        let overallGrandTotal = 0;
+                        const areaTotals = {
+                            "RSM1_BMA-West": {},
+                            "RSM2_BMA-East": {},
+                            "RSM3_UPC-East": {},
+                            "RSM4_UPC-NOR": {},
+                            "RSM5_UPC-NOE1": {},
+                            "RSM6_UPC-NOE2": {},
+                            "RSM7_UPC-CEW": {},
+                            "RSM8_UPC-SOU": {}
+                        };
+                        Object.keys(areaTotals).forEach(area => {
+                            statuses.forEach(status => {
+                                areaTotals[area][status] = 0;
+                            });
+                        });
+                        Object.keys(areaMonthMap).sort().forEach(area => {
+                            // Add row for area name
+                            const trArea = document.createElement('tr');
+                            const tdArea = document.createElement('td');
+                            tdArea.textContent = area;
+                            tdArea.style.fontWeight = 'bold';
+                            trArea.appendChild(tdArea);
+                            // Add empty cells for Status and Grand Total columns
+                            statuses.forEach(() => {
+                                const tdEmpty = document.createElement('td');
+                                trArea.appendChild(tdEmpty);
+                            });
+                            const tdEmptyTotal = document.createElement('td');
+                            trArea.appendChild(tdEmptyTotal);
+                            pivotBody.appendChild(trArea);
+                            // Add row for training month
+                            if (areaMonthMap[area].has(selectedMonth)) {
+                                const pivotKey = `${area} - ${selectedMonth}`;
+                                const tr = document.createElement('tr');
+                                const tdKey = document.createElement('td');
+                                tdKey.textContent = selectedMonth;
+                                tr.appendChild(tdKey);
+                                let rowTotal = 0;
+                                statuses.forEach(status => {
+                                    const td = document.createElement('td');
+                                    const count = pivotData[pivotKey]?.[status] || 0;
+                                    td.textContent = count || '';
+                                    rowTotal += count;
+                                    grandTotalByStatus[status] += count;
+                                    areaTotals[area][status] += count;
+                                    tr.appendChild(td);
+                                });
+                                const tdRowTotal = document.createElement('td');
+                                tdRowTotal.textContent = rowTotal;
+                                tr.appendChild(tdRowTotal);
+                                pivotBody.appendChild(tr);
+                                areaTotal += rowTotal;
+                                overallGrandTotal += rowTotal;
+                            }
+                            // Add total row for each area
+                            const trAreaTotal = document.createElement('tr');
+                            const tdAreaTotalLabel = document.createElement('td');
+                            tdAreaTotalLabel.textContent = `${area} Total`;
+                            tdAreaTotalLabel.style.fontWeight = 'bold';
+                            tdAreaTotalLabel.className = 'area-total';
+                            trAreaTotal.appendChild(tdAreaTotalLabel);
+                            statuses.forEach(status => {
+                                const td = document.createElement('td');
+                                td.textContent = areaTotals[area][status] || '';
+                                trAreaTotal.appendChild(td);
+                            });
+                            const tdAreaTotal = document.createElement('td');
+                            tdAreaTotal.textContent = areaTotal;
+                            tdAreaTotal.style.fontWeight = 'bold';
+                            tdAreaTotal.className = 'area-total';
+                            trAreaTotal.appendChild(tdAreaTotal);
+                            pivotBody.appendChild(trAreaTotal);
+                        });
+                        // Add Grand Total row
+                        const trGrandTotal = document.createElement('tr');
+                        trGrandTotal.className = 'grand-total';
+                        const tdGrandTotalLabel = document.createElement('td');
+                        tdGrandTotalLabel.textContent = 'Grand Total';
+                        tdGrandTotalLabel.style.fontWeight = 'bold';
+                        trGrandTotal.appendChild(tdGrandTotalLabel);
+                        statuses.forEach(status => {
+                            const td = document.createElement('td');
+                            td.textContent = grandTotalByStatus[status];
+                            td.style.fontWeight = 'bold';
+                            trGrandTotal.appendChild(td);
+                        });
+                        const tdOverallGrandTotal = document.createElement('td');
+                        tdOverallGrandTotal.textContent = overallGrandTotal;
+                        tdOverallGrandTotal.style.fontWeight = 'bold';
+                        trGrandTotal.appendChild(tdOverallGrandTotal);
+                        pivotBody.appendChild(trGrandTotal);
+                    }
                 })
                 .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
         }
-
         // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
         function downloadTableAsExcel() {
             const table = document.getElementById('data-table');
             const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
             XLSX.writeFile(workbook, 'data-table.xlsx');
         }
-
         // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
         function getYearFromGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return null;
             const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
             return matches ? parseInt(matches[1], 10) : null;
         }
-
         // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
         function parseGoogleSheetDate(dateString) {
             if (!dateString || !dateString.startsWith("Date(")) return '';
@@ -363,11 +490,9 @@
             const day = parseInt(matches[3], 10);
             return `${day.toString().padStart(2, '0')}/${(month + 1).toString().padStart(2, '0')}/${year}`;
         }
-
         // เพิ่ม event listener ให้ปุ่ม
         document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
         document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
-
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
         fetchDataAndUpdateTable();
         // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
