@@ -134,7 +134,7 @@
         setInterval(updateCurrentDateTime, 1000);
 
         // URL for Google Sheets
-        const sheetUrl = "https://docs.google.com/spreadsheets/d/1hsaIWrQmhwGJkR5IlCvCKoR2RTyC3jWhRoyEXqWZQs8/gviz/tq?tqx=out:json&sheet=แดชบอร์ดอบรมช่างใหม่";
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLKGmFsdD4oMcVdnf_wyrwAD3-3R7Ys9hXCg2gwBsudfJIUliRymBnVYHapN7a3Yq08Lgxf9cYYV6Y/pub?gid=377151035&single=true&output=csv";
 
         let chart;
         let originalData;
@@ -145,25 +145,49 @@
         function fetchDataAndUpdateTable() {
             fetch(sheetUrl)
                 .then(response => response.text())
-                .then(data => {
-                    const jsonString = data.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\)/)[1];
-                    const jsonData = JSON.parse(jsonString);
-                    const rows = jsonData.table.rows;
+                .then(csvText => {
+                    // แปลง CSV เป็น JSON
+                    const rows = csvText.split('\n').map(row => {
+                        const values = row.split(',').map(value => {
+                            // ลบเครื่องหมายคำพูดและช่องว่าง
+                            return value.replace(/^"|"$/g, '').trim();
+                        });
+                        return {
+                            c: values.map(value => ({ v: value }))
+                        };
+                    });
 
-                    originalData = rows;
-                    // กรองข้อมูลเฉพาะปี 2025
-                    filteredData2025 = filterDataByYear(rows, 2025);
+                    // ลบแถวหัวตารางออก
+                    rows.shift();
+
+                    // กรองข้อมูลที่ไม่ว่างเปล่า
+                    const validRows = rows.filter(row => row.c[0]?.v && row.c[0].v !== '');
+
+                    originalData = validRows;
+                    filteredData2025 = filterDataByYear(validRows, 2025);
                     updateChartAndTables(filteredData2025);
                     updateLineChart(filteredData2025);
                 })
-                .catch(error => console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error));
+                .catch(error => {
+                    console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
+                    // แสดงข้อความแจ้งเตือนเมื่อเกิดข้อผิดพลาด
+                    const messageDiv = document.createElement('div');
+                    messageDiv.style.padding = '10px';
+                    messageDiv.style.margin = '10px 0';
+                    messageDiv.style.backgroundColor = '#f8d7da';
+                    messageDiv.style.border = '1px solid #f5c6cb';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = '#721c24';
+                    messageDiv.innerHTML = 'เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาลองใหม่อีกครั้ง';
+                    document.querySelector('.controls').insertAdjacentElement('afterend', messageDiv);
+                });
         }
         
         // ฟังก์ชันสำหรับกรองข้อมูลตามปี
         function filterDataByYear(data, year) {
             return data.filter(row => {
-                const yearAJ = getYearFromGoogleSheetDate(row.c[35]?.v); // Index 35 คือคอลัมน์ AJ
-                return yearAJ === year;
+                const yearValue = row.c[41]?.v; // คอลัมน์ปี
+                return yearValue === year.toString();
             });
         }
 
@@ -305,20 +329,39 @@
 
             rows.forEach(row => {
                 const tr = document.createElement('tr');
+                // สร้างแถวข้อมูลโดยใช้ index ที่ถูกต้อง
+                const rowData = {
+                    area: row.c[0]?.v || '', // พื้นที่ (คอลัมน์แรก)
+                    roundDate: row.c[1]?.v || '', // รอบวันที่
+                    trainingMonth: row.c[2]?.v || '', // เดือนอบรม
+                    week: row.c[39]?.v || '', // week
+                    name: row.c[3]?.v || '', // ชื่อ-นามสกุล
+                    company: row.c[6]?.v || '', // ชื่อ บจก./หจก/ร้าน
+                    agentCode: row.c[7]?.v || '', // รหัสตัวแทน
+                    province: row.c[8]?.v || '', // จังหวัด
+                    workStatus: row.c[13]?.v || '', // สถานะกองงาน
+                    registerResult: row.c[33]?.v || '', // ผลการขึ้นทะเบียน
+                    latestStatus: row.c[34]?.v || '', // Status ล่าสุด
+                    startDate: row.c[35]?.v || '', // วันเริ่มต้น
+                    endDate: row.c[36]?.v || '', // วันสิ้นสุด
+                    sla: row.c[37]?.v || '' // SLA
+                };
+
                 tr.innerHTML = `
-                    <td>${row.c[26]?.v || ''}</td>
-                    <td>${row.c[27]?.v || ''}</td>
-                    <td>${row.c[28]?.v || ''}</td>
-                    <td>${row.c[39]?.v || ''}</td>
-                    <td>${row.c[3]?.v || ''}</td>
-                    <td>${row.c[6]?.v || ''}</td>
-                    <td>${row.c[7]?.v || ''}</td>
-                    <td>${row.c[8]?.v || ''}</td>
-                    <td>${row.c[13]?.v || ''}</td>
-                    <td>${row.c[33]?.v || ''}</td>
-                    <td>${parseGoogleSheetDate(row.c[35]?.v)}</td>
-                    <td>${parseGoogleSheetDate(row.c[36]?.v)}</td>
-                    <td>${row.c[37]?.v || ''}</td>
+                    <td>${rowData.area}</td>
+                    <td>${rowData.roundDate}</td>
+                    <td>${rowData.trainingMonth}</td>
+                    <td>${rowData.week}</td>
+                    <td>${rowData.name}</td>
+                    <td>${rowData.company}</td>
+                    <td>${rowData.agentCode}</td>
+                    <td>${rowData.province}</td>
+                    <td>${rowData.workStatus}</td>
+                    <td>${rowData.registerResult}</td>
+                    <td>${rowData.latestStatus}</td>
+                    <td>${rowData.startDate}</td>
+                    <td>${rowData.endDate}</td>
+                    <td>${rowData.sla}</td>
                 `;
                 dataBody.appendChild(tr);
             });
