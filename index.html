@@ -147,30 +147,65 @@
                 .then(response => response.text())
                 .then(csvText => {
                     // แปลง CSV เป็น JSON
-                    const rows = csvText.split('\n').map(row => {
-                        const values = row.split(',').map(value => {
-                            // ลบเครื่องหมายคำพูดและช่องว่าง
-                            return value.replace(/^"|"$/g, '').trim();
-                        });
-                        return {
-                            c: values.map(value => ({ v: value }))
-                        };
-                    });
+                    const rows = [];
+                    const lines = csvText.split('\n');
+                    
+                    // ข้ามบรรทัดแรก (หัวตาราง)
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (line) {  // ตรวจสอบว่าไม่ใช่บรรทัดว่าง
+                            let currentChar = 0;
+                            let inQuotes = false;
+                            let currentValue = '';
+                            const values = [];
+                            
+                            // วนลูปทีละตัวอักษรเพื่อแยกค่าที่ถูกต้อง
+                            while (currentChar < line.length) {
+                                const char = line[currentChar];
+                                
+                                if (char === '"' && line[currentChar - 1] !== '\\') {
+                                    inQuotes = !inQuotes;
+                                } else if (char === ',' && !inQuotes) {
+                                    values.push(currentValue.replace(/^"|"$/g, '').trim());
+                                    currentValue = '';
+                                } else {
+                                    currentValue += char;
+                                }
+                                
+                                currentChar++;
+                            }
+                            
+                            // เพิ่มค่าสุดท้าย
+                            values.push(currentValue.replace(/^"|"$/g, '').trim());
+                            
+                            // สร้าง row object
+                            rows.push({
+                                c: values.map(value => ({ v: value }))
+                            });
+                        }
+                    }
 
-                    // ลบแถวหัวตารางออก
-                    rows.shift();
+                    console.log('จำนวนแถวทั้งหมด:', rows.length); // แสดงจำนวนแถวเพื่อตรวจสอบ
 
-                    // กรองข้อมูลที่ไม่ว่างเปล่า
-                    const validRows = rows.filter(row => row.c[0]?.v && row.c[0].v !== '');
-
-                    originalData = validRows;
-                    filteredData2025 = filterDataByYear(validRows, 2025);
+                    originalData = rows;
+                    filteredData2025 = filterDataByYear(rows, 2025);
+                    console.log('จำนวนแถวปี 2025:', filteredData2025.length); // แสดงจำนวนแถวที่กรองแล้ว
                     updateChartAndTables(filteredData2025);
                     updateLineChart(filteredData2025);
+
+                    // แสดงข้อความจำนวนข้อมูลที่โหลด
+                    const messageDiv = document.createElement('div');
+                    messageDiv.style.padding = '10px';
+                    messageDiv.style.margin = '10px 0';
+                    messageDiv.style.backgroundColor = '#d4edda';
+                    messageDiv.style.border = '1px solid #c3e6cb';
+                    messageDiv.style.borderRadius = '4px';
+                    messageDiv.style.color = '#155724';
+                    messageDiv.innerHTML = `โหลดข้อมูลสำเร็จ: ${rows.length} รายการ (ปี 2025: ${filteredData2025.length} รายการ)`;
+                    document.querySelector('.controls').insertAdjacentElement('afterend', messageDiv);
                 })
                 .catch(error => {
                     console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
-                    // แสดงข้อความแจ้งเตือนเมื่อเกิดข้อผิดพลาด
                     const messageDiv = document.createElement('div');
                     messageDiv.style.padding = '10px';
                     messageDiv.style.margin = '10px 0';
@@ -315,7 +350,7 @@
             dataBody.innerHTML = '';
             
             // Define column headers
-            const columnHeaders = ["พื้นที่", "รอบวันที่", "เดือนอบรม", "week", "ชื่อ-นามสกุล", "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", "รหัสตัวแทน", "จังหวัดที่ตั้งร้านตัวแทน", "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", "ผลการขึ้นทะเบียน", "Status ล่าสุด", "วันเริ่มต้น", "วันสิ้นสุด", "SLA"];
+            const columnHeaders = ["พื้นที่", "รอบวันที่", "เดือนอบรม", "week", "ชื่อ-นามสกุล", "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", "รหัสตัวแทน", "จังหวัดที่ตั้งร้านตัวแทน", "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", "ผลการขึ้นทะเบียน", "Status ล่าสุด", "วันเริ่มต้น", "วันสิ้นสุด", "SLA", "ปี"];
 
             // Add column headers to the table
             const dataHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
@@ -327,11 +362,14 @@
                 headerRow.appendChild(header);
             });
 
-            rows.forEach(row => {
+            // กรองเฉพาะข้อมูลปี 2025
+            const filtered2025Rows = rows.filter(row => row.c[41]?.v === '2025');
+
+            filtered2025Rows.forEach(row => {
                 const tr = document.createElement('tr');
                 // สร้างแถวข้อมูลโดยใช้ index ที่ถูกต้อง
                 const rowData = {
-                    area: row.c[0]?.v || '', // พื้นที่ (คอลัมน์แรก)
+                    area: row.c[26]?.v || '', // พื้นที่ (คอลัมน์ AA)
                     roundDate: row.c[1]?.v || '', // รอบวันที่
                     trainingMonth: row.c[2]?.v || '', // เดือนอบรม
                     week: row.c[39]?.v || '', // week
@@ -344,7 +382,8 @@
                     latestStatus: row.c[34]?.v || '', // Status ล่าสุด
                     startDate: row.c[35]?.v || '', // วันเริ่มต้น
                     endDate: row.c[36]?.v || '', // วันสิ้นสุด
-                    sla: row.c[37]?.v || '' // SLA
+                    sla: row.c[37]?.v || '', // SLA
+                    year: row.c[41]?.v || '' // ปี (คอลัมน์ AP)
                 };
 
                 tr.innerHTML = `
@@ -362,6 +401,7 @@
                     <td>${rowData.startDate}</td>
                     <td>${rowData.endDate}</td>
                     <td>${rowData.sla}</td>
+                    <td>${rowData.year}</td>
                 `;
                 dataBody.appendChild(tr);
             });
@@ -380,10 +420,11 @@
             thAreaMonth.textContent = 'จำนวนช่าง(คน)';
             pivotHeader.appendChild(thAreaMonth);
 
-            const statusValues = new Set(originalData.map(row => row.c[34]?.v).filter(Boolean));
-            const statuses = Array.from(statusValues).sort();
+            // ดึงค่า Status ที่มีอยู่ทั้งหมดและเรียงลำดับ
+            const statusValues = [...new Set(rows.map(row => row.c[34]?.v).filter(Boolean))].sort();
 
-            statuses.forEach(status => {
+            // เพิ่ม column headers สำหรับแต่ละ Status
+            statusValues.forEach(status => {
                 const th = document.createElement('th');
                 th.textContent = status;
                 pivotHeader.appendChild(th);
@@ -395,35 +436,43 @@
 
             const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
             let grandTotalByStatus = {};
-            statuses.forEach(status => grandTotalByStatus[status] = 0);
+            statusValues.forEach(status => grandTotalByStatus[status] = 0);
             let overallGrandTotal = 0;
 
-            const areaMonthMap = {};
-            originalData.forEach(row => {
-                const area = row.c[26]?.v || 'ไม่ระบุ';
-                const trainingMonth = row.c[28]?.v || 'ไม่ระบุ';
-                if (!areaMonthMap[area]) {
-                    areaMonthMap[area] = new Set();
+            // สร้าง map ของพื้นที่และเดือน
+            const areaMonthMap = new Map();
+            rows.forEach(row => {
+                const area = row.c[26]?.v;
+                if (area) {  // เช็คว่ามีพื้นที่
+                    if (!areaMonthMap.has(area)) {
+                        areaMonthMap.set(area, new Set());
+                    }
+                    const month = row.c[28]?.v;
+                    if (month) {  // เช็คว่ามีเดือน
+                        areaMonthMap.get(area).add(month);
+                    }
                 }
-                areaMonthMap[area].add(trainingMonth);
             });
 
-            const areaTotals = {};
-            Object.keys(areaMonthMap).forEach(area => {
-                areaTotals[area] = {};
-                statuses.forEach(status => {
-                    areaTotals[area][status] = 0;
+            // สร้าง map สำหรับเก็บผลรวมของแต่ละพื้นที่
+            const areaTotals = new Map();
+            for (const area of areaMonthMap.keys()) {
+                areaTotals.set(area, {});
+                statusValues.forEach(status => {
+                    areaTotals.get(area)[status] = 0;
                 });
-            });
+            }
 
-            Object.keys(areaMonthMap).sort().forEach(area => {
+            // แสดงข้อมูลตามพื้นที่
+            Array.from(areaMonthMap.keys()).sort().forEach(area => {
+                // สร้างแถวหัวพื้นที่
                 const trArea = document.createElement('tr');
                 const tdArea = document.createElement('td');
                 tdArea.textContent = area;
                 tdArea.style.fontWeight = 'bold';
                 trArea.appendChild(tdArea);
 
-                statuses.forEach(() => {
+                statusValues.forEach(() => {
                     const tdEmpty = document.createElement('td');
                     trArea.appendChild(tdEmpty);
                 });
@@ -432,72 +481,77 @@
                 pivotBody.appendChild(trArea);
 
                 let areaTotal = 0;
-                monthOrder.forEach(trainingMonth => {
-                    const pivotKey = `${area} - ${trainingMonth}`;
+                // แสดงข้อมูลรายเดือน
+                monthOrder.forEach(month => {
                     const tr = document.createElement('tr');
-                    const tdKey = document.createElement('td');
-                    tdKey.textContent = trainingMonth;
-                    tr.appendChild(tdKey);
+                    const tdMonth = document.createElement('td');
+                    tdMonth.textContent = month;
+                    tr.appendChild(tdMonth);
 
-                    let rowTotal = 0;
-                    statuses.forEach(status => {
-                        const count = rows.filter(row => row.c[26]?.v === area && row.c[28]?.v === trainingMonth && row.c[34]?.v === status).length;
+                    let monthTotal = 0;
+                    statusValues.forEach(status => {
+                        const count = rows.filter(row => 
+                            row.c[26]?.v === area && 
+                            row.c[28]?.v === month && 
+                            row.c[34]?.v === status
+                        ).length;
                         const td = document.createElement('td');
                         td.textContent = count || '';
                         tr.appendChild(td);
-                        rowTotal += count;
-                        grandTotalByStatus[status] = (grandTotalByStatus[status] || 0) + count;
-                        areaTotals[area][status] = (areaTotals[area][status] || 0) + count;
+                        monthTotal += count;
+                        grandTotalByStatus[status] += count;
+                        areaTotals.get(area)[status] += count;
                     });
 
-                    const tdRowTotal = document.createElement('td');
-                    tdRowTotal.textContent = rowTotal;
-                    tr.appendChild(tdRowTotal);
+                    const tdMonthTotal = document.createElement('td');
+                    tdMonthTotal.textContent = monthTotal || '';
+                    tr.appendChild(tdMonthTotal);
                     pivotBody.appendChild(tr);
-
-                    areaTotal += rowTotal;
-                    overallGrandTotal += rowTotal;
+                    areaTotal += monthTotal;
+                    overallGrandTotal += monthTotal;
                 });
 
+                // แสดงผลรวมของพื้นที่
                 const trAreaTotal = document.createElement('tr');
-                const tdAreaTotalLabel = document.createElement('td');
-                tdAreaTotalLabel.textContent = `${area} Total`;
-                tdAreaTotalLabel.style.fontWeight = 'bold';
-                tdAreaTotalLabel.className = 'area-total';
-                trAreaTotal.appendChild(tdAreaTotalLabel);
-
-                statuses.forEach(status => {
-                    const td = document.createElement('td');
-                    td.textContent = areaTotals[area][status] || '';
-                    trAreaTotal.appendChild(td);
-                });
-
                 const tdAreaTotal = document.createElement('td');
-                tdAreaTotal.textContent = areaTotal;
+                tdAreaTotal.textContent = `${area} Total`;
                 tdAreaTotal.style.fontWeight = 'bold';
                 tdAreaTotal.className = 'area-total';
                 trAreaTotal.appendChild(tdAreaTotal);
+
+                statusValues.forEach(status => {
+                    const td = document.createElement('td');
+                    td.textContent = areaTotals.get(area)[status] || '';
+                    trAreaTotal.appendChild(td);
+                });
+
+                const tdTotal = document.createElement('td');
+                tdTotal.textContent = areaTotal || '';
+                tdTotal.style.fontWeight = 'bold';
+                tdTotal.className = 'area-total';
+                trAreaTotal.appendChild(tdTotal);
                 pivotBody.appendChild(trAreaTotal);
             });
 
+            // แสดงผลรวมทั้งหมด
             const trGrandTotal = document.createElement('tr');
             trGrandTotal.className = 'grand-total';
-            const tdGrandTotalLabel = document.createElement('td');
-            tdGrandTotalLabel.textContent = 'Grand Total';
-            tdGrandTotalLabel.style.fontWeight = 'bold';
-            trGrandTotal.appendChild(tdGrandTotalLabel);
+            const tdGrandTotal = document.createElement('td');
+            tdGrandTotal.textContent = 'Grand Total';
+            tdGrandTotal.style.fontWeight = 'bold';
+            trGrandTotal.appendChild(tdGrandTotal);
 
-            statuses.forEach(status => {
+            statusValues.forEach(status => {
                 const td = document.createElement('td');
-                td.textContent = grandTotalByStatus[status] || 0;
+                td.textContent = grandTotalByStatus[status] || '';
                 td.style.fontWeight = 'bold';
                 trGrandTotal.appendChild(td);
             });
 
-            const tdOverallGrandTotal = document.createElement('td');
-            tdOverallGrandTotal.textContent = overallGrandTotal;
-            tdOverallGrandTotal.style.fontWeight = 'bold';
-            trGrandTotal.appendChild(tdOverallGrandTotal);
+            const tdOverallTotal = document.createElement('td');
+            tdOverallTotal.textContent = overallGrandTotal || '';
+            tdOverallTotal.style.fontWeight = 'bold';
+            trGrandTotal.appendChild(tdOverallTotal);
             pivotBody.appendChild(trGrandTotal);
         }
 
