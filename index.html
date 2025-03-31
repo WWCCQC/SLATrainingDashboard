@@ -20,13 +20,16 @@
             text-align: center;
         }
         th {
-            background-color: #f4f4f4;
-            cursor: pointer;
+            background-color: #003366;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
             position: relative;
-            padding-right: 25px;
+            cursor: pointer;
+            font-weight: bold;
         }
         th:hover {
-            background-color: #e0e0e0;
+            background-color: #004080;
         }
         th::after {
             content: '';
@@ -40,11 +43,11 @@
             border-right: 5px solid transparent;
         }
         th.sort-asc::after {
-            border-bottom: 5px solid #333;
+            border-bottom: 5px solid #fff;
             margin-top: -2.5px;
         }
         th.sort-desc::after {
-            border-top: 5px solid #333;
+            border-top: 5px solid #fff;
             margin-top: 2.5px;
         }
         /* ปรับแต่งไอคอน sort */
@@ -57,38 +60,48 @@
             height: 0;
             border-left: 5px solid transparent;
             border-right: 5px solid transparent;
-            opacity: 0.3;
+            opacity: 0.7;
         }
         th::before {
             top: 40%;
-            border-bottom: 5px solid #666;
+            border-bottom: 5px solid #fff;
         }
         th::after {
             top: 55%;
-            border-top: 5px solid #666;
+            border-top: 5px solid #fff;
         }
         /* ไอคอนเมื่อ active */
         th.sort-asc::before {
             opacity: 1;
-            border-bottom-color: #333;
+            border-bottom-color: #fff;
         }
         th.sort-desc::after {
             opacity: 1;
-            border-top-color: #333;
+            border-top-color: #fff;
         }
         /* เมื่อ hover ทำให้ไอคอนเด่นขึ้น */
         th:hover::before,
         th:hover::after {
-            opacity: 0.6;
+            opacity: 0.9;
         }
-        .pivot-table th, .pivot-table td {
-            background-color: #e6f3ff; /* สีพื้นหลังเหมือนในภาพ */
+        .pivot-table th {
+            background-color: #f4f4f4;
+            color: #333;
+            font-weight: normal;
         }
-        .pivot-table th:first-child, .pivot-table td:first-child {
-            background-color: #d9ead3; /* สีเขียวอ่อนสำหรับคอลัมน์แรก */
+        .pivot-table th:first-child {
+            background-color: #f4f4f4;
+            color: #333;
         }
         .grand-total th, .grand-total td {
-            background-color: #b7e1cd; /* สีเขียวเข้มสำหรับแถว Grand Total */
+            background-color: #b7e1cd;
+            color: #333;
+        }
+        .pivot-table th, .pivot-table td {
+            background-color: #e6f3ff;
+        }
+        .pivot-table th:first-child, .pivot-table td:first-child {
+            background-color: #d9ead3;
         }
         .area-total {
             color: #006400; /* สีเขียวเข้ม */
@@ -169,6 +182,49 @@
             color: #006400;
             font-size: 24px;
             font-weight: bold;
+        }
+        /* สไตล์สำหรับตารางหลัก */
+        #data-table th {
+            background-color: #003366;
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            position: relative;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #data-table th:hover {
+            background-color: #004080;
+        }
+        /* ไอคอน sort สำหรับตารางหลัก */
+        #data-table th::before,
+        #data-table th::after {
+            content: '';
+            position: absolute;
+            right: 8px;
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            opacity: 0.7;
+        }
+        #data-table th::before {
+            top: 40%;
+            border-bottom: 5px solid #fff;
+        }
+        #data-table th::after {
+            top: 55%;
+            border-top: 5px solid #fff;
+        }
+        #data-table th.sort-asc::before {
+            opacity: 1;
+        }
+        #data-table th.sort-desc::after {
+            opacity: 1;
+        }
+        #data-table th:hover::before,
+        #data-table th:hover::after {
+            opacity: 0.9;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -557,8 +613,8 @@
             window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => {
                 return {
                     area: row.c[26]?.v || '',
-                    roundDate: row.c[1]?.v || '',
-                    trainingMonth: row.c[2]?.v || '',
+                    roundDate: row.c[27]?.v || '',
+                    trainingMonth: row.c[28]?.v || '',
                     week: row.c[39]?.v || '',
                     name: row.c[3]?.v || '',
                     company: row.c[6]?.v || '',
@@ -657,6 +713,17 @@
 
             // Render sorted data
             renderTableData(sortedData);
+
+            // Update sort indicators
+            const headers = document.querySelectorAll('#data-table th');
+            headers.forEach(header => {
+                if (header.dataset.key === key) {
+                    header.classList.remove(isAsc ? 'sort-desc' : 'sort-asc');
+                    header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+                } else {
+                    header.classList.remove('sort-asc', 'sort-desc');
+                }
+            });
         }
 
         function updatePivotTable(rows) {
@@ -665,23 +732,38 @@
             pivotHeader.innerHTML = '';
             pivotBody.innerHTML = '';
 
+            // เก็บข้อมูลสำหรับการ sort
+            let pivotData = {
+                headers: [],
+                rows: []
+            };
+
             const thAreaMonth = document.createElement('th');
             thAreaMonth.textContent = 'จำนวนช่าง(คน)';
+            thAreaMonth.style.cursor = 'pointer';
+            thAreaMonth.onclick = () => sortPivotTable(0);
             pivotHeader.appendChild(thAreaMonth);
+            pivotData.headers.push('จำนวนช่าง(คน)');
 
             // ดึงค่า Status ที่มีอยู่ทั้งหมดและเรียงลำดับ
             const statusValues = [...new Set(rows.map(row => row.c[34]?.v).filter(Boolean))].sort();
 
             // เพิ่ม column headers สำหรับแต่ละ Status
-            statusValues.forEach(status => {
+            statusValues.forEach((status, index) => {
                 const th = document.createElement('th');
                 th.textContent = status;
+                th.style.cursor = 'pointer';
+                th.onclick = () => sortPivotTable(index + 1);
                 pivotHeader.appendChild(th);
+                pivotData.headers.push(status);
             });
 
             const thGrandTotal = document.createElement('th');
             thGrandTotal.textContent = 'Grand Total';
+            thGrandTotal.style.cursor = 'pointer';
+            thGrandTotal.onclick = () => sortPivotTable(statusValues.length + 1);
             pivotHeader.appendChild(thGrandTotal);
+            pivotData.headers.push('Grand Total');
 
             const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
             let grandTotalByStatus = {};
@@ -802,6 +884,44 @@
             tdOverallTotal.style.fontWeight = 'bold';
             trGrandTotal.appendChild(tdOverallTotal);
             pivotBody.appendChild(trGrandTotal);
+
+            // เพิ่มฟังก์ชัน sortPivotTable
+            function sortPivotTable(columnIndex) {
+                const tbody = document.getElementById('pivot-body');
+                const rows = Array.from(tbody.getElementsByTagName('tr'));
+                let sortOrder = tbody.dataset.sortOrder === 'asc' ? 'desc' : 'asc';
+                tbody.dataset.sortOrder = sortOrder;
+
+                const sortedRows = rows.sort((a, b) => {
+                    // ข้ามแถวที่เป็นหัวพื้นที่ (ไม่มีข้อมูลตัวเลข)
+                    if (a.cells.length === 1 || b.cells.length === 1) return 0;
+
+                    const aValue = a.cells[columnIndex].textContent;
+                    const bValue = b.cells[columnIndex].textContent;
+
+                    // แปลงค่าเป็นตัวเลขถ้าเป็นไปได้
+                    const aNum = parseFloat(aValue) || 0;
+                    const bNum = parseFloat(bValue) || 0;
+
+                    if (sortOrder === 'asc') {
+                        return aNum - bNum;
+                    } else {
+                        return bNum - aNum;
+                    }
+                });
+
+                // จัดเรียงแถวใหม่
+                sortedRows.forEach(row => tbody.appendChild(row));
+
+                // อัปเดตไอคอนการเรียงลำดับ
+                const headers = pivotHeader.getElementsByTagName('th');
+                headers.forEach((header, index) => {
+                    header.classList.remove('sort-asc', 'sort-desc');
+                    if (index === columnIndex) {
+                        header.classList.add(sortOrder === 'asc' ? 'sort-asc' : 'sort-desc');
+                    }
+                });
+            }
         }
 
         // Restore original data on outside click
