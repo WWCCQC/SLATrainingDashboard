@@ -114,7 +114,7 @@
         .controls {
             margin-bottom: 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             align-items: center;
         }
         .controls button {
@@ -226,6 +226,55 @@
         #data-table th:hover::after {
             opacity: 0.9;
         }
+        .table-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .table-header-container h2 {
+            margin: 0;
+        }
+        .table-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .search-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #003366;
+            box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.1);
+        }
+        .table-buttons button {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .table-buttons button:hover {
+            background-color: #f0f0f0;
+        }
+        .table-buttons button svg {
+            width: 16px;
+            height: 16px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -237,11 +286,25 @@
         <p id="current-date"></p>
     </div>
     <div class="controls">
-        <div>
-            <button id="refresh-button">รีเฟรชข้อมูล</button>
-            <button id="download-button">ดาวน์โหลด</button>
-        </div>
-        <div style="display: flex; gap: 20px;">
+        <div style="display: flex; gap: 20px; justify-content: flex-end;">
+            <div class="card">
+                <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14V16C8.69 16 6 18.69 6 22H4C4 17.58 7.58 14 12 14ZM12 13C9.33 13 7 10.67 7 8C7 5.33 9.33 3 12 3C14.67 3 17 5.33 17 8C17 10.67 14.67 13 12 13ZM12 5C10.44 5 9 6.44 9 8C9 9.56 10.44 11 12 11C13.56 11 15 9.56 15 8C15 6.44 13.56 5 12 5Z"/>
+                </svg>
+                <div class="card-content">
+                    <div class="card-title">จำนวนช่างลงทะเบียนอบรม</div>
+                    <div class="card-value" id="total-technician-count">-</div>
+                </div>
+            </div>
+            <div class="card">
+                <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+                <div class="card-content">
+                    <div class="card-title">จำนวนช่างใหม่ที่ขึ้นทะเบียน</div>
+                    <div class="card-value" id="new-technician-count">-</div>
+                </div>
+            </div>
             <div class="card">
                 <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 14V16C8.69 16 6 18.69 6 22H4C4 17.58 7.58 14 12 14ZM12 13C9.33 13 7 10.67 7 8C7 5.33 9.33 3 12 3C14.67 3 17 5.33 17 8C17 10.67 14.67 13 12 13ZM12 5C10.44 5 9 6.44 9 8C9 9.56 10.44 11 12 11C13.56 11 15 9.56 15 8C15 6.44 13.56 5 12 5ZM20.75 16C21.44 16 22 16.56 22 17.25C22 17.94 21.44 18.5 20.75 18.5H19.5V19.75C19.5 20.44 18.94 21 18.25 21C17.56 21 17 20.44 17 19.75V18.5H15.75C15.06 18.5 14.5 17.94 14.5 17.25C14.5 16.56 15.06 16 15.75 16H17V14.75C17 14.06 17.56 13.5 18.25 13.5C18.94 13.5 19.5 14.06 19.5 14.75V16H20.75Z"/>
@@ -251,21 +314,12 @@
                     <div class="card-value" id="sla-value">-</div>
                 </div>
             </div>
-            <div class="card">
-                <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                </svg>
-                <div class="card-content">
-                    <div class="card-title">จำนวนช่างใหม่</div>
-                    <div class="card-value" id="new-technician-count">-</div>
-                </div>
-            </div>
         </div>
     </div>
 
     <div id="chart-container">
         <div class="chart-wrapper">
-            <div id="chart-label">Status การขึ้นทะเบียนช่างใหม่ประจำเดือน</div>
+            <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
         <div class="chart-wrapper">
@@ -281,6 +335,35 @@
         <tbody id="pivot-body"></tbody>
     </table>
 
+    <div class="table-header-container">
+        <h2>รายละเอียดข้อมูลช่างลงทะเบียนอบรมช่างใหม่</h2>
+        <div class="table-buttons">
+            <form class="search-container" onsubmit="event.preventDefault(); searchTableData();">
+                <input type="text" id="search-input" class="search-input" placeholder="พิมพ์คำค้นหา...">
+                <button type="button" id="search-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    ค้นหา
+                </button>
+            </form>
+            <button id="refresh-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                </svg>
+                รีเฟรชข้อมูล
+            </button>
+            <button id="download-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                ดาวน์โหลด
+            </button>
+        </div>
+    </div>
     <table id="data-table">
         <thead>
             <tr></tr>
@@ -507,13 +590,18 @@
 
             updateTables(filteredRows);
 
+            // อัปเดตจำนวนช่างทั้งหมด
+            const totalTechnicianCount = countTotalTechnicians(rows);
+            document.getElementById('total-technician-count').textContent = totalTechnicianCount + ' คน';
+
+            // อัปเดตจำนวนช่างใหม่พร้อมเปอร์เซ็นต์
+            const newTechnicianCount = countNewTechnicians(rows);
+            const percentage = ((newTechnicianCount / totalTechnicianCount) * 100).toFixed(2);
+            document.getElementById('new-technician-count').textContent = `${newTechnicianCount} คน (${percentage}%)`;
+
             // อัปเดตค่า SLA
             const averageSLA = calculateAverageSLA(rows);
             document.getElementById('sla-value').textContent = averageSLA + ' วัน';
-
-            // อัปเดตจำนวนช่างใหม่
-            const newTechnicianCount = countNewTechnicians(rows);
-            document.getElementById('new-technician-count').textContent = newTechnicianCount + ' คน';
         }
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
@@ -988,15 +1076,69 @@
             return count;
         }
 
+        // Function to search table data
+        function searchTableData() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                renderTableData(window.tableData);
+                return;
+            }
+
+            const filteredData = window.tableData.filter(row => {
+                return Object.values(row).some(value => {
+                    if (value === null || value === undefined) return false;
+                    return value.toString().toLowerCase().includes(searchTerm);
+                });
+            });
+
+            renderTableData(filteredData);
+        }
+
         // เพิ่ม event listener ให้ปุ่ม
-        document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
-        document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+        document.addEventListener('DOMContentLoaded', function() {
+            // ลบ event listeners เดิมที่อาจมีอยู่
+            const searchButton = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.querySelector('.search-container');
+
+            // ลบ event listener เดิมและเพิ่มใหม่
+            searchButton.replaceWith(searchButton.cloneNode(true));
+            const newSearchButton = document.getElementById('search-button');
+            
+            // เพิ่ม event listener ใหม่
+            newSearchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchTableData();
+            });
+
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                searchTableData();
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchTableData();
+                }
+            });
+
+            document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
+            document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+        });
 
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
         fetchDataAndUpdateTable();
 
         // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
         updateCurrentDateTime();
+
+        // ฟังก์ชันนับจำนวนช่างทั้งหมด
+        function countTotalTechnicians(rows) {
+            return rows.length;
+        }
     </script>
 </body>
 </html>
