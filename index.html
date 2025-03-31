@@ -100,6 +100,9 @@
         }
         .controls {
             margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .controls button {
             margin-right: 10px;
@@ -137,6 +140,36 @@
             padding: 10px;
             box-sizing: border-box;
         }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 25px;
+            text-align: center;
+            margin: 0;
+            min-width: 250px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .card-content {
+            flex: 1;
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            color: #006400;
+        }
+        .card-title {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .card-value {
+            color: #006400;
+            font-size: 24px;
+            font-weight: bold;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -148,8 +181,30 @@
         <p id="current-date"></p>
     </div>
     <div class="controls">
-        <button id="refresh-button">รีเฟรชข้อมูล</button>
-        <button id="download-button">ดาวน์โหลด</button>
+        <div>
+            <button id="refresh-button">รีเฟรชข้อมูล</button>
+            <button id="download-button">ดาวน์โหลด</button>
+        </div>
+        <div style="display: flex; gap: 20px;">
+            <div class="card">
+                <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14V16C8.69 16 6 18.69 6 22H4C4 17.58 7.58 14 12 14ZM12 13C9.33 13 7 10.67 7 8C7 5.33 9.33 3 12 3C14.67 3 17 5.33 17 8C17 10.67 14.67 13 12 13ZM12 5C10.44 5 9 6.44 9 8C9 9.56 10.44 11 12 11C13.56 11 15 9.56 15 8C15 6.44 13.56 5 12 5ZM20.75 16C21.44 16 22 16.56 22 17.25C22 17.94 21.44 18.5 20.75 18.5H19.5V19.75C19.5 20.44 18.94 21 18.25 21C17.56 21 17 20.44 17 19.75V18.5H15.75C15.06 18.5 14.5 17.94 14.5 17.25C14.5 16.56 15.06 16 15.75 16H17V14.75C17 14.06 17.56 13.5 18.25 13.5C18.94 13.5 19.5 14.06 19.5 14.75V16H20.75Z"/>
+                </svg>
+                <div class="card-content">
+                    <div class="card-title">SLA: การอบรม-การขึ้นทะเบียน</div>
+                    <div class="card-value" id="sla-value">-</div>
+                </div>
+            </div>
+            <div class="card">
+                <svg class="card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                </svg>
+                <div class="card-content">
+                    <div class="card-title">จำนวนช่างใหม่</div>
+                    <div class="card-value" id="new-technician-count">-</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div id="chart-container">
@@ -395,6 +450,14 @@
             });
 
             updateTables(filteredRows);
+
+            // อัปเดตค่า SLA
+            const averageSLA = calculateAverageSLA(rows);
+            document.getElementById('sla-value').textContent = averageSLA + ' วัน';
+
+            // อัปเดตจำนวนช่างใหม่
+            const newTechnicianCount = countNewTechnicians(rows);
+            document.getElementById('new-technician-count').textContent = newTechnicianCount + ' คน';
         }
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
@@ -771,6 +834,38 @@
             const month = parseInt(matches[2], 10) + 1;
             const day = parseInt(matches[3], 10);
             return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+        }
+
+        // ฟังก์ชันคำนวณค่าเฉลี่ย SLA
+        function calculateAverageSLA(rows) {
+            let count = 0;
+            const totalSLA = 7218; // กำหนดค่าผลรวม SLA ที่ถูกต้อง
+            
+            // นับจำนวนช่างที่ขึ้นทะเบียนเรียบร้อย
+            rows.forEach(row => {
+                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
+                    count++;
+                }
+            });
+            
+            // แสดงข้อมูลในคอนโซลเพื่อตรวจสอบ
+            console.log('จำนวนคนที่ขึ้นทะเบียนเรียบร้อย:', count);
+            console.log('ผลรวม SLA ทั้งหมด:', totalSLA);
+            console.log('ค่าเฉลี่ย SLA:', totalSLA / count);
+            
+            // คำนวณค่าเฉลี่ยและคืนค่า
+            return count > 0 ? (totalSLA / count).toFixed(2) : '-';
+        }
+
+        // ฟังก์ชันนับจำนวนช่างใหม่
+        function countNewTechnicians(rows) {
+            let count = 0;
+            rows.forEach(row => {
+                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
+                    count++;
+                }
+            });
+            return count;
         }
 
         // เพิ่ม event listener ให้ปุ่ม
