@@ -149,9 +149,13 @@
             font-weight: bold;
         }
         .chart-wrapper {
-            width: 50%; /* ปรับขนาดให้เหมาะสม */
+            width: 48%; /* ปรับขนาดให้กว้างขึ้น */
             padding: 10px;
             box-sizing: border-box;
+        }
+        canvas#myChart, canvas#lineChart {
+            height: 500px !important; /* เพิ่มความสูงของกราฟ */
+            max-height: 500px !important;
         }
         .card {
             background-color: #fff;
@@ -469,9 +473,9 @@
 
         // ฟังก์ชันเพื่ออัปเดตกราฟและตาราง
         function updateChartAndTables(rows, selectedMonth = null, selectedStatus = null) {
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
-            const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ"];
-            const colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f'];
+            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
+            const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ", "อยู่ระหว่างอบรมทฤษฎี", "ไม่ผ่านอบรม"];
+            const colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f', '#00b300', '#ff0066'];
 
             // Filter data based on selected month and status
             let filteredRows = rows;
@@ -512,9 +516,12 @@
                             color: 'white',
                             anchor: 'center',
                             align: 'center',
-                            formatter: Math.round,
+                            formatter: function(value) {
+                                return value === 0 ? '' : Math.round(value);
+                            },
                             font: {
-                                weight: 'bold'
+                                weight: 'bold',
+                                size: 14 /* เพิ่มขนาดตัวอักษรในกราฟ */
                             }
                         },
                         tooltip: {
@@ -606,7 +613,7 @@
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
         function updateLineChart(rows) {
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
+            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
             const lineChartCanvas = document.getElementById('lineChart').getContext('2d');
 
             const lineChartData = {
@@ -635,9 +642,12 @@
                         datalabels: {
                             anchor: 'end',
                             align: 'top',
-                            formatter: Math.round,
+                            formatter: function(value) {
+                                return value === 0 ? '' : Math.round(value);
+                            },
                             font: {
-                                weight: 'bold'
+                                weight: 'bold',
+                                size: 14 /* เพิ่มขนาดตัวอักษรในกราฟ */
                             }
                         }
                     },
@@ -853,7 +863,7 @@
             pivotHeader.appendChild(thGrandTotal);
             pivotData.headers.push('Grand Total');
 
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25'];
+            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
             let grandTotalByStatus = {};
             statusValues.forEach(status => grandTotalByStatus[status] = 0);
 
