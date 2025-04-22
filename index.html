@@ -547,7 +547,7 @@
                         y: {
                             stacked: true,
                             beginAtZero: true,
-                            grace: '15%',
+                            max: 100, // กำหนดค่าสูงสุดของแกน Y ที่ 100
                             ticks: {
                                 stepSize: 10
                             },
@@ -653,7 +653,11 @@
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            max: 100, // กำหนดค่าสูงสุดของแกน Y ที่ 100
+                            ticks: {
+                                stepSize: 10
+                            }
                         }
                     }
                 },
@@ -830,6 +834,18 @@
             pivotHeader.innerHTML = '';
             pivotBody.innerHTML = '';
 
+            // กำหนดลำดับพื้นที่ที่ต้องการแสดง
+            const areaOrder = [
+                'RSM1_BMA-West',
+                'RSM2_BMA-East',
+                'RSM3_UPC-East',
+                'RSM4_UPC-NOR',
+                'RSM5_UPC-NOE1',
+                'RSM6_UPC-NOE2',
+                'RSM7_UPC-CEW',
+                'RSM8_UPC-SOU'
+            ];
+
             // เก็บข้อมูลสำหรับการ sort
             let pivotData = {
                 headers: [],
@@ -900,11 +916,16 @@
             let overallGrandTotal = 0;
 
             // แสดงข้อมูลตามพื้นที่
-            for (const [area, areaInfo] of areaData) {
+            // ใช้ลำดับจาก areaOrder แทนที่จะวนลูปผ่าน areaData
+            areaOrder.forEach(orderedArea => {
+                if (!areaData.has(orderedArea)) return; // ข้ามถ้าไม่มีข้อมูลสำหรับพื้นที่นี้
+                
+                const areaInfo = areaData.get(orderedArea);
+                
                 // สร้างแถวหัวพื้นที่
                 const trArea = document.createElement('tr');
                 const tdArea = document.createElement('td');
-                tdArea.textContent = area;
+                tdArea.textContent = orderedArea;
                 tdArea.style.fontWeight = 'bold';
                 trArea.appendChild(tdArea);
 
@@ -926,14 +947,14 @@
                     statusValues.forEach(status => {
                         const count = areaInfo.monthData[month][status] || 0;
                         const td = document.createElement('td');
-                        td.textContent = count || '';
+                        td.textContent = count > 0 ? count : ''; // แสดงเฉพาะค่าที่มากกว่า 0
                         tr.appendChild(td);
                         monthTotal += count;
                         grandTotalByStatus[status] += count;
                     });
 
                     const tdMonthTotal = document.createElement('td');
-                    tdMonthTotal.textContent = monthTotal || '';
+                    tdMonthTotal.textContent = monthTotal > 0 ? monthTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
                     tr.appendChild(tdMonthTotal);
                     pivotBody.appendChild(tr);
                     overallGrandTotal += monthTotal;
@@ -942,25 +963,26 @@
                 // แสดงผลรวมของพื้นที่
                 const trAreaTotal = document.createElement('tr');
                 const tdAreaTotal = document.createElement('td');
-                tdAreaTotal.textContent = `${area} Total`;
+                tdAreaTotal.textContent = `${orderedArea} Total`;
                 tdAreaTotal.style.fontWeight = 'bold';
                 tdAreaTotal.className = 'area-total';
                 trAreaTotal.appendChild(tdAreaTotal);
 
                 statusValues.forEach(status => {
                     const td = document.createElement('td');
-                    td.textContent = areaInfo.statusTotals[status] || '';
+                    const statusTotal = areaInfo.statusTotals[status] || 0;
+                    td.textContent = statusTotal > 0 ? statusTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
                     td.style.fontWeight = 'bold';
                     trAreaTotal.appendChild(td);
                 });
 
                 const tdTotal = document.createElement('td');
-                tdTotal.textContent = areaInfo.total || '';
+                tdTotal.textContent = areaInfo.total > 0 ? areaInfo.total : ''; // แสดงเฉพาะค่าที่มากกว่า 0
                 tdTotal.style.fontWeight = 'bold';
                 tdTotal.className = 'area-total';
                 trAreaTotal.appendChild(tdTotal);
                 pivotBody.appendChild(trAreaTotal);
-            }
+            });
 
             // แสดงผลรวมทั้งหมด
             const trGrandTotal = document.createElement('tr');
@@ -972,13 +994,14 @@
 
             statusValues.forEach(status => {
                 const td = document.createElement('td');
-                td.textContent = grandTotalByStatus[status] || '';
+                const statusTotal = grandTotalByStatus[status] || 0;
+                td.textContent = statusTotal > 0 ? statusTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
                 td.style.fontWeight = 'bold';
                 trGrandTotal.appendChild(td);
             });
 
             const tdOverallTotal = document.createElement('td');
-            tdOverallTotal.textContent = overallGrandTotal || '';
+            tdOverallTotal.textContent = overallGrandTotal > 0 ? overallGrandTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
             tdOverallTotal.style.fontWeight = 'bold';
             trGrandTotal.appendChild(tdOverallTotal);
             pivotBody.appendChild(trGrandTotal);
