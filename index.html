@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แดชบอร์ด</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,12 +14,20 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
         }
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: center;
-            user-select: text; /* เพิ่มคุณสมบัตินี้เพื่อให้สามารถเลือกข้อความได้ */
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
         }
         th {
             background-color: #003366;
@@ -124,22 +133,58 @@
             font-size: 14px;
             cursor: pointer;
         }
-        .pivot-table {
-            margin-bottom: 5px; /* ลดช่องว่างระหว่างตารางสรุปกับตารางหลัก */
-        }
-        .header-container {
-            background-color: #003366; /* สีน้ำเงินเข้ม */
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 25px;
+            text-align: center;
+            margin: 0;
+            min-width: 250px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            color: white;
+            gap: 15px;
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            color: #006400;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .card-content {
+            flex-grow: 1;
+        }
+        .card-title {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        .card-value {
+            color: #006400;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: left;
         }
         #chart-container {
+            margin-left: 320px;
             position: relative;
-            display: flex; /* จัดวางกราฟให้อยู่ข้างกัน */
+            display: flex;
+            gap: 20px;
+        }
+        .chart-wrapper {
+            flex: 1;
+            min-width: 0;
+            position: relative;
+        }
+        .total-display {
+            position: absolute;
+            top: -30px;
+            right: 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #006400;
         }
         #chart-label {
             position: absolute;
@@ -148,11 +193,6 @@
             transform: translateX(-50%);
             font-size: 16px;
             font-weight: bold;
-        }
-        .chart-wrapper {
-            width: 48%; /* ปรับขนาดให้กว้างขึ้น */
-            padding: 10px;
-            box-sizing: border-box;
         }
         canvas#myChart, canvas#lineChart {
             height: 500px !important; /* เพิ่มความสูงของกราฟ */
@@ -189,6 +229,34 @@
             font-weight: bold;
         }
         /* สไตล์สำหรับตารางหลัก */
+        #data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+        }
+        #data-table th, #data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
+            background-color: white;
+            position: relative;
+        }
+        #data-table tbody tr td {
+            -webkit-user-select: text !important;
+            -moz-user-select: text !important;
+            -ms-user-select: text !important;
+            user-select: text !important;
+            cursor: text;
+        }
         #data-table th {
             background-color: #003366;
             color: white;
@@ -280,6 +348,64 @@
             width: 16px;
             height: 16px;
         }
+        .legend-container {
+            position: absolute;
+            left: -200px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 180px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        .legend-item:hover {
+            background-color: #f5f5f5;
+        }
+        .legend-item.hidden .legend-color {
+            opacity: 0.5;
+        }
+        .legend-item.hidden span {
+            color: #999;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .header-container {
+            background-color: #003366;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            width: 100%;
+        }
+        h1 {
+            color: white;
+            margin: 0;
+            font-size: 24px;
+        }
+        #current-date {
+            color: white;
+            font-size: 16px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -324,6 +450,40 @@
 
     <div id="chart-container">
         <div class="chart-wrapper">
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #006400;"></div>
+                    <span>ขึ้นทะเบียนเรียบร้อย</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF6B00;"></div>
+                    <span>ช่างลาออก</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF1493;"></div>
+                    <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4169E1;"></div>
+                    <span>ติดประวัติอาชญากรรม</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90EE90;"></div>
+                    <span>อยู่ระหว่างอบรมปฏิบัติ</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #008080;"></div>
+                    <span>เอกสารยังไม่ครบ</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #006400;"></div>
+                    <span>อยู่ระหว่างอบรมทฤษฎี</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF69B4;"></div>
+                    <span>ไม่ผ่านอบรม</span>
+                </div>
+            </div>
             <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
@@ -371,7 +531,23 @@
     </div>
     <table id="data-table">
         <thead>
-            <tr></tr>
+            <tr>
+                <th>พื้นที่</th>
+                <th>รอบวันที่</th>
+                <th>เดือนอบรม</th>
+                <th>week</th>
+                <th>ชื่อ-นามสกุล</th>
+                <th>ชื่อ บจก./หจก/ร้าน (ตัวแทน)</th>
+                <th>รหัสตัวแทน</th>
+                <th>จังหวัดที่ตั้งร้านตัวแทน</th>
+                <th>สถานะกองงาน (หัวหน้าหรือลูกน้อง)</th>
+                <th>ผลการขึ้นทะเบียน</th>
+                <th>Status ล่าสุด</th>
+                <th>วันเริ่มต้น</th>
+                <th>วันสิ้นสุด</th>
+                <th>SLA</th>
+                <th>ปี</th>
+            </tr>
         </thead>
         <tbody id="data-body"></tbody>
     </table>
@@ -403,50 +579,9 @@
             fetch(sheetUrl)
                 .then(response => response.text())
                 .then(csvText => {
-                    // แปลง CSV เป็น JSON
-                    const rows = [];
-                    const lines = csvText.split('\n');
-                    
-                    // ข้ามบรรทัดแรก (หัวตาราง)
-                    for (let i = 1; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (line) {  // ตรวจสอบว่าไม่ใช่บรรทัดว่าง
-                            let currentChar = 0;
-                            let inQuotes = false;
-                            let currentValue = '';
-                            const values = [];
-                            
-                            // วนลูปทีละตัวอักษรเพื่อแยกค่าที่ถูกต้อง
-                            while (currentChar < line.length) {
-                                const char = line[currentChar];
-                                
-                                if (char === '"' && line[currentChar - 1] !== '\\') {
-                                    inQuotes = !inQuotes;
-                                } else if (char === ',' && !inQuotes) {
-                                    values.push(currentValue.replace(/^"|"$/g, '').trim());
-                                    currentValue = '';
-                                } else {
-                                    currentValue += char;
-                                }
-                                
-                                currentChar++;
-                            }
-                            
-                            // เพิ่มค่าสุดท้าย
-                            values.push(currentValue.replace(/^"|"$/g, '').trim());
-                            
-                            // สร้าง row object
-                            rows.push({
-                                c: values.map(value => ({ v: value }))
-                            });
-                        }
-                    }
-
-                    console.log('จำนวนแถวทั้งหมด:', rows.length); // แสดงจำนวนแถวเพื่อตรวจสอบ
-
+                    const rows = parseCsvData(csvText);
                     originalData = rows;
                     filteredData2025 = filterDataByYear(rows, 2025);
-                    console.log('จำนวนแถวปี 2025:', filteredData2025.length); // แสดงจำนวนแถวที่กรองแล้ว
                     updateChartAndTables(filteredData2025);
                     updateLineChart(filteredData2025);
                 })
@@ -463,11 +598,49 @@
                     document.querySelector('.controls').insertAdjacentElement('afterend', messageDiv);
                 });
         }
-        
+
+        // ฟังก์ชันแยกข้อมูล CSV
+        function parseCsvData(csvText) {
+            const rows = [];
+            const lines = csvText.split('\n');
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line) {
+                    let currentChar = 0;
+                    let inQuotes = false;
+                    let currentValue = '';
+                    const values = [];
+                    
+                    while (currentChar < line.length) {
+                        const char = line[currentChar];
+                        
+                        if (char === '"' && line[currentChar - 1] !== '\\') {
+                            inQuotes = !inQuotes;
+                        } else if (char === ',' && !inQuotes) {
+                            values.push(currentValue.replace(/^"|"$/g, '').trim());
+                            currentValue = '';
+                        } else {
+                            currentValue += char;
+                        }
+                        
+                        currentChar++;
+                    }
+                    
+                    values.push(currentValue.replace(/^"|"$/g, '').trim());
+                    rows.push({
+                        c: values.map(value => ({ v: value }))
+                    });
+                }
+            }
+            
+            return rows;
+        }
+
         // ฟังก์ชันสำหรับกรองข้อมูลตามปี
         function filterDataByYear(data, year) {
             return data.filter(row => {
-                const yearValue = row.c[41]?.v; // คอลัมน์ปี
+                const yearValue = row.c[41]?.v;
                 return yearValue === year.toString();
             });
         }
@@ -476,9 +649,8 @@
         function updateChartAndTables(rows, selectedMonth = null, selectedStatus = null) {
             const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
             const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ", "อยู่ระหว่างอบรมทฤษฎี", "ไม่ผ่านอบรม"];
-            const colors = ['#4dc9f6', '#f67019', '#f53794', '#537bc4', '#acc236', '#166a8f', '#00b300', '#ff0066'];
+            const colors = ['#006400', '#FF6B00', '#FF1493', '#4169E1', '#90EE90', '#008080', '#006400', '#FF69B4'];
 
-            // Filter data based on selected month and status
             let filteredRows = rows;
             if (selectedMonth) {
                 filteredRows = filteredRows.filter(row => row.c[28]?.v === selectedMonth);
@@ -494,7 +666,8 @@
                     data: monthOrder.map(month => {
                         return filteredRows.filter(row => row.c[28]?.v === month && row.c[34]?.v === status).length;
                     }),
-                    backgroundColor: status === "ขึ้นทะเบียนเรียบร้อย" ? '#006400' : colors[index]
+                    backgroundColor: colors[index],
+                    hidden: document.querySelector(`.legend-item:nth-child(${index + 1})`).classList.contains('hidden')
                 }))
             };
 
@@ -513,16 +686,19 @@
                         }
                     },
                     plugins: {
+                        legend: {
+                            display: false
+                        },
                         datalabels: {
                             color: 'white',
                             anchor: 'center',
                             align: 'center',
                             formatter: function(value) {
-                                return value === 0 ? '' : Math.round(value);
+                                return value > 0 ? value : '';
                             },
                             font: {
                                 weight: 'bold',
-                                size: 14 /* เพิ่มขนาดตัวอักษรในกราฟ */
+                                size: 14
                             }
                         },
                         tooltip: {
@@ -548,7 +724,7 @@
                         y: {
                             stacked: true,
                             beginAtZero: true,
-                            max: 100, // กำหนดค่าสูงสุดของแกน Y ที่ 100
+                            max: 100,
                             ticks: {
                                 stepSize: 10
                             },
@@ -569,46 +745,57 @@
                         }
                     }
                 },
-                plugins: [ChartDataLabels]
+                plugins: [ChartDataLabels, {
+                    // Plugin สำหรับแสดงยอดรวมบนแท่ง เฉพาะเมื่อไม่มี legend ไหนถูกเลือก
+                    afterDatasetsDraw: function(chart) {
+                        if (window.selectedLegendItems && window.selectedLegendItems.size > 0) return;
+                        const ctx = chart.ctx;
+                        const datasets = chart.data.datasets;
+                        const labels = chart.data.labels;
+                        labels.forEach((label, i) => {
+                            let sum = 0;
+                            datasets.forEach(ds => {
+                                if (!ds.hidden) sum += ds.data[i] || 0;
+                            });
+                            // หาตำแหน่ง y สูงสุดของแท่ง
+                            let meta = null;
+                            for (let d = datasets.length - 1; d >= 0; d--) {
+                                if (!datasets[d].hidden && datasets[d].data[i] > 0) {
+                                    meta = chart.getDatasetMeta(d);
+                                    break;
+                                }
+                            }
+                            if (meta && meta.data[i]) {
+                                const x = meta.data[i].x;
+                                const y = meta.data[i].y - 10;
+                                ctx.save();
+                                ctx.font = 'bold 16px Arial';
+                                ctx.fillStyle = '#000';
+                                ctx.textAlign = 'center';
+                                ctx.fillText(sum, x, y);
+                                ctx.restore();
+                            }
+                        });
+                    }
+                }]
             });
 
-            // แสดงผลรวมด้านบนกราฟ
-            const ctx = chartCanvas;
-            const datasets = chart.data.datasets;
-            const labels = chart.data.labels;
-            
-            labels.forEach((label, index) => {
-                let total = 0;
-                datasets.forEach(dataset => {
-                    total += dataset.data[index];
-                });
-                
-                ctx.save();
-                ctx.fillStyle = '#000';
-                ctx.font = 'bold 16px Arial';
-                ctx.textAlign = 'center';
-                
-                const meta = chart.getDatasetMeta(0);
-                const x = meta.data[index].x;
-                const y = chart.scales.y.getPixelForValue(chart.scales.y.max) - 20;
-                
-                ctx.fillText('รวม: ' + total, x, y);
-                ctx.restore();
-            });
-
+            // อัพเดทตาราง
             updateTables(filteredRows);
+            updatePivotTable(filteredRows);
 
-            // อัปเดตจำนวนช่างทั้งหมด
-            const totalTechnicianCount = countTotalTechnicians(rows);
+            // เรียกใช้ฟังก์ชันจัดการ Legend
+            initializeLegendHandlers();
+
+            // อัพเดทการ์ดข้อมูล
+            const totalTechnicianCount = countTotalTechnicians(filteredData2025);
             document.getElementById('total-technician-count').textContent = totalTechnicianCount + ' คน';
 
-            // อัปเดตจำนวนช่างใหม่พร้อมเปอร์เซ็นต์
-            const newTechnicianCount = countNewTechnicians(rows);
+            const newTechnicianCount = countNewTechnicians(filteredData2025);
             const percentage = ((newTechnicianCount / totalTechnicianCount) * 100).toFixed(2);
             document.getElementById('new-technician-count').textContent = `${newTechnicianCount} คน (${percentage}%)`;
 
-            // อัปเดตค่า SLA
-            const averageSLA = calculateAverageSLA(rows);
+            const averageSLA = calculateAverageSLA(filteredData2025);
             document.getElementById('sla-value').textContent = averageSLA + ' วัน';
         }
 
@@ -624,7 +811,7 @@
                     data: monthOrder.map(month => {
                         return rows.filter(row => row.c[28]?.v === month && row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length;
                     }),
-                    backgroundColor: '#006400', // สีเขียวเข้ม
+                    backgroundColor: '#006400',
                     borderColor: '#006400',
                     fill: true
                 }]
@@ -635,7 +822,7 @@
             }
 
             lineChart = new Chart(lineChartCanvas, {
-                type: 'bar', // เปลี่ยนเป็นกราฟแท่ง
+                type: 'bar',
                 data: lineChartData,
                 options: {
                     responsive: true,
@@ -648,14 +835,14 @@
                             },
                             font: {
                                 weight: 'bold',
-                                size: 14 /* เพิ่มขนาดตัวอักษรในกราฟ */
+                                size: 14
                             }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            max: 100, // กำหนดค่าสูงสุดของแกน Y ที่ 100
+                            max: 100,
                             ticks: {
                                 stepSize: 10
                             }
@@ -666,15 +853,184 @@
             });
         }
 
-        // ฟังก์ชันเพื่ออัปเดตตาราง
+        // ฟังก์ชันสำหรับการจัดการตารางข้อมูล
+        function initializeDataTable(rows) {
+            // กรองข้อมูลปี 2025
+            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
+                area: row.c[26]?.v || '',
+                roundDate: row.c[27]?.v || '',
+                trainingMonth: row.c[28]?.v || '',
+                week: row.c[39]?.v || '',
+                name: row.c[3]?.v || '',
+                company: row.c[6]?.v || '',
+                agentCode: row.c[7]?.v || '',
+                province: row.c[8]?.v || '',
+                workStatus: row.c[13]?.v || '',
+                registerResult: row.c[33]?.v || '',
+                latestStatus: row.c[34]?.v || '',
+                startDate: row.c[35]?.v || '',
+                endDate: row.c[36]?.v || '',
+                sla: row.c[37]?.v || '',
+                year: row.c[41]?.v || ''
+            }));
+
+            // สร้างส่วนหัวตาราง
+            const headers = [
+                { text: "พื้นที่", key: "area" },
+                { text: "รอบวันที่", key: "roundDate" },
+                { text: "เดือนอบรม", key: "trainingMonth" },
+                { text: "week", key: "week" },
+                { text: "ชื่อ-นามสกุล", key: "name" },
+                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
+                { text: "รหัสตัวแทน", key: "agentCode" },
+                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
+                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
+                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
+                { text: "Status ล่าสุด", key: "latestStatus" },
+                { text: "วันเริ่มต้น", key: "startDate" },
+                { text: "วันสิ้นสุด", key: "endDate" },
+                { text: "SLA", key: "sla" },
+                { text: "ปี", key: "year" }
+            ];
+
+            // สร้างส่วนหัวตาราง
+            const thead = document.querySelector('#data-table thead');
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.text;
+                th.dataset.key = header.key;
+                th.addEventListener('click', () => handleSort(header.key));
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // แสดงข้อมูล
+            renderTableData(window.tableData);
+        }
+
+        // ฟังก์ชันแสดงข้อมูลในตาราง
+        function renderTableData(data) {
+            const tbody = document.querySelector('#data-table tbody');
+            tbody.innerHTML = '';
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ตัวแปรเก็บสถานะการ sort
+        let currentSort = {
+            key: null,
+            isAsc: true
+        };
+
+        // ฟังก์ชันจัดการการ sort
+        function handleSort(key) {
+            const isAsc = currentSort.key === key ? !currentSort.isAsc : true;
+            currentSort = { key, isAsc };
+
+            const sortedData = sortData(window.tableData, key, isAsc);
+            renderTableData(sortedData);
+            updateSortIndicators(key, isAsc);
+        }
+
+        // ฟังก์ชัน sort ข้อมูล
+        function sortData(data, key, isAsc) {
+            return [...data].sort((a, b) => {
+                let valueA = a[key];
+                let valueB = b[key];
+
+                // จัดการค่าว่าง
+                if (!valueA && valueA !== 0) return isAsc ? 1 : -1;
+                if (!valueB && valueB !== 0) return isAsc ? -1 : 1;
+
+                // จัดการข้อมูลตามประเภท
+                if (key === 'week') {
+                    valueA = parseInt(valueA.replace(/\D/g, '')) || 0;
+                    valueB = parseInt(valueB.replace(/\D/g, '')) || 0;
+                } else if (key === 'trainingMonth') {
+                    const months = {
+                        'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4,
+                        'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8,
+                        'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+                    };
+                    valueA = months[valueA.substring(0, 3)] || 0;
+                    valueB = months[valueB.substring(0, 3)] || 0;
+                } else if (key === 'startDate' || key === 'endDate') {
+                    const parseDate = (str) => {
+                        const [day, month, year] = (str || '').split('/').map(Number);
+                        return day ? new Date(year, month - 1, day) : new Date(0);
+                    };
+                    valueA = parseDate(valueA);
+                    valueB = parseDate(valueB);
+                } else if (key === 'sla') {
+                    valueA = parseFloat(valueA) || 0;
+                    valueB = parseFloat(valueB) || 0;
+                }
+
+                // เปรียบเทียบค่า
+                if (valueA instanceof Date) {
+                    return isAsc ? valueA - valueB : valueB - valueA;
+                }
+                if (typeof valueA === 'number') {
+                    return isAsc ? valueA - valueB : valueB - valueA;
+                }
+                return isAsc ? 
+                    String(valueA).localeCompare(String(valueB), 'th') : 
+                    String(valueB).localeCompare(String(valueA), 'th');
+            });
+        }
+
+        // ฟังก์ชันอัปเดตไอคอน sort
+        function updateSortIndicators(key, isAsc) {
+            const headers = document.querySelectorAll('#data-table th');
+            headers.forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+                if (header.dataset.key === key) {
+                    header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
+                }
+            });
+        }
+
+        // แก้ไขฟังก์ชัน updateTables เพื่อเพิ่มการจัดการ sort
         function updateTables(rows) {
             // อัปเดต Pivot Table
             updatePivotTable(rows);
 
-            const dataBody = document.getElementById('data-body');
-            dataBody.innerHTML = '';
-            
-            // Define column headers with their corresponding data keys
+            // กรองข้อมูลเฉพาะปี 2025
+            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
+                area: row.c[26]?.v || '',
+                roundDate: row.c[27]?.v || '',
+                trainingMonth: row.c[28]?.v || '',
+                week: row.c[39]?.v || '',
+                name: row.c[3]?.v || '',
+                company: row.c[6]?.v || '',
+                agentCode: row.c[7]?.v || '',
+                province: row.c[8]?.v || '',
+                workStatus: row.c[13]?.v || '',
+                registerResult: row.c[33]?.v || '',
+                latestStatus: row.c[34]?.v || '',
+                startDate: row.c[35]?.v || '',
+                endDate: row.c[36]?.v || '',
+                sla: row.c[37]?.v || '',
+                year: row.c[41]?.v || ''
+            }));
+
+            // เริ่มต้นสร้างตารางใหม่
+            const dataTable = document.getElementById('data-table');
+            const thead = dataTable.getElementsByTagName('thead')[0];
+            thead.innerHTML = '';
+
+            // สร้างแถวส่วนหัว
+            const headerRow = thead.insertRow();
             const columnHeaders = [
                 { text: "พื้นที่", key: "area" },
                 { text: "รอบวันที่", key: "roundDate" },
@@ -693,389 +1049,173 @@
                 { text: "ปี", key: "year" }
             ];
 
-            // Add column headers to the table
-            const dataHeader = document.getElementById('data-table').getElementsByTagName('thead')[0];
-            dataHeader.innerHTML = '';
-            let headerRow = dataHeader.insertRow();
+            // สร้างหัวคอลัมน์พร้อม event listener
             columnHeaders.forEach(header => {
-                let th = document.createElement("th");
+                const th = document.createElement('th');
                 th.textContent = header.text;
                 th.dataset.key = header.key;
-                th.onclick = function() {
-                    const isAsc = !this.classList.contains('sort-asc');
-                    document.querySelectorAll('#data-table th').forEach(th => {
-                        th.classList.remove('sort-asc', 'sort-desc');
-                    });
-                    this.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
-                    sortTable(header.key, isAsc);
-                };
+                th.addEventListener('click', () => handleSort(header.key));
                 headerRow.appendChild(th);
             });
 
-            // Store the rows data globally for sorting
-            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => {
-                return {
-                    area: row.c[26]?.v || '',
-                    roundDate: row.c[27]?.v || '',
-                    trainingMonth: row.c[28]?.v || '',
-                    week: row.c[39]?.v || '',
-                    name: row.c[3]?.v || '',
-                    company: row.c[6]?.v || '',
-                    agentCode: row.c[7]?.v || '',
-                    province: row.c[8]?.v || '',
-                    workStatus: row.c[13]?.v || '',
-                    registerResult: row.c[33]?.v || '',
-                    latestStatus: row.c[34]?.v || '',
-                    startDate: row.c[35]?.v || '',
-                    endDate: row.c[36]?.v || '',
-                    sla: row.c[37]?.v || '',
-                    year: row.c[41]?.v || ''
-                };
-            });
-
-            // Initial render of the table data
+            // แสดงข้อมูลในตาราง
             renderTableData(window.tableData);
         }
 
-        // Function to render table data
-        function renderTableData(data) {
-            const dataBody = document.getElementById('data-body');
-            dataBody.innerHTML = '';
-            
-            data.forEach(rowData => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${rowData.area || ''}</td>
-                    <td>${rowData.roundDate || ''}</td>
-                    <td>${rowData.trainingMonth || ''}</td>
-                    <td>${rowData.week || ''}</td>
-                    <td>${rowData.name || ''}</td>
-                    <td>${rowData.company || ''}</td>
-                    <td>${rowData.agentCode || ''}</td>
-                    <td>${rowData.province || ''}</td>
-                    <td>${rowData.workStatus || ''}</td>
-                    <td>${rowData.registerResult || ''}</td>
-                    <td>${rowData.latestStatus || ''}</td>
-                    <td>${rowData.startDate || ''}</td>
-                    <td>${rowData.endDate || ''}</td>
-                    <td>${rowData.sla || ''}</td>
-                    <td>${rowData.year || ''}</td>
-                `;
-                dataBody.appendChild(tr);
-            });
-        }
-
-        // Function to sort table
-        function sortTable(key, isAsc) {
-            const sortedData = [...window.tableData].sort((a, b) => {
-                let valueA = a[key];
-                let valueB = b[key];
-
-                // Handle numeric values
-                if (!isNaN(valueA) && !isNaN(valueB)) {
-                    valueA = Number(valueA);
-                    valueB = Number(valueB);
-                }
-
-                // Handle empty values
-                if (!valueA && valueA !== 0) return isAsc ? 1 : -1;
-                if (!valueB && valueB !== 0) return isAsc ? -1 : 1;
-
-                // Handle dates in format DD/MM/YYYY
-                if (key === 'startDate' || key === 'endDate') {
-                    if (valueA && valueB) {
-                        const [dayA, monthA, yearA] = valueA.split('/').map(Number);
-                        const [dayB, monthB, yearB] = valueB.split('/').map(Number);
-                        const dateA = new Date(yearA, monthA - 1, dayA);
-                        const dateB = new Date(yearB, monthB - 1, dayB);
-                        return isAsc ? dateA - dateB : dateB - dateA;
-                    }
-                }
-
-                // Handle week format (Week XX)
-                if (key === 'week') {
-                    const weekA = parseInt(valueA.replace('Week ', '')) || 0;
-                    const weekB = parseInt(valueB.replace('Week ', '')) || 0;
-                    return isAsc ? weekA - weekB : weekB - weekA;
-                }
-
-                // Handle month format (JanXX, FebXX, etc.)
-                if (key === 'trainingMonth') {
-                    const monthOrder = { 'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 
-                                      'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12 };
-                    const monthA = monthOrder[valueA.substring(0, 3)] || 0;
-                    const monthB = monthOrder[valueB.substring(0, 3)] || 0;
-                    return isAsc ? monthA - monthB : monthB - monthA;
-                }
-
-                // Default string comparison
-                return isAsc ? 
-                    valueA.toString().localeCompare(valueB.toString()) : 
-                    valueB.toString().localeCompare(valueA.toString());
-            });
-
-            // Render sorted data
-            renderTableData(sortedData);
-
-            // Update sort indicators
-            const headers = document.querySelectorAll('#data-table th');
-            headers.forEach(header => {
-                if (header.dataset.key === key) {
-                    header.classList.remove(isAsc ? 'sort-desc' : 'sort-asc');
-                    header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
-                } else {
-                    header.classList.remove('sort-asc', 'sort-desc');
-                }
-            });
-        }
-
+        // ฟังก์ชันแสดงข้อมูลในตาราง
         function updatePivotTable(rows) {
             const pivotHeader = document.getElementById('pivot-header');
             const pivotBody = document.getElementById('pivot-body');
-            pivotHeader.innerHTML = '';
-            pivotBody.innerHTML = '';
-
-            // กำหนดลำดับพื้นที่ที่ต้องการแสดง
-            const areaOrder = [
-                'RSM1_BMA-West',
-                'RSM2_BMA-East',
-                'RSM3_UPC-East',
-                'RSM4_UPC-NOR',
-                'RSM5_UPC-NOE1',
-                'RSM6_UPC-NOE2',
-                'RSM7_UPC-CEW',
-                'RSM8_UPC-SOU'
+            
+            // กำหนดหัวข้อคอลัมน์
+            const columns = [
+                "ขึ้นทะเบียนเรียบร้อย",
+                "ช่างลาออก",
+                "ตัวแทนยังไม่ส่งขึ้นทะเบียน",
+                "ติดประวัติอาชญากรรม",
+                "อยู่ระหว่างอบรมปฎิบัติ",
+                "เอกสารยังไม่ครบ",
+                "อยู่ระหว่างอบรมทฤษฎี",
+                "ไม่ผ่านอบรม",
+                "Grand Total"
             ];
 
-            // เก็บข้อมูลสำหรับการ sort
-            let pivotData = {
-                headers: [],
-                rows: []
-            };
+            // สร้างส่วนหัวตาราง
+            pivotHeader.innerHTML = `
+                <th>สถานะการอบรมช่างใหม่รายพื้นที่</th>
+                ${columns.map(col => `<th>${col}</th>`).join('')}
+            `;
 
-            const thAreaMonth = document.createElement('th');
-            thAreaMonth.textContent = 'จำนวนช่าง(คน)';
-            thAreaMonth.style.cursor = 'pointer';
-            thAreaMonth.onclick = () => sortPivotTable(0);
-            pivotHeader.appendChild(thAreaMonth);
-            pivotData.headers.push('จำนวนช่าง(คน)');
+            // เตรียมข้อมูลสำหรับตาราง
+            const areas = [
+                "RSM1_BMA-West",
+                "RSM2_BMA-East",
+                "RSM3_UPC-East",
+                "RSM4_UPC-NOR",
+                "RSM5_UPC-NOE1",
+                "RSM6_UPC-NOE2",
+                "RSM7_UPC-CEW",
+                "RSM8_UPC-SOU"
+            ];
+            const months = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
 
-            // ดึงค่า Status ที่มีอยู่ทั้งหมดและเรียงลำดับ
-            const statusValues = [...new Set(rows.map(row => row.c[34]?.v).filter(Boolean))].sort();
+            let tableHTML = '';
+            let finalGrandTotal = new Array(columns.length).fill(0);
 
-            // เพิ่ม column headers สำหรับแต่ละ Status
-            statusValues.forEach((status, index) => {
-                const th = document.createElement('th');
-                th.textContent = status;
-                th.style.cursor = 'pointer';
-                th.onclick = () => sortPivotTable(index + 1);
-                pivotHeader.appendChild(th);
-                pivotData.headers.push(status);
-            });
+            // สร้างข้อมูลตาราง
+            areas.forEach(area => {
+                // แสดงชื่อพื้นที่
+                tableHTML += `<tr class="area-header"><td>${area}</td>${columns.map(() => '<td></td>').join('')}</tr>`;
 
-            const thGrandTotal = document.createElement('th');
-            thGrandTotal.textContent = 'Grand Total';
-            thGrandTotal.style.cursor = 'pointer';
-            thGrandTotal.onclick = () => sortPivotTable(statusValues.length + 1);
-            pivotHeader.appendChild(thGrandTotal);
-            pivotData.headers.push('Grand Total');
-
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
-            let grandTotalByStatus = {};
-            statusValues.forEach(status => grandTotalByStatus[status] = 0);
-
-            // รวบรวมข้อมูลสำหรับแต่ละพื้นที่
-            const areaData = new Map();
-            rows.forEach(row => {
-                const area = row.c[26]?.v;
-                const month = row.c[28]?.v;
-                const status = row.c[34]?.v;
-
-                if (!area || !month || !status) return;
-
-                if (!areaData.has(area)) {
-                    areaData.set(area, {
-                        monthData: {},
-                        statusTotals: {},
-                        total: 0
-                    });
-                    statusValues.forEach(s => areaData.get(area).statusTotals[s] = 0);
-                    monthOrder.forEach(m => {
-                        areaData.get(area).monthData[m] = {};
-                        statusValues.forEach(s => areaData.get(area).monthData[m][s] = 0);
-                    });
-                }
-
-                const areaInfo = areaData.get(area);
-                if (monthOrder.includes(month)) {
-                    areaInfo.monthData[month][status] = (areaInfo.monthData[month][status] || 0) + 1;
-                    areaInfo.statusTotals[status] = (areaInfo.statusTotals[status] || 0) + 1;
-                    areaInfo.total += 1;
-                }
-            });
-
-            let overallGrandTotal = 0;
-
-            // แสดงข้อมูลตามพื้นที่
-            // ใช้ลำดับจาก areaOrder แทนที่จะวนลูปผ่าน areaData
-            areaOrder.forEach(orderedArea => {
-                if (!areaData.has(orderedArea)) return; // ข้ามถ้าไม่มีข้อมูลสำหรับพื้นที่นี้
-                
-                const areaInfo = areaData.get(orderedArea);
-                
-                // สร้างแถวหัวพื้นที่
-                const trArea = document.createElement('tr');
-                const tdArea = document.createElement('td');
-                tdArea.textContent = orderedArea;
-                tdArea.style.fontWeight = 'bold';
-                trArea.appendChild(tdArea);
-
-                statusValues.forEach(() => {
-                    const tdEmpty = document.createElement('td');
-                    trArea.appendChild(tdEmpty);
-                });
-                trArea.appendChild(document.createElement('td'));
-                pivotBody.appendChild(trArea);
+                let areaTotal = new Array(columns.length).fill(0);
 
                 // แสดงข้อมูลรายเดือน
-                monthOrder.forEach(month => {
-                    const tr = document.createElement('tr');
-                    const tdMonth = document.createElement('td');
-                    tdMonth.textContent = month;
-                    tr.appendChild(tdMonth);
+                months.forEach(month => {
+                    const monthData = rows.filter(row => 
+                        row.c[26]?.v === area && 
+                        row.c[28]?.v === month
+                    );
 
-                    let monthTotal = 0;
-                    statusValues.forEach(status => {
-                        const count = areaInfo.monthData[month][status] || 0;
-                        const td = document.createElement('td');
-                        td.textContent = count > 0 ? count : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-                        tr.appendChild(td);
-                        monthTotal += count;
-                        grandTotalByStatus[status] += count;
-                    });
+                    if (monthData.length > 0) {
+                        const rowData = [
+                            monthData.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length,
+                            monthData.filter(row => row.c[34]?.v === "ช่างลาออก").length,
+                            monthData.filter(row => row.c[34]?.v === "ตัวแทนยังไม่ส่งขึ้นทะเบียน").length,
+                            monthData.filter(row => row.c[34]?.v === "ติดประวัติอาชญากรรม").length,
+                            monthData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมปฎิบัติ").length,
+                            monthData.filter(row => row.c[34]?.v === "เอกสารยังไม่ครบ").length,
+                            monthData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมทฤษฎี").length,
+                            monthData.filter(row => row.c[34]?.v === "ไม่ผ่านอบรม").length
+                        ];
 
-                    const tdMonthTotal = document.createElement('td');
-                    tdMonthTotal.textContent = monthTotal > 0 ? monthTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-                    tr.appendChild(tdMonthTotal);
-                    pivotBody.appendChild(tr);
-                    overallGrandTotal += monthTotal;
+                        // คำนวณผลรวมของแต่ละแถว
+                        const monthTotal = rowData.reduce((a, b) => a + b, 0);
+                        rowData.push(monthTotal);
+
+                        // เพิ่มค่าในผลรวมของพื้นที่
+                        rowData.forEach((val, idx) => {
+                            areaTotal[idx] += val;
+                        });
+
+                        // แสดงเฉพาะแถวที่มีข้อมูล
+                        if (monthTotal > 0) {
+                            tableHTML += `
+                                <tr>
+                                    <td>${month}</td>
+                                    ${rowData.map(val => `<td>${val || ''}</td>`).join('')}
+                                </tr>
+                            `;
+                        }
+                    }
                 });
+
+                // คำนวณผลรวมของพื้นที่
+                const areaTotalSum = areaTotal.slice(0, -1).reduce((a, b) => a + b, 0);
+                areaTotal[areaTotal.length - 1] = areaTotalSum;
 
                 // แสดงผลรวมของพื้นที่
-                const trAreaTotal = document.createElement('tr');
-                const tdAreaTotal = document.createElement('td');
-                tdAreaTotal.textContent = `${orderedArea} Total`;
-                tdAreaTotal.style.fontWeight = 'bold';
-                tdAreaTotal.className = 'area-total';
-                trAreaTotal.appendChild(tdAreaTotal);
+                if (areaTotalSum > 0) {
+                    tableHTML += `
+                        <tr class="area-total">
+                            <td>${area} Total</td>
+                            ${areaTotal.map(val => `<td>${val || ''}</td>`).join('')}
+                        </tr>
+                    `;
 
-                statusValues.forEach(status => {
-                    const td = document.createElement('td');
-                    const statusTotal = areaInfo.statusTotals[status] || 0;
-                    td.textContent = statusTotal > 0 ? statusTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-                    td.style.fontWeight = 'bold';
-                    trAreaTotal.appendChild(td);
-                });
-
-                const tdTotal = document.createElement('td');
-                tdTotal.textContent = areaInfo.total > 0 ? areaInfo.total : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-                tdTotal.style.fontWeight = 'bold';
-                tdTotal.className = 'area-total';
-                trAreaTotal.appendChild(tdTotal);
-                pivotBody.appendChild(trAreaTotal);
+                    // เพิ่มค่าใน Grand Total
+                    areaTotal.forEach((val, idx) => {
+                        finalGrandTotal[idx] += val;
+                    });
+                }
             });
 
-            // แสดงผลรวมทั้งหมด
-            const trGrandTotal = document.createElement('tr');
-            trGrandTotal.className = 'grand-total';
-            const tdGrandTotal = document.createElement('td');
-            tdGrandTotal.textContent = 'Grand Total';
-            tdGrandTotal.style.fontWeight = 'bold';
-            trGrandTotal.appendChild(tdGrandTotal);
+            // คำนวณผลรวมสุดท้ายสำหรับ Grand Total
+            const finalTotalSum = finalGrandTotal.slice(0, -1).reduce((a, b) => a + b, 0);
+            finalGrandTotal[finalGrandTotal.length - 1] = finalTotalSum;
 
-            statusValues.forEach(status => {
-                const td = document.createElement('td');
-                const statusTotal = grandTotalByStatus[status] || 0;
-                td.textContent = statusTotal > 0 ? statusTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-                td.style.fontWeight = 'bold';
-                trGrandTotal.appendChild(td);
-            });
+            // เพิ่มแถว Grand Total
+            tableHTML += `
+                <tr class="grand-total">
+                    <td>Grand Total</td>
+                    ${finalGrandTotal.map(val => `<td>${val || ''}</td>`).join('')}
+                </tr>
+            `;
 
-            const tdOverallTotal = document.createElement('td');
-            tdOverallTotal.textContent = overallGrandTotal > 0 ? overallGrandTotal : ''; // แสดงเฉพาะค่าที่มากกว่า 0
-            tdOverallTotal.style.fontWeight = 'bold';
-            trGrandTotal.appendChild(tdOverallTotal);
-            pivotBody.appendChild(trGrandTotal);
+            pivotBody.innerHTML = tableHTML;
 
-            // เพิ่มฟังก์ชัน sortPivotTable
-            function sortPivotTable(columnIndex) {
-                const tbody = document.getElementById('pivot-body');
-                const rows = Array.from(tbody.getElementsByTagName('tr'));
-                let sortOrder = tbody.dataset.sortOrder === 'asc' ? 'desc' : 'asc';
-                tbody.dataset.sortOrder = sortOrder;
-
-                const sortedRows = rows.sort((a, b) => {
-                    // ข้ามแถวที่เป็นหัวพื้นที่ (ไม่มีข้อมูลตัวเลข)
-                    if (a.cells.length === 1 || b.cells.length === 1) return 0;
-
-                    const aValue = a.cells[columnIndex].textContent;
-                    const bValue = b.cells[columnIndex].textContent;
-
-                    // แปลงค่าเป็นตัวเลขถ้าเป็นไปได้
-                    const aNum = parseFloat(aValue) || 0;
-                    const bNum = parseFloat(bValue) || 0;
-
-                    if (sortOrder === 'asc') {
-                        return aNum - bNum;
-                    } else {
-                        return bNum - aNum;
-                    }
-                });
-
-                // จัดเรียงแถวใหม่
-                sortedRows.forEach(row => tbody.appendChild(row));
-
-                // อัปเดตไอคอนการเรียงลำดับ
-                const headers = pivotHeader.getElementsByTagName('th');
-                headers.forEach((header, index) => {
-                    header.classList.remove('sort-asc', 'sort-desc');
-                    if (index === columnIndex) {
-                        header.classList.add(sortOrder === 'asc' ? 'sort-asc' : 'sort-desc');
-                    }
-                });
-            }
-        }
-
-        // Restore original data on outside click
-        document.addEventListener('click', event => {
-            if (!event.target.closest('#chart-container')) {
-                updateChartAndTables(filteredData2025);
-            }
-        });
-
-        // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
-        function downloadTableAsExcel() {
-            const table = document.getElementById('data-table');
-            const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-            XLSX.writeFile(workbook, 'data-table.xlsx');
-        }
-
-        // ฟังก์ชันเพื่อดึงเฉพาะปีจากวันที่ในรูปแบบ Date(YYYY,MM,DD)
-        function getYearFromGoogleSheetDate(dateString) {
-            if (!dateString || !dateString.startsWith("Date(")) return null;
-            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-            return matches ? parseInt(matches[1], 10) : null;
-        }
-
-        // ฟังก์ชันเพื่อแปลงวันที่ในรูปแบบ Date(YYYY,MM,DD) ให้เป็น DD/MM/YYYY
-        function parseGoogleSheetDate(dateString) {
-            if (!dateString || !dateString.startsWith("Date(")) return '';
-            const matches = dateString.match(/Date\((\d+),(\d+),(\d+)\)/);
-            if (!matches) return '';
-            const year = parseInt(matches[1], 10);
-            const month = parseInt(matches[2], 10) + 1;
-            const day = parseInt(matches[3], 10);
-            return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+            // เพิ่ม CSS สำหรับจัดรูปแบบตาราง
+            const style = document.createElement('style');
+            style.textContent = `
+                .area-header {
+                    background-color: #e8f5e9;
+                    font-weight: bold;
+                }
+                .area-total {
+                    background-color: #e8f5e9;
+                    font-weight: bold;
+                    color: green;
+                }
+                .grand-total {
+                    background-color: #e8f5e9;
+                    font-weight: bold;
+                }
+                #pivot-table td:empty {
+                    background-color: #f5f5f5;
+                }
+                #pivot-table td {
+                    text-align: center;
+                }
+                .area-header td:first-child {
+                    text-align: left;
+                }
+                .area-total td:first-child {
+                    text-align: left;
+                }
+                .grand-total td:first-child {
+                    text-align: left;
+                }
+            `;
+            document.head.appendChild(style);
         }
 
         // ฟังก์ชันคำนวณค่าเฉลี่ย SLA
@@ -1161,6 +1301,27 @@
 
             document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
             document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+
+            // เพิ่มการจัดการการเลือกข้อความในตาราง
+            const dataTable = document.getElementById('data-table');
+            if (dataTable) {
+                dataTable.addEventListener('mousedown', function(e) {
+                    if (e.target.tagName === 'TD') {
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(e.target);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                });
+
+                // ป้องกันการเลือกข้อความถูกยกเลิกเมื่อลากเมาส์
+                dataTable.addEventListener('selectstart', function(e) {
+                    if (e.target.tagName === 'TD') {
+                        e.preventDefault();
+                    }
+                });
+            }
         });
 
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
@@ -1172,6 +1333,91 @@
         // ฟังก์ชันนับจำนวนช่างทั้งหมด
         function countTotalTechnicians(rows) {
             return rows.length;
+        }
+
+        // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
+        function downloadTableAsExcel() {
+            const table = document.getElementById('data-table');
+            const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+            XLSX.writeFile(workbook, 'data-table.xlsx');
+        }
+
+        // เพิ่มฟังก์ชันสำหรับจัดการ Legend
+        function initializeLegendHandlers() {
+            const legendItems = document.querySelectorAll('.legend-item');
+            const datasets = chart.data.datasets;
+            let selectedItems = window.selectedLegendItems || new Set();
+            window.selectedLegendItems = selectedItems;
+            
+            // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง
+            document.addEventListener('click', (event) => {
+                // ตรวจสอบว่าคลิกที่ legend-item หรือไม่
+                const clickedLegend = event.target.closest('.legend-item');
+                const clickedChart = event.target.closest('canvas');
+                
+                // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ ให้แสดงทุกรายการ
+                if (!clickedLegend && !clickedChart) {
+                    selectedItems.clear();
+                    legendItems.forEach((item, i) => {
+                        item.classList.remove('selected');
+                        datasets[i].hidden = false;
+                    });
+                    chart.update();
+                    // อัพเดทตารางให้แสดงข้อมูลทั้งหมด
+                    updateChartAndTables(filteredData2025);
+                }
+            });
+
+            // จัดการการคลิกที่ Legend items
+            legendItems.forEach((item, index) => {
+                item.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (event.ctrlKey || event.metaKey) {
+                        if (selectedItems.has(index)) {
+                            selectedItems.delete(index);
+                            item.classList.remove('selected');
+                        } else {
+                            selectedItems.add(index);
+                            item.classList.add('selected');
+                        }
+                    } else {
+                        selectedItems.clear();
+                        selectedItems.add(index);
+                        legendItems.forEach((otherItem, i) => {
+                            if (i === index) {
+                                otherItem.classList.add('selected');
+                            } else {
+                                otherItem.classList.remove('selected');
+                            }
+                        });
+                    }
+                    window.selectedLegendItems = selectedItems;
+                    // อัพเดทการแสดงผลกราฟ
+                    datasets.forEach((dataset, i) => {
+                        if (selectedItems.size === 0) {
+                            // ถ้าไม่มีรายการที่ถูกเลือก แสดงทุกรายการ
+                            dataset.hidden = false;
+                        } else {
+                            // ซ่อนรายการที่ไม่ได้เลือก
+                            dataset.hidden = !selectedItems.has(i);
+                        }
+                    });
+
+                    chart.update();
+                    // อัพเดทตารางตาม Legend ที่เลือก
+                    const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
+                    const filteredRows = filteredData2025.filter(row => {
+                        if (selectedItems.size === 0) {
+                            return true; // แสดงข้อมูลทั้งหมด
+                        } else {
+                            return selectedStatuses.includes(row.c[34]?.v);
+                        }
+                    });
+                    
+                    // อัพเดทตารางข้อมูล
+                    updateChartAndTables(filteredRows);
+                });
+            });
         }
     </script>
 </body>
