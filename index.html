@@ -552,8 +552,6 @@
         <tbody id="data-body"></tbody>
     </table>
 
-    <div id="pagination-container" style="display: flex; justify-content: center; align-items: center; gap: 4px; margin: 16px 0;"></div>
-
     <script>
         // ฟังก์ชันเพื่ออัปเดตวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
         function updateCurrentDateTime() {
@@ -575,80 +573,6 @@
         let originalData;
         let filteredData2025;
         let lineChart;
-        let sortedTableData = [];
-
-        // ===== GLOBAL HEADERS สำหรับตารางหลัก =====
-        const headers = [
-            { text: "พื้นที่", key: "area" },
-            { text: "รอบวันที่", key: "roundDate" },
-            { text: "เดือนอบรม", key: "trainingMonth" },
-            { text: "week", key: "week" },
-            { text: "ชื่อ-นามสกุล", key: "name" },
-            { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
-            { text: "รหัสตัวแทน", key: "agentCode" },
-            { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
-            { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
-            { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
-            { text: "Status ล่าสุด", key: "latestStatus" },
-            { text: "วันเริ่มต้น", key: "startDate" },
-            { text: "วันสิ้นสุด", key: "endDate" },
-            { text: "SLA", key: "sla" },
-            { text: "ปี", key: "year" }
-        ];
-
-        // ===== Pagination Variables =====
-        let currentPage = 1;
-        const rowsPerPage = 50;
-        let totalPages = 1;
-
-        // ===== Pagination Controls =====
-        function renderPagination(totalRows) {
-            totalPages = Math.ceil(totalRows / rowsPerPage) || 1;
-            const container = document.getElementById('pagination-container');
-            if (!container) return;
-            container.innerHTML = '';
-
-            // ปุ่มก่อนหน้า
-            const prevBtn = document.createElement('button');
-            prevBtn.textContent = 'ก่อนหน้า';
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => changePage(currentPage - 1);
-            container.appendChild(prevBtn);
-
-            // เลขหน้า
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === currentPage || (i <= 2 || i > totalPages - 2 || Math.abs(i - currentPage) <= 1)) {
-                    const pageBtn = document.createElement('button');
-                    pageBtn.textContent = i;
-                    if (i === currentPage) pageBtn.className = 'active';
-                    pageBtn.onclick = () => changePage(i);
-                    container.appendChild(pageBtn);
-                } else if (i === 3 && currentPage > 4) {
-                    const span = document.createElement('span');
-                    span.textContent = '...';
-                    container.appendChild(span);
-                } else if (i === totalPages - 2 && currentPage < totalPages - 3) {
-                    const span = document.createElement('span');
-                    span.textContent = '...';
-                    container.appendChild(span);
-                }
-            }
-
-            // ปุ่มถัดไป
-            const nextBtn = document.createElement('button');
-            nextBtn.textContent = 'ถัดไป';
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => changePage(currentPage + 1);
-            container.appendChild(nextBtn);
-        }
-
-        window.changePage = function(page) {
-            currentPage = Math.max(1, Math.min(page, totalPages));
-            const data = sortedTableData.length ? sortedTableData : window.tableData;
-            renderTableData(data);
-            renderPagination(data.length);
-            updateSortIndicators(currentSort.key, currentSort.isAsc);
-        }
 
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
@@ -951,14 +875,36 @@
             }));
 
             // สร้างส่วนหัวตาราง
-            const dataTable = document.getElementById('data-table');
-            const thead = dataTable.getElementsByTagName('thead')[0];
-            thead.innerHTML = `<tr>${headers.map(h => `<th data-key="${h.key}">${h.text}</th>`).join('')}</tr>`;
-            const ths = thead.querySelectorAll('th');
-            ths.forEach((th, i) => {
-                th.onclick = null;
-                th.addEventListener('click', () => handleSort(headers[i].key));
+            const headers = [
+                { text: "พื้นที่", key: "area" },
+                { text: "รอบวันที่", key: "roundDate" },
+                { text: "เดือนอบรม", key: "trainingMonth" },
+                { text: "week", key: "week" },
+                { text: "ชื่อ-นามสกุล", key: "name" },
+                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
+                { text: "รหัสตัวแทน", key: "agentCode" },
+                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
+                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
+                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
+                { text: "Status ล่าสุด", key: "latestStatus" },
+                { text: "วันเริ่มต้น", key: "startDate" },
+                { text: "วันสิ้นสุด", key: "endDate" },
+                { text: "SLA", key: "sla" },
+                { text: "ปี", key: "year" }
+            ];
+
+            // สร้างส่วนหัวตาราง
+            const thead = document.querySelector('#data-table thead');
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.text;
+                th.dataset.key = header.key;
+                th.addEventListener('click', () => handleSort(header.key));
+                headerRow.appendChild(th);
             });
+            thead.appendChild(headerRow);
 
             // แสดงข้อมูล
             renderTableData(window.tableData);
@@ -966,14 +912,10 @@
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
         function renderTableData(data) {
-            if (!Array.isArray(data)) data = [];
             const tbody = document.querySelector('#data-table tbody');
             tbody.innerHTML = '';
-            // slice เฉพาะหน้าปัจจุบัน
-            const start = (currentPage - 1) * rowsPerPage;
-            const end = start + rowsPerPage;
-            const pageData = data.slice(start, end);
-            pageData.forEach(row => {
+
+            data.forEach(row => {
                 const tr = document.createElement('tr');
                 Object.values(row).forEach(value => {
                     const td = document.createElement('td');
@@ -994,10 +936,9 @@
         function handleSort(key) {
             const isAsc = currentSort.key === key ? !currentSort.isAsc : true;
             currentSort = { key, isAsc };
-            sortedTableData = sortData(window.tableData, key, isAsc);
-            currentPage = 1;
-            renderTableData(sortedTableData);
-            renderPagination(sortedTableData.length);
+
+            const sortedData = sortData(window.tableData, key, isAsc);
+            renderTableData(sortedData);
             updateSortIndicators(key, isAsc);
         }
 
@@ -1061,7 +1002,11 @@
 
         // แก้ไขฟังก์ชัน updateTables เพื่อเพิ่มการจัดการ sort
         function updateTables(rows) {
-            window.tableData = rows.map(row => ({
+            // อัปเดต Pivot Table
+            updatePivotTable(rows);
+
+            // กรองข้อมูลเฉพาะปี 2025
+            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
                 area: row.c[26]?.v || '',
                 roundDate: row.c[27]?.v || '',
                 trainingMonth: row.c[28]?.v || '',
@@ -1078,13 +1023,43 @@
                 sla: row.c[37]?.v || '',
                 year: row.c[41]?.v || ''
             }));
-            sortedTableData = currentSort.key
-                ? sortData(window.tableData, currentSort.key, currentSort.isAsc)
-                : window.tableData;
-            currentPage = 1;
-            renderTableData(sortedTableData);
-            renderPagination(sortedTableData.length);
-            updateSortIndicators(currentSort.key, currentSort.isAsc);
+
+            // เริ่มต้นสร้างตารางใหม่
+            const dataTable = document.getElementById('data-table');
+            const thead = dataTable.getElementsByTagName('thead')[0];
+            thead.innerHTML = '';
+
+            // สร้างแถวส่วนหัว
+            const headerRow = thead.insertRow();
+            const columnHeaders = [
+                { text: "พื้นที่", key: "area" },
+                { text: "รอบวันที่", key: "roundDate" },
+                { text: "เดือนอบรม", key: "trainingMonth" },
+                { text: "week", key: "week" },
+                { text: "ชื่อ-นามสกุล", key: "name" },
+                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
+                { text: "รหัสตัวแทน", key: "agentCode" },
+                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
+                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
+                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
+                { text: "Status ล่าสุด", key: "latestStatus" },
+                { text: "วันเริ่มต้น", key: "startDate" },
+                { text: "วันสิ้นสุด", key: "endDate" },
+                { text: "SLA", key: "sla" },
+                { text: "ปี", key: "year" }
+            ];
+
+            // สร้างหัวคอลัมน์พร้อม event listener
+            columnHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.text;
+                th.dataset.key = header.key;
+                th.addEventListener('click', () => handleSort(header.key));
+                headerRow.appendChild(th);
+            });
+
+            // แสดงข้อมูลในตาราง
+            renderTableData(window.tableData);
         }
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
