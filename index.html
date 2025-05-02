@@ -574,6 +574,25 @@
         let filteredData2025;
         let lineChart;
 
+        // ===== GLOBAL HEADERS สำหรับตารางหลัก =====
+        const headers = [
+            { text: "พื้นที่", key: "area" },
+            { text: "รอบวันที่", key: "roundDate" },
+            { text: "เดือนอบรม", key: "trainingMonth" },
+            { text: "week", key: "week" },
+            { text: "ชื่อ-นามสกุล", key: "name" },
+            { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
+            { text: "รหัสตัวแทน", key: "agentCode" },
+            { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
+            { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
+            { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
+            { text: "Status ล่าสุด", key: "latestStatus" },
+            { text: "วันเริ่มต้น", key: "startDate" },
+            { text: "วันสิ้นสุด", key: "endDate" },
+            { text: "SLA", key: "sla" },
+            { text: "ปี", key: "year" }
+        ];
+
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
             fetch(sheetUrl)
@@ -875,36 +894,14 @@
             }));
 
             // สร้างส่วนหัวตาราง
-            const headers = [
-                { text: "พื้นที่", key: "area" },
-                { text: "รอบวันที่", key: "roundDate" },
-                { text: "เดือนอบรม", key: "trainingMonth" },
-                { text: "week", key: "week" },
-                { text: "ชื่อ-นามสกุล", key: "name" },
-                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
-                { text: "รหัสตัวแทน", key: "agentCode" },
-                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
-                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
-                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
-                { text: "Status ล่าสุด", key: "latestStatus" },
-                { text: "วันเริ่มต้น", key: "startDate" },
-                { text: "วันสิ้นสุด", key: "endDate" },
-                { text: "SLA", key: "sla" },
-                { text: "ปี", key: "year" }
-            ];
-
-            // สร้างส่วนหัวตาราง
-            const thead = document.querySelector('#data-table thead');
-            thead.innerHTML = '';
-            const headerRow = document.createElement('tr');
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header.text;
-                th.dataset.key = header.key;
-                th.addEventListener('click', () => handleSort(header.key));
-                headerRow.appendChild(th);
+            const dataTable = document.getElementById('data-table');
+            const thead = dataTable.getElementsByTagName('thead')[0];
+            thead.innerHTML = `<tr>${headers.map(h => `<th data-key="${h.key}">${h.text}</th>`).join('')}</tr>`;
+            const ths = thead.querySelectorAll('th');
+            ths.forEach((th, i) => {
+                th.onclick = null;
+                th.addEventListener('click', () => handleSort(headers[i].key));
             });
-            thead.appendChild(headerRow);
 
             // แสดงข้อมูล
             renderTableData(window.tableData);
@@ -1027,39 +1024,19 @@
             // เริ่มต้นสร้างตารางใหม่
             const dataTable = document.getElementById('data-table');
             const thead = dataTable.getElementsByTagName('thead')[0];
-            thead.innerHTML = '';
-
-            // สร้างแถวส่วนหัว
-            const headerRow = thead.insertRow();
-            const columnHeaders = [
-                { text: "พื้นที่", key: "area" },
-                { text: "รอบวันที่", key: "roundDate" },
-                { text: "เดือนอบรม", key: "trainingMonth" },
-                { text: "week", key: "week" },
-                { text: "ชื่อ-นามสกุล", key: "name" },
-                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
-                { text: "รหัสตัวแทน", key: "agentCode" },
-                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
-                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
-                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
-                { text: "Status ล่าสุด", key: "latestStatus" },
-                { text: "วันเริ่มต้น", key: "startDate" },
-                { text: "วันสิ้นสุด", key: "endDate" },
-                { text: "SLA", key: "sla" },
-                { text: "ปี", key: "year" }
-            ];
-
-            // สร้างหัวคอลัมน์พร้อม event listener
-            columnHeaders.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header.text;
-                th.dataset.key = header.key;
-                th.addEventListener('click', () => handleSort(header.key));
-                headerRow.appendChild(th);
+            thead.innerHTML = `<tr>${headers.map(h => `<th data-key="${h.key}">${h.text}</th>`).join('')}</tr>`;
+            const ths = thead.querySelectorAll('th');
+            ths.forEach((th, i) => {
+                th.onclick = null;
+                th.addEventListener('click', () => handleSort(headers[i].key));
             });
 
             // แสดงข้อมูลในตาราง
             renderTableData(window.tableData);
+            // ถ้ามีสถานะ sort เดิม ให้ sort ต่อทันที
+            if (currentSort.key) {
+                handleSort(currentSort.key);
+            }
         }
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
