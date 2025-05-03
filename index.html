@@ -1492,9 +1492,54 @@
 
         // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
         function downloadTableAsExcel() {
-            const table = document.getElementById('data-table');
-            const workbook = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
-            XLSX.writeFile(workbook, 'data-table.xlsx');
+            // สร้างตาราง HTML ชั่วคราวที่มีข้อมูลทั้งหมด (ไม่ใช่เฉพาะหน้าปัจจุบัน)
+            const tempTable = document.createElement('table');
+            
+            // คัดลอกส่วนหัวตาราง
+            const headerRow = document.createElement('tr');
+            const headers = document.querySelectorAll('#data-table th');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.textContent;
+                headerRow.appendChild(th);
+            });
+            
+            // สร้าง thead และใส่แถวหัวข้อ
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            tempTable.appendChild(thead);
+            
+            // สร้าง tbody สำหรับใส่ข้อมูลทั้งหมด
+            const tbody = document.createElement('tbody');
+            
+            // ใส่ข้อมูลทั้งหมด (ไม่ใช่เฉพาะข้อมูลที่แสดงในหน้าปัจจุบัน)
+            window.tableData.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            tempTable.appendChild(tbody);
+            
+            // แปลงตารางชั่วคราวเป็นไฟล์ Excel
+            const workbook = XLSX.utils.table_to_book(tempTable, { sheet: "ข้อมูลการอบรมช่าง" });
+            
+            // ตั้งชื่อไฟล์ที่จะดาวน์โหลดพร้อมวันที่
+            const now = new Date();
+            const datePart = now.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\//g, '-');
+            
+            const filename = `ข้อมูลการอบรมช่าง_${datePart}.xlsx`;
+            
+            // ดาวน์โหลดไฟล์
+            XLSX.writeFile(workbook, filename);
         }
 
         // เพิ่มฟังก์ชันสำหรับจัดการ Legend
