@@ -406,6 +406,82 @@
             color: white;
             font-size: 16px;
         }
+        /* สไตล์สำหรับการแบ่งหน้า */
+        .pagination-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 10px 0;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .pagination-button {
+            padding: 8px 12px;
+            background-color: #003366;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+        .pagination-button:hover {
+            background-color: #004080;
+        }
+        .pagination-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .pagination-info {
+            font-size: 14px;
+            color: #333;
+            margin: 0 10px;
+        }
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-size-selector select {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .page-size-selector label {
+            font-size: 14px;
+            color: #333;
+        }
+        .pagination-pages {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .page-number {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .page-number.active {
+            background-color: #003366;
+            color: white;
+            border-color: #003366;
+        }
+        .page-number:hover:not(.active) {
+            background-color: #f5f5f5;
+        }
+        .page-ellipsis {
+            padding: 6px 5px;
+            font-size: 14px;
+            color: #333;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -552,6 +628,25 @@
         <tbody id="data-body"></tbody>
     </table>
 
+    <div class="pagination-container">
+        <div class="pagination-controls">
+            <button id="prev-button" class="pagination-button" disabled>ก่อนหน้า</button>
+            <div class="pagination-pages" id="pagination-pages">
+                <!-- หมายเลขหน้าจะถูกสร้างโดย JavaScript -->
+            </div>
+            <div class="pagination-info" id="pagination-info">หน้า 1 จาก 10</div>
+            <button id="next-button" class="pagination-button">ถัดไป</button>
+        </div>
+        <div class="page-size-selector">
+            <label for="page-size">จำนวนแถวต่อหน้า:</label>
+            <select id="page-size">
+                <option value="50">50</option>
+                <option value="100">100</option>
+                <option value="200">200</option>
+            </select>
+        </div>
+    </div>
+
     <script>
         // ฟังก์ชันเพื่ออัปเดตวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
         function updateCurrentDateTime() {
@@ -573,6 +668,11 @@
         let originalData;
         let filteredData2025;
         let lineChart;
+
+        // ตัวแปรสำหรับการแบ่งหน้า
+        let currentPage = 1;
+        let pageSize = 50;
+        let totalPages = 1;
 
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
@@ -920,8 +1020,15 @@
         function renderTableData(data) {
             const tbody = document.querySelector('#data-table tbody');
             tbody.innerHTML = '';
-
-            data.forEach(row => {
+            
+            // คำนวณข้อมูลสำหรับการแสดงหน้าปัจจุบัน
+            totalPages = Math.ceil(data.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, data.length);
+            const currentPageData = data.slice(startIndex, endIndex);
+            
+            // แสดงข้อมูลในตาราง
+            currentPageData.forEach(row => {
                 const tr = document.createElement('tr');
                 Object.values(row).forEach(value => {
                     const td = document.createElement('td');
@@ -930,6 +1037,84 @@
                 });
                 tbody.appendChild(tr);
             });
+            
+            // อัปเดตข้อมูลการแบ่งหน้า
+            updatePagination(data.length);
+        }
+        
+        // ฟังก์ชันอัปเดตข้อมูลการแบ่งหน้า
+        function updatePagination(totalItems) {
+            const paginationInfo = document.getElementById('pagination-info');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const paginationPages = document.getElementById('pagination-pages');
+            
+            // อัปเดตข้อมูลหน้า
+            paginationInfo.textContent = `หน้า ${currentPage} จาก ${totalPages} (รายการทั้งหมด ${totalItems})`;
+            
+            // อัปเดตสถานะปุ่ม
+            prevButton.disabled = currentPage === 1;
+            nextButton.disabled = currentPage === totalPages;
+            
+            // สร้างปุ่มหมายเลขหน้า
+            paginationPages.innerHTML = '';
+            
+            // กำหนดจำนวนปุ่มหน้าที่จะแสดง
+            const maxPageButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPageButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+            
+            // ปรับค่า startPage เมื่อ endPage อยู่ที่ค่าสูงสุด
+            if (endPage === totalPages) {
+                startPage = Math.max(1, endPage - maxPageButtons + 1);
+            }
+            
+            // แสดงปุ่มหน้าแรกถ้าต้องการ
+            if (startPage > 1) {
+                const firstPageButton = createPageButton(1);
+                paginationPages.appendChild(firstPageButton);
+                
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'page-ellipsis';
+                    paginationPages.appendChild(ellipsis);
+                }
+            }
+            
+            // สร้างปุ่มหมายเลขหน้า
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = createPageButton(i);
+                paginationPages.appendChild(pageButton);
+            }
+            
+            // แสดงปุ่มหน้าสุดท้ายถ้าต้องการ
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('div');
+                    ellipsis.textContent = '...';
+                    ellipsis.className = 'page-ellipsis';
+                    paginationPages.appendChild(ellipsis);
+                }
+                
+                const lastPageButton = createPageButton(totalPages);
+                paginationPages.appendChild(lastPageButton);
+            }
+        }
+        
+        // ฟังก์ชันสร้างปุ่มหมายเลขหน้า
+        function createPageButton(pageNumber) {
+            const pageButton = document.createElement('div');
+            pageButton.className = 'page-number' + (pageNumber === currentPage ? ' active' : '');
+            pageButton.textContent = pageNumber;
+            pageButton.addEventListener('click', () => goToPage(pageNumber));
+            return pageButton;
+        }
+        
+        // ฟังก์ชันเปลี่ยนหน้า
+        function goToPage(page) {
+            currentPage = page;
+            renderTableData(window.tableData);
         }
 
         // ตัวแปรเก็บสถานะการ sort
@@ -1199,6 +1384,7 @@
             const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
             
             if (!searchTerm) {
+                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
                 renderTableData(window.tableData);
                 return;
             }
@@ -1210,6 +1396,7 @@
                 });
             });
 
+            currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
             renderTableData(filteredData);
         }
 
@@ -1249,6 +1436,26 @@
             });
             
             document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+            
+            // Event Listeners สำหรับปุ่มแบ่งหน้า
+            document.getElementById('prev-button').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+            
+            document.getElementById('next-button').addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+            
+            // Event Listener สำหรับเลือกขนาดหน้า
+            document.getElementById('page-size').addEventListener('change', function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
+                renderTableData(window.tableData);
+            });
 
             // เพิ่มการจัดการการเลือกข้อความในตาราง
             const dataTable = document.getElementById('data-table');
