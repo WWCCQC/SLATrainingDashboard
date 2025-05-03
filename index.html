@@ -582,8 +582,13 @@
                     const rows = parseCsvData(csvText);
                     originalData = rows;
                     filteredData2025 = filterDataByYear(rows, 2025);
+                    
+                    // แยกการอัปเดตตารางหลักออกจากการอัปเดตกราฟและ pivot table
                     updateChartAndTables(filteredData2025);
                     updateLineChart(filteredData2025);
+                    
+                    // อัปเดตตารางหลักเพียงครั้งเดียวเมื่อโหลดข้อมูล
+                    updateMainTable(filteredData2025);
                 })
                 .catch(error => {
                     console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
@@ -597,6 +602,65 @@
                     messageDiv.innerHTML = 'เกิดข้อผิดพลาดในการดึงข้อมูล กรุณาลองใหม่อีกครั้ง';
                     document.querySelector('.controls').insertAdjacentElement('afterend', messageDiv);
                 });
+        }
+        
+        // ฟังก์ชันสำหรับอัปเดตเฉพาะตารางหลัก
+        function updateMainTable(rows) {
+            // กรองข้อมูลเฉพาะปี 2025
+            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
+                area: row.c[26]?.v || '',
+                roundDate: row.c[27]?.v || '',
+                trainingMonth: row.c[28]?.v || '',
+                week: row.c[39]?.v || '',
+                name: row.c[3]?.v || '',
+                company: row.c[6]?.v || '',
+                agentCode: row.c[7]?.v || '',
+                province: row.c[8]?.v || '',
+                workStatus: row.c[13]?.v || '',
+                registerResult: row.c[33]?.v || '',
+                latestStatus: row.c[34]?.v || '',
+                startDate: row.c[35]?.v || '',
+                endDate: row.c[36]?.v || '',
+                sla: row.c[37]?.v || '',
+                year: row.c[41]?.v || ''
+            }));
+
+            // เริ่มต้นสร้างตารางใหม่
+            const dataTable = document.getElementById('data-table');
+            const thead = dataTable.getElementsByTagName('thead')[0];
+            thead.innerHTML = '';
+
+            // สร้างแถวส่วนหัว
+            const headerRow = thead.insertRow();
+            const columnHeaders = [
+                { text: "พื้นที่", key: "area" },
+                { text: "รอบวันที่", key: "roundDate" },
+                { text: "เดือนอบรม", key: "trainingMonth" },
+                { text: "week", key: "week" },
+                { text: "ชื่อ-นามสกุล", key: "name" },
+                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
+                { text: "รหัสตัวแทน", key: "agentCode" },
+                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
+                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
+                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
+                { text: "Status ล่าสุด", key: "latestStatus" },
+                { text: "วันเริ่มต้น", key: "startDate" },
+                { text: "วันสิ้นสุด", key: "endDate" },
+                { text: "SLA", key: "sla" },
+                { text: "ปี", key: "year" }
+            ];
+
+            // สร้างหัวคอลัมน์พร้อม event listener
+            columnHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.text;
+                th.dataset.key = header.key;
+                th.addEventListener('click', () => handleSort(header.key));
+                headerRow.appendChild(th);
+            });
+
+            // แสดงข้อมูลในตาราง
+            renderTableData(window.tableData);
         }
 
         // ฟังก์ชันแยกข้อมูล CSV
@@ -780,8 +844,7 @@
                 }]
             });
 
-            // อัพเดทตาราง
-            updateTables(filteredRows);
+            // อัพเดทเฉพาะตาราง Pivot ไม่กระทบตารางหลัก
             updatePivotTable(filteredRows);
 
             // เรียกใช้ฟังก์ชันจัดการ Legend
@@ -851,63 +914,6 @@
                 },
                 plugins: [ChartDataLabels]
             });
-        }
-
-        // ฟังก์ชันสำหรับการจัดการตารางข้อมูล
-        function initializeDataTable(rows) {
-            // กรองข้อมูลปี 2025
-            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
-                area: row.c[26]?.v || '',
-                roundDate: row.c[27]?.v || '',
-                trainingMonth: row.c[28]?.v || '',
-                week: row.c[39]?.v || '',
-                name: row.c[3]?.v || '',
-                company: row.c[6]?.v || '',
-                agentCode: row.c[7]?.v || '',
-                province: row.c[8]?.v || '',
-                workStatus: row.c[13]?.v || '',
-                registerResult: row.c[33]?.v || '',
-                latestStatus: row.c[34]?.v || '',
-                startDate: row.c[35]?.v || '',
-                endDate: row.c[36]?.v || '',
-                sla: row.c[37]?.v || '',
-                year: row.c[41]?.v || ''
-            }));
-
-            // สร้างส่วนหัวตาราง
-            const headers = [
-                { text: "พื้นที่", key: "area" },
-                { text: "รอบวันที่", key: "roundDate" },
-                { text: "เดือนอบรม", key: "trainingMonth" },
-                { text: "week", key: "week" },
-                { text: "ชื่อ-นามสกุล", key: "name" },
-                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
-                { text: "รหัสตัวแทน", key: "agentCode" },
-                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
-                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
-                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
-                { text: "Status ล่าสุด", key: "latestStatus" },
-                { text: "วันเริ่มต้น", key: "startDate" },
-                { text: "วันสิ้นสุด", key: "endDate" },
-                { text: "SLA", key: "sla" },
-                { text: "ปี", key: "year" }
-            ];
-
-            // สร้างส่วนหัวตาราง
-            const thead = document.querySelector('#data-table thead');
-            thead.innerHTML = '';
-            const headerRow = document.createElement('tr');
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header.text;
-                th.dataset.key = header.key;
-                th.addEventListener('click', () => handleSort(header.key));
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-
-            // แสดงข้อมูล
-            renderTableData(window.tableData);
         }
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
@@ -998,68 +1004,6 @@
                     header.classList.add(isAsc ? 'sort-asc' : 'sort-desc');
                 }
             });
-        }
-
-        // แก้ไขฟังก์ชัน updateTables เพื่อเพิ่มการจัดการ sort
-        function updateTables(rows) {
-            // อัปเดต Pivot Table
-            updatePivotTable(rows);
-
-            // กรองข้อมูลเฉพาะปี 2025
-            window.tableData = rows.filter(row => row.c[41]?.v === '2025').map(row => ({
-                area: row.c[26]?.v || '',
-                roundDate: row.c[27]?.v || '',
-                trainingMonth: row.c[28]?.v || '',
-                week: row.c[39]?.v || '',
-                name: row.c[3]?.v || '',
-                company: row.c[6]?.v || '',
-                agentCode: row.c[7]?.v || '',
-                province: row.c[8]?.v || '',
-                workStatus: row.c[13]?.v || '',
-                registerResult: row.c[33]?.v || '',
-                latestStatus: row.c[34]?.v || '',
-                startDate: row.c[35]?.v || '',
-                endDate: row.c[36]?.v || '',
-                sla: row.c[37]?.v || '',
-                year: row.c[41]?.v || ''
-            }));
-
-            // เริ่มต้นสร้างตารางใหม่
-            const dataTable = document.getElementById('data-table');
-            const thead = dataTable.getElementsByTagName('thead')[0];
-            thead.innerHTML = '';
-
-            // สร้างแถวส่วนหัว
-            const headerRow = thead.insertRow();
-            const columnHeaders = [
-                { text: "พื้นที่", key: "area" },
-                { text: "รอบวันที่", key: "roundDate" },
-                { text: "เดือนอบรม", key: "trainingMonth" },
-                { text: "week", key: "week" },
-                { text: "ชื่อ-นามสกุล", key: "name" },
-                { text: "ชื่อ บจก./หจก/ร้าน (ตัวแทน)", key: "company" },
-                { text: "รหัสตัวแทน", key: "agentCode" },
-                { text: "จังหวัดที่ตั้งร้านตัวแทน", key: "province" },
-                { text: "สถานะกองงาน (หัวหน้าหรือลูกน้อง)", key: "workStatus" },
-                { text: "ผลการขึ้นทะเบียน", key: "registerResult" },
-                { text: "Status ล่าสุด", key: "latestStatus" },
-                { text: "วันเริ่มต้น", key: "startDate" },
-                { text: "วันสิ้นสุด", key: "endDate" },
-                { text: "SLA", key: "sla" },
-                { text: "ปี", key: "year" }
-            ];
-
-            // สร้างหัวคอลัมน์พร้อม event listener
-            columnHeaders.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header.text;
-                th.dataset.key = header.key;
-                th.addEventListener('click', () => handleSort(header.key));
-                headerRow.appendChild(th);
-            });
-
-            // แสดงข้อมูลในตาราง
-            renderTableData(window.tableData);
         }
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
@@ -1299,7 +1243,11 @@
                 }
             });
 
-            document.getElementById('refresh-button').addEventListener('click', fetchDataAndUpdateTable);
+            document.getElementById('refresh-button').addEventListener('click', function() {
+                // อัปเดตทั้งตารางหลักและกราฟ
+                fetchDataAndUpdateTable();
+            });
+            
             document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
 
             // เพิ่มการจัดการการเลือกข้อความในตาราง
@@ -1363,8 +1311,8 @@
                         datasets[i].hidden = false;
                     });
                     chart.update();
-                    // อัพเดทตารางให้แสดงข้อมูลทั้งหมด
-                    updateChartAndTables(filteredData2025);
+                    // อัพเดทเฉพาะแผนภูมิและตาราง pivot โดยไม่กระทบตารางหลัก
+                    updatePivotTable(filteredData2025);
                 }
             });
 
@@ -1404,7 +1352,8 @@
                     });
 
                     chart.update();
-                    // อัพเดทตารางตาม Legend ที่เลือก
+                    
+                    // อัพเดทเฉพาะตาราง pivot ไม่กระทบตารางหลัก
                     const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
                     const filteredRows = filteredData2025.filter(row => {
                         if (selectedItems.size === 0) {
@@ -1414,8 +1363,8 @@
                         }
                     });
                     
-                    // อัพเดทตารางข้อมูล
-                    updateChartAndTables(filteredRows);
+                    // อัพเดทเฉพาะตาราง pivot โดยไม่เรียก updateTables
+                    updatePivotTable(filteredRows);
                 });
             });
         }
