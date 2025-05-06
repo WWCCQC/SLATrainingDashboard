@@ -811,7 +811,7 @@
 
         // ฟังก์ชันเพื่ออัปเดตกราฟและตาราง
         function updateChartAndTables(rows, selectedMonth = null, selectedStatus = null) {
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
+            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25'];
             const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ", "อยู่ระหว่างอบรมทฤษฎี", "ไม่ผ่านอบรม"];
             const colors = ['#006400', '#FF6B00', '#FF1493', '#4169E1', '#90EE90', '#008080', '#006400', '#FF69B4'];
 
@@ -964,7 +964,7 @@
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
         function updateLineChart(rows) {
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
+            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25'];
             const lineChartCanvas = document.getElementById('lineChart').getContext('2d');
 
             const lineChartData = {
@@ -1226,7 +1226,7 @@
                 "RSM7_UPC-CEW",
                 "RSM8_UPC-SOU"
             ];
-            const months = ['Jan25', 'Feb25', 'Mar25', 'Apr25'];
+            const months = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25'];
 
             let tableHTML = '';
             let finalGrandTotal = new Array(columns.length).fill(0);
