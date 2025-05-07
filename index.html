@@ -524,6 +524,52 @@
         </div>
     </div>
 
+    <!-- เพิ่มการ์ดสถานะอื่นๆ -->
+    <div style="display: flex; flex-wrap: nowrap; gap: 8px; margin-bottom: 20px; justify-content: center; overflow-x: auto;">
+        <div class="card" style="background-color: #008080; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">เอกสารยังไม่ครบ</div>
+                <div class="card-value" id="sla-incomplete-docs" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #4169E1; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">ติดประวัติอาชญากรรม</div>
+                <div class="card-value" id="sla-criminal-record" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #FF6B00; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">ช่างลาออก</div>
+                <div class="card-value" id="sla-resigned" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #FF69B4; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">ไม่ผ่านอบรม</div>
+                <div class="card-value" id="sla-failed-training" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #FF1493; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">ตัวแทนยังไม่ส่งขึ้นทะเบียน</div>
+                <div class="card-value" id="sla-not-submitted" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #4CA64C; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">อยู่ระหว่างอบรมทฤษฎี</div>
+                <div class="card-value" id="sla-theory-training" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #90EE90; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 14px;">อยู่ระหว่างอบรมปฏิบัติ</div>
+                <div class="card-value" id="sla-practical-training" style="font-size: 18px;">-</div>
+            </div>
+        </div>
+    </div>
+
     <div id="chart-container">
         <div class="chart-wrapper">
             <div class="legend-container">
@@ -545,7 +591,7 @@
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #90EE90;"></div>
-                    <span>อยู่ระหว่างอบรมปฏิบัติ</span>
+                    <span>อยู่ระหว่างอบรมปฎิบัติ</span>
                 </div>
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #008080;"></div>
@@ -960,6 +1006,328 @@
 
             const averageSLA = calculateAverageSLA(filteredData2025);
             document.getElementById('sla-value').textContent = averageSLA + ' วัน';
+
+            // อัพเดทการ์ดสถานะต่างๆ
+            updateStatusCards(filteredData2025);
+        }
+
+        // ฟังก์ชันคำนวณค่าเฉลี่ย SLA
+        function calculateAverageSLA(rows) {
+            let count = 0;
+            let totalSLA = 0;
+            
+            // ดึงค่า SLA จากทุกแถวที่มีสถานะ "ขึ้นทะเบียนเรียบร้อย"
+            rows.forEach(row => {
+                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
+                    const sla = parseFloat(row.c[37]?.v) || 0;
+                    if (sla > 0) {
+                        totalSLA += sla;
+                        count++;
+                    }
+                }
+            });
+            
+            // คำนวณค่าเฉลี่ยและคืนค่า
+            return count > 0 ? (totalSLA / count).toFixed(2) : '-';
+        }
+
+        // ฟังก์ชันคำนวณค่าเฉลี่ย SLA สำหรับสถานะเฉพาะ
+        function calculateStatusSLA(rows, status) {
+            let count = 0;
+            let totalSLA = 0;
+            
+            // ดึงค่า SLA จากทุกแถวที่มีสถานะตามที่ระบุ
+            rows.forEach(row => {
+                if (row.c[34]?.v === status) {
+                    const sla = parseFloat(row.c[37]?.v) || 0;
+                    if (sla > 0) {
+                        totalSLA += sla;
+                        count++;
+                    }
+                }
+            });
+            
+            return {
+                average: count > 0 ? (totalSLA / count).toFixed(2) : '-',
+                count: count
+            };
+        }
+
+        // ฟังก์ชันนับจำนวนช่างใหม่
+        function countNewTechnicians(rows) {
+            let count = 0;
+            rows.forEach(row => {
+                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        // Function to search table data
+        function searchTableData() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
+                renderTableData(window.tableData);
+                return;
+            }
+
+            const filteredData = window.tableData.filter(row => {
+                return Object.values(row).some(value => {
+                    if (value === null || value === undefined) return false;
+                    return value.toString().toLowerCase().includes(searchTerm);
+                });
+            });
+
+            currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
+            renderTableData(filteredData);
+        }
+
+        // เพิ่ม event listener ให้ปุ่ม
+        document.addEventListener('DOMContentLoaded', function() {
+            // ลบ event listeners เดิมที่อาจมีอยู่
+            const searchButton = document.getElementById('search-button');
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.querySelector('.search-container');
+
+            // ลบ event listener เดิมและเพิ่มใหม่
+            searchButton.replaceWith(searchButton.cloneNode(true));
+            const newSearchButton = document.getElementById('search-button');
+            
+            // เพิ่ม event listener ใหม่
+            newSearchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                searchTableData();
+            });
+
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                searchTableData();
+            });
+            
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchTableData();
+                }
+            });
+
+            document.getElementById('refresh-button').addEventListener('click', function() {
+                // อัปเดตทั้งตารางหลักและกราฟ
+                fetchDataAndUpdateTable();
+            });
+            
+            document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
+            
+            // Event Listeners สำหรับปุ่มแบ่งหน้า
+            document.getElementById('prev-button').addEventListener('click', function() {
+                if (currentPage > 1) {
+                    goToPage(currentPage - 1);
+                }
+            });
+            
+            document.getElementById('next-button').addEventListener('click', function() {
+                if (currentPage < totalPages) {
+                    goToPage(currentPage + 1);
+                }
+            });
+            
+            // Event Listener สำหรับเลือกขนาดหน้า
+            document.getElementById('page-size').addEventListener('change', function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
+                renderTableData(window.tableData);
+            });
+
+            // เพิ่มการจัดการการเลือกข้อความในตาราง
+            const dataTable = document.getElementById('data-table');
+            if (dataTable) {
+                dataTable.addEventListener('mousedown', function(e) {
+                    if (e.target.tagName === 'TD') {
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(e.target);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                });
+
+                // ป้องกันการเลือกข้อความถูกยกเลิกเมื่อลากเมาส์
+                dataTable.addEventListener('selectstart', function(e) {
+                    if (e.target.tagName === 'TD') {
+                        e.preventDefault();
+                    }
+                });
+            }
+        });
+
+        // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
+        fetchDataAndUpdateTable();
+
+        // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
+        updateCurrentDateTime();
+
+        // ฟังก์ชันนับจำนวนช่างทั้งหมด
+        function countTotalTechnicians(rows) {
+            return rows.length;
+        }
+
+        // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
+        function downloadTableAsExcel() {
+            // สร้างตาราง HTML ชั่วคราวที่มีข้อมูลทั้งหมด (ไม่ใช่เฉพาะหน้าปัจจุบัน)
+            const tempTable = document.createElement('table');
+            
+            // คัดลอกส่วนหัวตาราง
+            const headerRow = document.createElement('tr');
+            const headers = document.querySelectorAll('#data-table th');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header.textContent;
+                headerRow.appendChild(th);
+            });
+            
+            // สร้าง thead และใส่แถวหัวข้อ
+            const thead = document.createElement('thead');
+            thead.appendChild(headerRow);
+            tempTable.appendChild(thead);
+            
+            // สร้าง tbody สำหรับใส่ข้อมูลทั้งหมด
+            const tbody = document.createElement('tbody');
+            
+            // ใส่ข้อมูลทั้งหมด (ไม่ใช่เฉพาะข้อมูลที่แสดงในหน้าปัจจุบัน)
+            window.tableData.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            tempTable.appendChild(tbody);
+            
+            // แปลงตารางชั่วคราวเป็นไฟล์ Excel
+            const workbook = XLSX.utils.table_to_book(tempTable, { sheet: "ข้อมูลการอบรมช่าง" });
+            
+            // ตั้งชื่อไฟล์ที่จะดาวน์โหลดพร้อมวันที่
+            const now = new Date();
+            const datePart = now.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\//g, '-');
+            
+            const filename = `ข้อมูลการอบรมช่าง_${datePart}.xlsx`;
+            
+            // ดาวน์โหลดไฟล์
+            XLSX.writeFile(workbook, filename);
+        }
+
+        // เพิ่มฟังก์ชันสำหรับจัดการ Legend
+        function initializeLegendHandlers() {
+            const legendItems = document.querySelectorAll('.legend-item');
+            const datasets = chart.data.datasets;
+            let selectedItems = window.selectedLegendItems || new Set();
+            window.selectedLegendItems = selectedItems;
+            
+            // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง
+            document.addEventListener('click', (event) => {
+                // ตรวจสอบว่าคลิกที่ legend-item หรือไม่
+                const clickedLegend = event.target.closest('.legend-item');
+                const clickedChart = event.target.closest('canvas');
+                
+                // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ ให้แสดงทุกรายการ
+                if (!clickedLegend && !clickedChart) {
+                    selectedItems.clear();
+                    legendItems.forEach((item, i) => {
+                        item.classList.remove('selected');
+                        datasets[i].hidden = false;
+                    });
+                    chart.update();
+                    // อัพเดทเฉพาะแผนภูมิและตาราง pivot โดยไม่กระทบตารางหลัก
+                    updatePivotTable(filteredData2025);
+                }
+            });
+
+            // จัดการการคลิกที่ Legend items
+            legendItems.forEach((item, index) => {
+                item.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (event.ctrlKey || event.metaKey) {
+                        if (selectedItems.has(index)) {
+                            selectedItems.delete(index);
+                            item.classList.remove('selected');
+                        } else {
+                            selectedItems.add(index);
+                            item.classList.add('selected');
+                        }
+                    } else {
+                        selectedItems.clear();
+                        selectedItems.add(index);
+                        legendItems.forEach((otherItem, i) => {
+                            if (i === index) {
+                                otherItem.classList.add('selected');
+                            } else {
+                                otherItem.classList.remove('selected');
+                            }
+                        });
+                    }
+                    window.selectedLegendItems = selectedItems;
+                    // อัพเดทการแสดงผลกราฟ
+                    datasets.forEach((dataset, i) => {
+                        if (selectedItems.size === 0) {
+                            // ถ้าไม่มีรายการที่ถูกเลือก แสดงทุกรายการ
+                            dataset.hidden = false;
+                        } else {
+                            // ซ่อนรายการที่ไม่ได้เลือก
+                            dataset.hidden = !selectedItems.has(i);
+                        }
+                    });
+
+                    chart.update();
+                    
+                    // อัพเดทเฉพาะตาราง pivot ไม่กระทบตารางหลัก
+                    const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
+                    const filteredRows = filteredData2025.filter(row => {
+                        if (selectedItems.size === 0) {
+                            return true; // แสดงข้อมูลทั้งหมด
+                        } else {
+                            return selectedStatuses.includes(row.c[34]?.v);
+                        }
+                    });
+                    
+                    // อัพเดทเฉพาะตาราง pivot โดยไม่เรียก updateTables
+                    updatePivotTable(filteredRows);
+                });
+            });
+        }
+
+        // ฟังก์ชันอัพเดทการ์ดสถานะต่างๆ
+        function updateStatusCards(rows) {
+            const statuses = [
+                { id: 'sla-register-complete', status: 'ขึ้นทะเบียนเรียบร้อย' },
+                { id: 'sla-incomplete-docs', status: 'เอกสารยังไม่ครบ' },
+                { id: 'sla-criminal-record', status: 'ติดประวัติอาชญากรรม' },
+                { id: 'sla-theory-training', status: 'อยู่ระหว่างอบรมทฤษฎี' },
+                { id: 'sla-practical-training', status: 'อยู่ระหว่างอบรมปฎิบัติ' },
+                { id: 'sla-resigned', status: 'ช่างลาออก' },
+                { id: 'sla-not-submitted', status: 'ตัวแทนยังไม่ส่งขึ้นทะเบียน' },
+                { id: 'sla-failed-training', status: 'ไม่ผ่านอบรม' }
+            ];
+
+            statuses.forEach(item => {
+                const result = calculateStatusSLA(rows, item.status);
+                const element = document.getElementById(item.id);
+                if (element) {
+                    element.textContent = result.average !== '-' 
+                        ? `${result.average} วัน (${result.count} คน)` 
+                        : `0 คน`;
+                }
+            });
         }
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
@@ -1345,280 +1713,6 @@
                 }
             `;
             document.head.appendChild(style);
-        }
-
-        // ฟังก์ชันคำนวณค่าเฉลี่ย SLA
-        function calculateAverageSLA(rows) {
-            let count = 0;
-            const totalSLA = 7218; // กำหนดค่าผลรวม SLA ที่ถูกต้อง
-            
-            // นับจำนวนช่างที่ขึ้นทะเบียนเรียบร้อย
-            rows.forEach(row => {
-                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
-                    count++;
-                }
-            });
-            
-            // แสดงข้อมูลในคอนโซลเพื่อตรวจสอบ
-            console.log('จำนวนคนที่ขึ้นทะเบียนเรียบร้อย:', count);
-            console.log('ผลรวม SLA ทั้งหมด:', totalSLA);
-            console.log('ค่าเฉลี่ย SLA:', totalSLA / count);
-            
-            // คำนวณค่าเฉลี่ยและคืนค่า
-            return count > 0 ? (totalSLA / count).toFixed(2) : '-';
-        }
-
-        // ฟังก์ชันนับจำนวนช่างใหม่
-        function countNewTechnicians(rows) {
-            let count = 0;
-            rows.forEach(row => {
-                if (row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย") {
-                    count++;
-                }
-            });
-            return count;
-        }
-
-        // Function to search table data
-        function searchTableData() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-            
-            if (!searchTerm) {
-                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
-                renderTableData(window.tableData);
-                return;
-            }
-
-            const filteredData = window.tableData.filter(row => {
-                return Object.values(row).some(value => {
-                    if (value === null || value === undefined) return false;
-                    return value.toString().toLowerCase().includes(searchTerm);
-                });
-            });
-
-            currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
-            renderTableData(filteredData);
-        }
-
-        // เพิ่ม event listener ให้ปุ่ม
-        document.addEventListener('DOMContentLoaded', function() {
-            // ลบ event listeners เดิมที่อาจมีอยู่
-            const searchButton = document.getElementById('search-button');
-            const searchInput = document.getElementById('search-input');
-            const searchForm = document.querySelector('.search-container');
-
-            // ลบ event listener เดิมและเพิ่มใหม่
-            searchButton.replaceWith(searchButton.cloneNode(true));
-            const newSearchButton = document.getElementById('search-button');
-            
-            // เพิ่ม event listener ใหม่
-            newSearchButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                searchTableData();
-            });
-
-            searchForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                searchTableData();
-            });
-            
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    searchTableData();
-                }
-            });
-
-            document.getElementById('refresh-button').addEventListener('click', function() {
-                // อัปเดตทั้งตารางหลักและกราฟ
-                fetchDataAndUpdateTable();
-            });
-            
-            document.getElementById('download-button').addEventListener('click', downloadTableAsExcel);
-            
-            // Event Listeners สำหรับปุ่มแบ่งหน้า
-            document.getElementById('prev-button').addEventListener('click', function() {
-                if (currentPage > 1) {
-                    goToPage(currentPage - 1);
-                }
-            });
-            
-            document.getElementById('next-button').addEventListener('click', function() {
-                if (currentPage < totalPages) {
-                    goToPage(currentPage + 1);
-                }
-            });
-            
-            // Event Listener สำหรับเลือกขนาดหน้า
-            document.getElementById('page-size').addEventListener('change', function() {
-                pageSize = parseInt(this.value);
-                currentPage = 1; // รีเซ็ตกลับไปหน้าแรก
-                renderTableData(window.tableData);
-            });
-
-            // เพิ่มการจัดการการเลือกข้อความในตาราง
-            const dataTable = document.getElementById('data-table');
-            if (dataTable) {
-                dataTable.addEventListener('mousedown', function(e) {
-                    if (e.target.tagName === 'TD') {
-                        const selection = window.getSelection();
-                        const range = document.createRange();
-                        range.selectNodeContents(e.target);
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    }
-                });
-
-                // ป้องกันการเลือกข้อความถูกยกเลิกเมื่อลากเมาส์
-                dataTable.addEventListener('selectstart', function(e) {
-                    if (e.target.tagName === 'TD') {
-                        e.preventDefault();
-                    }
-                });
-            }
-        });
-
-        // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
-        fetchDataAndUpdateTable();
-
-        // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
-        updateCurrentDateTime();
-
-        // ฟังก์ชันนับจำนวนช่างทั้งหมด
-        function countTotalTechnicians(rows) {
-            return rows.length;
-        }
-
-        // ฟังก์ชันเพื่อดาวน์โหลดตารางเป็น Excel
-        function downloadTableAsExcel() {
-            // สร้างตาราง HTML ชั่วคราวที่มีข้อมูลทั้งหมด (ไม่ใช่เฉพาะหน้าปัจจุบัน)
-            const tempTable = document.createElement('table');
-            
-            // คัดลอกส่วนหัวตาราง
-            const headerRow = document.createElement('tr');
-            const headers = document.querySelectorAll('#data-table th');
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header.textContent;
-                headerRow.appendChild(th);
-            });
-            
-            // สร้าง thead และใส่แถวหัวข้อ
-            const thead = document.createElement('thead');
-            thead.appendChild(headerRow);
-            tempTable.appendChild(thead);
-            
-            // สร้าง tbody สำหรับใส่ข้อมูลทั้งหมด
-            const tbody = document.createElement('tbody');
-            
-            // ใส่ข้อมูลทั้งหมด (ไม่ใช่เฉพาะข้อมูลที่แสดงในหน้าปัจจุบัน)
-            window.tableData.forEach(row => {
-                const tr = document.createElement('tr');
-                Object.values(row).forEach(value => {
-                    const td = document.createElement('td');
-                    td.textContent = value;
-                    tr.appendChild(td);
-                });
-                tbody.appendChild(tr);
-            });
-            
-            tempTable.appendChild(tbody);
-            
-            // แปลงตารางชั่วคราวเป็นไฟล์ Excel
-            const workbook = XLSX.utils.table_to_book(tempTable, { sheet: "ข้อมูลการอบรมช่าง" });
-            
-            // ตั้งชื่อไฟล์ที่จะดาวน์โหลดพร้อมวันที่
-            const now = new Date();
-            const datePart = now.toLocaleDateString('th-TH', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).replace(/\//g, '-');
-            
-            const filename = `ข้อมูลการอบรมช่าง_${datePart}.xlsx`;
-            
-            // ดาวน์โหลดไฟล์
-            XLSX.writeFile(workbook, filename);
-        }
-
-        // เพิ่มฟังก์ชันสำหรับจัดการ Legend
-        function initializeLegendHandlers() {
-            const legendItems = document.querySelectorAll('.legend-item');
-            const datasets = chart.data.datasets;
-            let selectedItems = window.selectedLegendItems || new Set();
-            window.selectedLegendItems = selectedItems;
-            
-            // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง
-            document.addEventListener('click', (event) => {
-                // ตรวจสอบว่าคลิกที่ legend-item หรือไม่
-                const clickedLegend = event.target.closest('.legend-item');
-                const clickedChart = event.target.closest('canvas');
-                
-                // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ ให้แสดงทุกรายการ
-                if (!clickedLegend && !clickedChart) {
-                    selectedItems.clear();
-                    legendItems.forEach((item, i) => {
-                        item.classList.remove('selected');
-                        datasets[i].hidden = false;
-                    });
-                    chart.update();
-                    // อัพเดทเฉพาะแผนภูมิและตาราง pivot โดยไม่กระทบตารางหลัก
-                    updatePivotTable(filteredData2025);
-                }
-            });
-
-            // จัดการการคลิกที่ Legend items
-            legendItems.forEach((item, index) => {
-                item.addEventListener('click', (event) => {
-                    event.stopPropagation();
-                    if (event.ctrlKey || event.metaKey) {
-                        if (selectedItems.has(index)) {
-                            selectedItems.delete(index);
-                            item.classList.remove('selected');
-                        } else {
-                            selectedItems.add(index);
-                            item.classList.add('selected');
-                        }
-                    } else {
-                        selectedItems.clear();
-                        selectedItems.add(index);
-                        legendItems.forEach((otherItem, i) => {
-                            if (i === index) {
-                                otherItem.classList.add('selected');
-                            } else {
-                                otherItem.classList.remove('selected');
-                            }
-                        });
-                    }
-                    window.selectedLegendItems = selectedItems;
-                    // อัพเดทการแสดงผลกราฟ
-                    datasets.forEach((dataset, i) => {
-                        if (selectedItems.size === 0) {
-                            // ถ้าไม่มีรายการที่ถูกเลือก แสดงทุกรายการ
-                            dataset.hidden = false;
-                        } else {
-                            // ซ่อนรายการที่ไม่ได้เลือก
-                            dataset.hidden = !selectedItems.has(i);
-                        }
-                    });
-
-                    chart.update();
-                    
-                    // อัพเดทเฉพาะตาราง pivot ไม่กระทบตารางหลัก
-                    const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
-                    const filteredRows = filteredData2025.filter(row => {
-                        if (selectedItems.size === 0) {
-                            return true; // แสดงข้อมูลทั้งหมด
-                        } else {
-                            return selectedStatuses.includes(row.c[34]?.v);
-                        }
-                    });
-                    
-                    // อัพเดทเฉพาะตาราง pivot โดยไม่เรียก updateTables
-                    updatePivotTable(filteredRows);
-                });
-            });
         }
     </script>
 </body>
