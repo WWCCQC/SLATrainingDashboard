@@ -614,7 +614,7 @@
         </div>
     </div>
 
-    <h2>สถานะการอบรมช่างใหม่รายพื้นที่</h2>
+    <h2 id="pivot-table-title">สถานะการอบรมช่างใหม่รายพื้นที่</h2>
     <table id="pivot-table" class="pivot-table">
         <thead>
             <tr id="pivot-header"></tr>
@@ -624,32 +624,54 @@
 
     <div class="table-header-container">
         <h2>รายละเอียดข้อมูลช่างลงทะเบียนอบรมช่างใหม่</h2>
-        <div class="table-buttons">
-            <form class="search-container" onsubmit="event.preventDefault(); searchTableData();">
-                <input type="text" id="search-input" class="search-input" placeholder="พิมพ์คำค้นหา...">
-                <button type="button" id="search-button">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    ค้นหา
-                </button>
-            </form>
-            <button id="refresh-button">
+    </div>
+    <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+        <div class="card month-card" data-month="all" style="background-color: #003366; color: white; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">All</div>
+        <div class="card month-card" data-month="Jan" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Jan</div>
+        <div class="card month-card" data-month="Feb" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Feb</div>
+        <div class="card month-card" data-month="Mar" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Mar</div>
+        <div class="card month-card" data-month="Apr" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Apr</div>
+        <div class="card month-card" data-month="May" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">May</div>
+        <div class="card month-card" data-month="Jun" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Jun</div>
+        <div class="card month-card" data-month="Jul" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Jul</div>
+        <div class="card month-card" data-month="Aug" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Aug</div>
+        <div class="card month-card" data-month="Sep" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Sep</div>
+        <div class="card month-card" data-month="Oct" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Oct</div>
+        <div class="card month-card" data-month="Nov" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Nov</div>
+        <div class="card month-card" data-month="Dec" style="background-color: #f0f0f0; color: black; padding: 5px 10px; font-size: 14px; min-width: auto; cursor: pointer;">Dec</div>
+    </div>
+    <div class="table-buttons" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: -40px; margin-bottom: 10px;">
+        <form class="search-container" onsubmit="event.preventDefault(); searchTableData();">
+            <input type="text" id="search-input" class="search-input" placeholder="พิมพ์คำค้นหา...">
+            <button type="button" id="search-button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                รีเฟรชข้อมูล
+                ค้นหา
             </button>
-            <button id="download-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                ดาวน์โหลด
-            </button>
-        </div>
+        </form>
+        <button id="reset-filter-button" title="ล้างการกรอง">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 3h18v18H3z"></path>
+                <path d="M21 3l-9 9M3 21l9-9"></path>
+            </svg>
+            ล้างตัวกรอง
+        </button>
+        <button id="refresh-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+            </svg>
+            รีเฟรชข้อมูล
+        </button>
+        <button id="download-button">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ดาวน์โหลด
+        </button>
     </div>
     <table id="data-table">
         <thead>
@@ -735,6 +757,30 @@
                     
                     // อัปเดตตารางหลักเพียงครั้งเดียวเมื่อโหลดข้อมูล
                     updateMainTable(filteredData2025);
+                    
+                    // รีเซ็ตการแสดงผลให้แสดงข้อมูลทั้งหมด
+                    const allButton = document.querySelector('.month-card[data-month="all"]');
+                    if (allButton) {
+                        // ไฮไลต์ปุ่ม All
+                        document.querySelectorAll('.month-card').forEach(card => {
+                            card.style.backgroundColor = '#f0f0f0';
+                            card.style.color = 'black';
+                        });
+                        allButton.style.backgroundColor = '#003366';
+                        allButton.style.color = 'white';
+                    }
+                    
+                    // ลบข้อความแสดงจำนวนข้อมูลที่กรองออก
+                    const existingInfo = document.getElementById('data-count-info');
+                    if (existingInfo) {
+                        existingInfo.remove();
+                    }
+                    
+                    // แสดงตัวควบคุมการแบ่งหน้า
+                    const paginationContainer = document.querySelector('.pagination-container');
+                    if (paginationContainer) {
+                        paginationContainer.style.display = 'flex';
+                    }
                 })
                 .catch(error => {
                     console.error("เกิดข้อผิดพลาดในการดึงข้อมูล:", error);
@@ -770,6 +816,9 @@
                 sla: row.c[37]?.v || '',
                 year: row.c[41]?.v || ''
             }));
+            
+            // เก็บข้อมูลต้นฉบับไว้
+            window.originalTableData = [...window.tableData];
 
             // เริ่มต้นสร้างตารางใหม่
             const dataTable = document.getElementById('data-table');
@@ -1085,6 +1134,71 @@
             renderTableData(filteredData);
         }
 
+        // ฟังก์ชันกรองข้อมูลตามเดือน
+        function filterTableByMonth(monthName) {
+            if (!window.originalTableData) {
+                // สำรองข้อมูลต้นฉบับหากยังไม่มี
+                window.originalTableData = window.tableData ? [...window.tableData] : [];
+            }
+            
+            if (monthName === 'all') {
+                // กลับไปดูข้อมูลทั้งหมดโดยใช้ฟังก์ชันรีเซ็ต
+                resetTableData();
+                return;
+            }
+            
+            // กรองข้อมูลตามเดือนที่เลือก
+            const filteredData = window.originalTableData.filter(row => {
+                // ตรวจสอบค่าในคอลัมน์เดือนอบรม
+                // เนื่องจากเดือนอบรมอยู่ในรูปแบบ 'Jan25', 'Feb25', ฯลฯ
+                // เราต้องตรวจสอบเฉพาะส่วนต้นของสตริงว่าเริ่มต้นด้วยเดือนที่เลือกหรือไม่
+                return row.trainingMonth && row.trainingMonth.startsWith(monthName);
+            });
+            
+            // แสดงข้อมูลทั้งหมดของเดือนที่เลือกโดยไม่มีการแบ่งหน้า
+            renderAllMonthData(filteredData);
+        }
+        
+        // ฟังก์ชันแสดงข้อมูลทั้งหมดของเดือนที่เลือก
+        function renderAllMonthData(data) {
+            const tbody = document.querySelector('#data-table tbody');
+            tbody.innerHTML = '';
+            
+            // แสดงข้อมูลทั้งหมดโดยไม่มีการแบ่งหน้า
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                Object.values(row).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            // ซ่อนตัวควบคุมการแบ่งหน้า
+            const paginationContainer = document.querySelector('.pagination-container');
+            paginationContainer.style.display = 'none';
+            
+            // แสดงข้อความแสดงจำนวนข้อมูลที่กรอง
+            const dataCountInfo = document.createElement('div');
+            dataCountInfo.id = 'data-count-info';
+            dataCountInfo.style.textAlign = 'right';
+            dataCountInfo.style.marginTop = '10px';
+            dataCountInfo.style.fontSize = '14px';
+            dataCountInfo.style.color = '#666';
+            dataCountInfo.textContent = `แสดงข้อมูลทั้งหมด ${data.length} รายการ`;
+            
+            // ลบข้อความเดิมถ้ามี
+            const existingInfo = document.getElementById('data-count-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
+            // แทรกข้อความใหม่หลังตาราง
+            const dataTable = document.getElementById('data-table');
+            dataTable.parentNode.insertBefore(dataCountInfo, dataTable.nextSibling);
+        }
+
         // เพิ่ม event listener ให้ปุ่ม
         document.addEventListener('DOMContentLoaded', function() {
             // ลบ event listeners เดิมที่อาจมีอยู่
@@ -1113,6 +1227,10 @@
                     e.preventDefault();
                     searchTableData();
                 }
+            });
+
+            document.getElementById('reset-filter-button').addEventListener('click', function() {
+                resetTableData();
             });
 
             document.getElementById('refresh-button').addEventListener('click', function() {
@@ -1162,6 +1280,23 @@
                     }
                 });
             }
+            
+            // เพิ่ม Event Listener สำหรับปุ่มเดือน
+            const monthCards = document.querySelectorAll('.month-card');
+            monthCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const selectedMonth = this.getAttribute('data-month');
+                    filterTableByMonth(selectedMonth);
+                    
+                    // ไฮไลต์ปุ่มที่เลือก
+                    monthCards.forEach(c => {
+                        c.style.backgroundColor = '#f0f0f0';
+                        c.style.color = 'black';
+                    });
+                    this.style.backgroundColor = '#003366';
+                    this.style.color = 'white';
+                });
+            });
         });
 
         // ดึงข้อมูลครั้งแรกเมื่อโหลดหน้าเว็บ
@@ -1309,14 +1444,13 @@
         // ฟังก์ชันอัพเดทการ์ดสถานะต่างๆ
         function updateStatusCards(rows) {
             const statuses = [
-                { id: 'sla-register-complete', status: 'ขึ้นทะเบียนเรียบร้อย' },
                 { id: 'sla-incomplete-docs', status: 'เอกสารยังไม่ครบ' },
                 { id: 'sla-criminal-record', status: 'ติดประวัติอาชญากรรม' },
-                { id: 'sla-theory-training', status: 'อยู่ระหว่างอบรมทฤษฎี' },
-                { id: 'sla-practical-training', status: 'อยู่ระหว่างอบรมปฎิบัติ' },
                 { id: 'sla-resigned', status: 'ช่างลาออก' },
+                { id: 'sla-failed-training', status: 'ไม่ผ่านอบรม' },
                 { id: 'sla-not-submitted', status: 'ตัวแทนยังไม่ส่งขึ้นทะเบียน' },
-                { id: 'sla-failed-training', status: 'ไม่ผ่านอบรม' }
+                { id: 'sla-theory-training', status: 'อยู่ระหว่างอบรมทฤษฎี' },
+                { id: 'sla-practical-training', status: 'อยู่ระหว่างอบรมปฎิบัติ' }
             ];
 
             statuses.forEach(item => {
@@ -1386,6 +1520,11 @@
 
         // ฟังก์ชันแสดงข้อมูลในตาราง
         function renderTableData(data) {
+            if (!data || data.length === 0) {
+                console.warn("ไม่มีข้อมูลที่จะแสดง");
+                return;
+            }
+            
             const tbody = document.querySelector('#data-table tbody');
             tbody.innerHTML = '';
             
@@ -1406,12 +1545,37 @@
                 tbody.appendChild(tr);
             });
             
+            // แสดงตัวควบคุมการแบ่งหน้า
+            const paginationContainer = document.querySelector('.pagination-container');
+            if (paginationContainer) {
+                paginationContainer.style.display = 'flex';
+            }
+            
+            // ลบข้อความแสดงจำนวนข้อมูลที่กรองออก
+            const existingInfo = document.getElementById('data-count-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
             // อัปเดตข้อมูลการแบ่งหน้า
             updatePagination(data.length);
         }
         
         // ฟังก์ชันอัปเดตข้อมูลการแบ่งหน้า
         function updatePagination(totalItems) {
+            if (!totalItems || totalItems === 0) {
+                console.warn("ไม่มีข้อมูลสำหรับการแบ่งหน้า");
+                return;
+            }
+            
+            // คำนวณจำนวนหน้าทั้งหมด
+            totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+            
+            // ปรับปรุงหน้าปัจจุบันไม่ให้เกินจำนวนหน้าทั้งหมด
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            
             const paginationInfo = document.getElementById('pagination-info');
             const prevButton = document.getElementById('prev-button');
             const nextButton = document.getElementById('next-button');
@@ -1577,9 +1741,36 @@
                 "Grand Total"
             ];
 
+            // เฉพาะเดือนปัจจุบัน (May25)
+            const currentMonth = 'May25';
+            
+            // แยกส่วนเดือนและปีจาก currentMonth
+            const monthNames = {
+                'Jan': 'January',
+                'Feb': 'February',
+                'Mar': 'March',
+                'Apr': 'April',
+                'May': 'May',
+                'Jun': 'June',
+                'Jul': 'July',
+                'Aug': 'August',
+                'Sep': 'September',
+                'Oct': 'October',
+                'Nov': 'November',
+                'Dec': 'December'
+            };
+            
+            const monthCode = currentMonth.substring(0, 3);
+            const yearCode = currentMonth.substring(3);
+            const fullMonthName = monthNames[monthCode];
+            const fullYear = '20' + yearCode;
+            
+            // อัพเดทชื่อตาราง
+            document.getElementById('pivot-table-title').textContent = `สถานะการอบรมช่างใหม่รายพื้นที่ ${fullMonthName} ${fullYear}`;
+            
             // สร้างส่วนหัวตาราง
             pivotHeader.innerHTML = `
-                <th>สถานะการอบรมช่างใหม่รายพื้นที่</th>
+                <th>พื้นที่</th>
                 ${columns.map(col => `<th>${col}</th>`).join('')}
             `;
 
@@ -1594,81 +1785,48 @@
                 "RSM7_UPC-CEW",
                 "RSM8_UPC-SOU"
             ];
-            const months = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25'];
 
             let tableHTML = '';
             let finalGrandTotal = new Array(columns.length).fill(0);
 
             // สร้างข้อมูลตาราง
             areas.forEach(area => {
-                // แสดงชื่อพื้นที่
-                tableHTML += `<tr class="area-header"><td>${area}</td>${columns.map(() => '<td></td>').join('')}</tr>`;
+                // กรองข้อมูลเฉพาะพื้นที่และเดือนปัจจุบัน
+                const areaData = rows.filter(row => 
+                    row.c[26]?.v === area && 
+                    row.c[28]?.v === currentMonth
+                );
 
-                let areaTotal = new Array(columns.length).fill(0);
+                if (areaData.length > 0) {
+                    const rowData = [
+                        areaData.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length,
+                        areaData.filter(row => row.c[34]?.v === "ช่างลาออก").length,
+                        areaData.filter(row => row.c[34]?.v === "ตัวแทนยังไม่ส่งขึ้นทะเบียน").length,
+                        areaData.filter(row => row.c[34]?.v === "ติดประวัติอาชญากรรม").length,
+                        areaData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมปฎิบัติ").length,
+                        areaData.filter(row => row.c[34]?.v === "เอกสารยังไม่ครบ").length,
+                        areaData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมทฤษฎี").length,
+                        areaData.filter(row => row.c[34]?.v === "ไม่ผ่านอบรม").length
+                    ];
 
-                // แสดงข้อมูลรายเดือน
-                months.forEach(month => {
-                    const monthData = rows.filter(row => 
-                        row.c[26]?.v === area && 
-                        row.c[28]?.v === month
-                    );
+                    // คำนวณผลรวมของแถว
+                    const areaTotal = rowData.reduce((a, b) => a + b, 0);
+                    rowData.push(areaTotal);
 
-                    if (monthData.length > 0) {
-                        const rowData = [
-                            monthData.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length,
-                            monthData.filter(row => row.c[34]?.v === "ช่างลาออก").length,
-                            monthData.filter(row => row.c[34]?.v === "ตัวแทนยังไม่ส่งขึ้นทะเบียน").length,
-                            monthData.filter(row => row.c[34]?.v === "ติดประวัติอาชญากรรม").length,
-                            monthData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมปฎิบัติ").length,
-                            monthData.filter(row => row.c[34]?.v === "เอกสารยังไม่ครบ").length,
-                            monthData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมทฤษฎี").length,
-                            monthData.filter(row => row.c[34]?.v === "ไม่ผ่านอบรม").length
-                        ];
-
-                        // คำนวณผลรวมของแต่ละแถว
-                        const monthTotal = rowData.reduce((a, b) => a + b, 0);
-                        rowData.push(monthTotal);
-
-                        // เพิ่มค่าในผลรวมของพื้นที่
-                        rowData.forEach((val, idx) => {
-                            areaTotal[idx] += val;
-                        });
-
-                        // แสดงเฉพาะแถวที่มีข้อมูล
-                        if (monthTotal > 0) {
-                            tableHTML += `
-                                <tr>
-                                    <td>${month}</td>
-                                    ${rowData.map(val => `<td>${val || ''}</td>`).join('')}
-                                </tr>
-                            `;
-                        }
-                    }
-                });
-
-                // คำนวณผลรวมของพื้นที่
-                const areaTotalSum = areaTotal.slice(0, -1).reduce((a, b) => a + b, 0);
-                areaTotal[areaTotal.length - 1] = areaTotalSum;
-
-                // แสดงผลรวมของพื้นที่
-                if (areaTotalSum > 0) {
+                    // แสดงข้อมูลแต่ละพื้นที่โดยตรงเลย (ไม่ต้องมีแถว May25)
                     tableHTML += `
-                        <tr class="area-total">
-                            <td>${area} Total</td>
-                            ${areaTotal.map(val => `<td>${val || ''}</td>`).join('')}
+                        <tr>
+                            <td>${area}</td>
+                            ${rowData.map(val => `<td>${val || ''}</td>`).join('')}
                         </tr>
                     `;
 
                     // เพิ่มค่าใน Grand Total
-                    areaTotal.forEach((val, idx) => {
+                    rowData.forEach((val, idx) => {
                         finalGrandTotal[idx] += val;
                     });
                 }
             });
-
-            // คำนวณผลรวมสุดท้ายสำหรับ Grand Total
-            const finalTotalSum = finalGrandTotal.slice(0, -1).reduce((a, b) => a + b, 0);
-            finalGrandTotal[finalGrandTotal.length - 1] = finalTotalSum;
 
             // เพิ่มแถว Grand Total
             tableHTML += `
@@ -1702,10 +1860,7 @@
                 #pivot-table td {
                     text-align: center;
                 }
-                .area-header td:first-child {
-                    text-align: left;
-                }
-                .area-total td:first-child {
+                #pivot-table td:first-child {
                     text-align: left;
                 }
                 .grand-total td:first-child {
@@ -1713,6 +1868,50 @@
                 }
             `;
             document.head.appendChild(style);
+        }
+
+        // ฟังก์ชันแสดงข้อมูลทั้งหมดแบบรีเซ็ต
+        function resetTableData() {
+            // ตรวจสอบว่ามีข้อมูลต้นฉบับหรือไม่
+            if (!window.originalTableData) {
+                console.warn("ไม่พบข้อมูลต้นฉบับ");
+                return;
+            }
+            
+            // คืนค่าข้อมูลกลับเป็นข้อมูลต้นฉบับทั้งหมด
+            window.tableData = [...window.originalTableData];
+            
+            // รีเซ็ตหน้าไปที่หน้าแรก
+            currentPage = 1;
+            
+            // แสดงตัวควบคุมการแบ่งหน้า
+            const paginationContainer = document.querySelector('.pagination-container');
+            if (paginationContainer) {
+                paginationContainer.style.display = 'flex';
+            }
+            
+            // ลบข้อความแสดงจำนวนข้อมูลที่กรองออก
+            const existingInfo = document.getElementById('data-count-info');
+            if (existingInfo) {
+                existingInfo.remove();
+            }
+            
+            // รีเซ็ตไฮไลต์ปุ่ม
+            const monthCards = document.querySelectorAll('.month-card');
+            monthCards.forEach(card => {
+                card.style.backgroundColor = '#f0f0f0';
+                card.style.color = 'black';
+            });
+            
+            // ไฮไลต์ปุ่ม All
+            const allButton = document.querySelector('.month-card[data-month="all"]');
+            if (allButton) {
+                allButton.style.backgroundColor = '#003366';
+                allButton.style.color = 'white';
+            }
+            
+            // แสดงข้อมูลทั้งหมดในตาราง
+            renderTableData(window.originalTableData);
         }
     </script>
 </body>
