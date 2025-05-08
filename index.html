@@ -1076,8 +1076,8 @@
                 }
             });
             
-            // คำนวณค่าเฉลี่ยและคืนค่า
-            return count > 0 ? (totalSLA / count).toFixed(2) : '-';
+            // คำนวณค่าเฉลี่ยและคืนค่า ปัดขึ้นเป็นจำนวนเต็ม
+            return count > 0 ? Math.ceil(totalSLA / count) : '-';
         }
 
         // ฟังก์ชันคำนวณค่าเฉลี่ย SLA สำหรับสถานะเฉพาะ
@@ -1097,7 +1097,7 @@
             });
             
             return {
-                average: count > 0 ? (totalSLA / count).toFixed(2) : '-',
+                average: count > 0 ? Math.ceil(totalSLA / count) : '-',
                 count: count
             };
         }
