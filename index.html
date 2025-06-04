@@ -707,46 +707,135 @@
 
     <!-- เพิ่มการ์ดสถานะอื่นๆ -->
     <div style="display: flex; flex-wrap: nowrap; gap: 8px; margin-bottom: 20px; justify-content: center; overflow-x: auto;">
-        <div class="card" style="background-color: #008080; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #008080; color: white; width: 12.5%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">เอกสารยังไม่ครบ</div>
-                <div class="card-value" id="sla-incomplete-docs" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">เอกสารยังไม่ครบ</div>
+                <div class="card-value" id="sla-incomplete-docs" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #4169E1; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #DC143C; color: white; width: 12.5%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">ติดประวัติอาชญากรรม</div>
-                <div class="card-value" id="sla-criminal-record" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">ไม่เข้าอบรม</div>
+                <div class="card-value" id="sla-not-attend" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #FF6B00; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #FF69B4; color: white; width: 12.5%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">ช่างลาออก</div>
-                <div class="card-value" id="sla-resigned" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">ไม่ผ่านอบรม</div>
+                <div class="card-value" id="sla-failed-training" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #FF69B4; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #FF6B00; color: white; width: 12.5%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">ไม่ผ่านอบรม</div>
-                <div class="card-value" id="sla-failed-training" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">ช่างลาออก</div>
+                <div class="card-value" id="sla-resigned" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #FF1493; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #FF1493; color: white; width: 12.5%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">ตัวแทนยังไม่ส่งขึ้นทะเบียน</div>
-                <div class="card-value" id="sla-not-submitted" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">ตัวแทนยังไม่ส่งขึ้นทะเบียน</div>
+                <div class="card-value" id="sla-not-submitted" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #4CA64C; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #4169E1; color: white; width: 12%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">อยู่ระหว่างอบรมทฤษฎี</div>
-                <div class="card-value" id="sla-theory-training" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">ติดประวัติอาชญากรรม</div>
+                <div class="card-value" id="sla-criminal-record" style="font-size: 16px;">-</div>
             </div>
         </div>
-        <div class="card" style="background-color: #90EE90; color: white; width: 14%; min-width: 130px; padding: 8px 15px;">
+        <div class="card" style="background-color: #4CA64C; color: white; width: 12%; min-width: 120px; padding: 8px 12px;">
             <div class="card-content">
-                <div class="card-title" style="font-size: 14px;">อยู่ระหว่างอบรมปฏิบัติ</div>
-                <div class="card-value" id="sla-practical-training" style="font-size: 18px;">-</div>
+                <div class="card-title" style="font-size: 13px;">อยู่ระหว่างอบรมทฤษฎี</div>
+                <div class="card-value" id="sla-theory-training" style="font-size: 16px;">-</div>
+            </div>
+        </div>
+        <div class="card" style="background-color: #90EE90; color: white; width: 12%; min-width: 120px; padding: 8px 12px;">
+            <div class="card-content">
+                <div class="card-title" style="font-size: 13px;">อยู่ระหว่างอบรมปฎิบัติ</div>
+                <div class="card-value" id="sla-practical-training" style="font-size: 16px;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLA Analysis Section -->
+    <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: 20px 0; padding: 20px;">
+        <h3 style="color: #003366; text-align: center; margin-bottom: 20px;">การวิเคราะห์ SLA (Service Level Agreement)</h3>
+        
+        <!-- SLA Summary Cards -->
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center;">
+            <div class="card" style="background-color: #28a745; color: white; min-width: 200px; padding: 15px 20px;">
+                <div class="card-content">
+                    <div class="card-title" style="font-size: 16px; color: white;">SLA เฉลี่ย (ขึ้นทะเบียนสำเร็จ)</div>
+                    <div class="card-value" id="sla-success-avg" style="font-size: 22px; color: white;">-</div>
+                </div>
+            </div>
+            
+            <div class="card" style="background-color: #17a2b8; color: white; min-width: 200px; padding: 15px 20px;">
+                <div class="card-content">
+                    <div class="card-title" style="font-size: 16px; color: white;">SLA เฉลี่ย (ทั้งหมด)</div>
+                    <div class="card-value" id="sla-overall-avg" style="font-size: 22px; color: white;">-</div>
+                </div>
+            </div>
+            
+            <div class="card" style="background-color: #6f42c1; color: white; min-width: 200px; padding: 15px 20px;">
+                <div class="card-content">
+                    <div class="card-title" style="font-size: 16px; color: white;">เป้าหมาย SLA</div>
+                    <div class="card-value" style="font-size: 22px; color: white;">≤ 30 วัน</div>
+                </div>
+            </div>
+            
+            <div class="card" style="background-color: #fd7e14; color: white; min-width: 200px; padding: 15px 20px;">
+                <div class="card-content">
+                    <div class="card-title" style="font-size: 16px; color: white;">สถานะ SLA</div>
+                    <div class="card-value" id="sla-status" style="font-size: 22px; color: white;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SLA by Status Table -->
+        <div style="margin: 20px 0;">
+            <h4 style="color: #003366; margin-bottom: 15px;">การวิเคราะห์ SLA รายสถานะ</h4>
+            <table id="sla-analysis-table" style="width: 100%; border-collapse: collapse; background-color: white;">
+                <thead>
+                    <tr style="background-color: #003366; color: white;">
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">สถานะ</th>
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">จำนวน (คน)</th>
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">SLA เฉลี่ย (วัน)</th>
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">SLA สูงสุด (วัน)</th>
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">SLA ต่ำสุด (วัน)</th>
+                        <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">ประเมินผล</th>
+                    </tr>
+                </thead>
+                <tbody id="sla-analysis-body">
+                    <!-- จะถูกเติมด้วย JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SLA Performance Indicators -->
+        <div style="margin: 20px 0;">
+            <h4 style="color: #003366; margin-bottom: 15px;">ตัวชี้วัดประสิทธิภาพ SLA</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center;">
+                <div class="card" style="background-color: #20c997; color: white; min-width: 180px; padding: 12px 15px;">
+                    <div class="card-content">
+                        <div class="card-title" style="font-size: 14px; color: white;">% ขึ้นทะเบียนตรงเวลา</div>
+                        <div class="card-value" id="sla-ontime-percentage" style="font-size: 18px; color: white;">-</div>
+                    </div>
+                </div>
+                
+                <div class="card" style="background-color: #e83e8c; color: white; min-width: 180px; padding: 12px 15px;">
+                    <div class="card-content">
+                        <div class="card-title" style="font-size: 14px; color: white;">% เกินกำหนด SLA</div>
+                        <div class="card-value" id="sla-overdue-percentage" style="font-size: 18px; color: white;">-</div>
+                    </div>
+                </div>
+                
+                <div class="card" style="background-color: #ffc107; color: #212529; min-width: 180px; padding: 12px 15px;">
+                    <div class="card-content">
+                        <div class="card-title" style="font-size: 14px;">กรณีที่ต้องติดตาม</div>
+                        <div class="card-value" id="sla-followup-count" style="font-size: 18px;">-</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1492,14 +1581,57 @@
             return rows.length;
         }
 
+        // ฟังก์ชันตรวจสอบสถานะทั้งหมดที่มีในข้อมูล
+        function getAllUniqueStatuses(rows) {
+            const statuses = new Set();
+            rows.forEach(row => {
+                const status = row.c[34]?.v; // คอลัมน์ "Status ล่าสุด"
+                if (status && status.trim()) {
+                    statuses.add(status.trim());
+                }
+            });
+            return Array.from(statuses).sort();
+        }
+
+        // ฟังก์ชันตรวจสอบว่าการ์ดครบหรือไม่
+        function validateStatusCards(rows) {
+            const allStatuses = getAllUniqueStatuses(rows);
+            const cardStatuses = [
+                'เอกสารยังไม่ครบ',
+                'ไม่เข้าอบรม',
+                'ไม่ผ่านอบรม',
+                'ช่างลาออก',
+                'ตัวแทนยังไม่ส่งขึ้นทะเบียน',
+                'ติดประวัติอาชญากรรม',
+                'อยู่ระหว่างอบรมทฤษฎี',
+                'อยู่ระหว่างอบรมปฎิบัติ'
+            ];
+            
+            // ตรวจสอบสถานะที่ขาดหายไป
+            const missingStatuses = allStatuses.filter(status => !cardStatuses.includes(status));
+            
+            if (missingStatuses.length > 0) {
+                console.warn('สถานะที่ขาดหายไปจากการ์ด:', missingStatuses);
+            } else {
+                console.log('การ์ดสถานะครบถ้วนแล้ว');
+            }
+            
+            console.log('สถานะทั้งหมดในข้อมูล:', allStatuses);
+            return { allStatuses, missingStatuses };
+        }
+
         // ฟังก์ชันอัพเดทการ์ดสถานะต่างๆ
         function updateStatusCards(rows) {
+            // ตรวจสอบสถานะก่อนอัปเดต
+            validateStatusCards(rows);
+            
             const statuses = [
                 { id: 'sla-incomplete-docs', status: 'เอกสารยังไม่ครบ' },
-                { id: 'sla-criminal-record', status: 'ติดประวัติอาชญากรรม' },
-                { id: 'sla-resigned', status: 'ช่างลาออก' },
+                { id: 'sla-not-attend', status: 'ไม่เข้าอบรม' },
                 { id: 'sla-failed-training', status: 'ไม่ผ่านอบรม' },
+                { id: 'sla-resigned', status: 'ช่างลาออก' },
                 { id: 'sla-not-submitted', status: 'ตัวแทนยังไม่ส่งขึ้นทะเบียน' },
+                { id: 'sla-criminal-record', status: 'ติดประวัติอาชญากรรม' },
                 { id: 'sla-theory-training', status: 'อยู่ระหว่างอบรมทฤษฎี' },
                 { id: 'sla-practical-training', status: 'อยู่ระหว่างอบรมปฎิบัติ' }
             ];
@@ -1508,9 +1640,178 @@
                 const result = calculateStatusSLA(rows, item.status);
                 const element = document.getElementById(item.id);
                 if (element) {
-                    element.textContent = result.count > 0 ? `${result.count} คน` : '0 คน';
+                    // แสดงทั้งจำนวนคนและ SLA เฉลี่ย
+                    if (result.count > 0 && result.average !== '-') {
+                        element.textContent = `${result.count} คน (${result.average} วัน)`;
+                    } else if (result.count > 0) {
+                        element.textContent = `${result.count} คน`;
+                    } else {
+                        element.textContent = '0 คน';
+                    }
                 }
             });
+            
+            // อัปเดต SLA Analysis
+            updateSLAAnalysis(rows);
+        }
+
+        // ฟังก์ชันใหม่สำหรับการวิเคราะห์ SLA อย่างละเอียด
+        function updateSLAAnalysis(rows) {
+            // คำนวณ SLA เฉลี่ยสำหรับผู้ที่ขึ้นทะเบียนสำเร็จ
+            const successRows = rows.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย");
+            let successSLATotal = 0;
+            let successCount = 0;
+            
+            successRows.forEach(row => {
+                const sla = parseFloat(row.c[37]?.v) || 0;
+                if (sla > 0) {
+                    successSLATotal += sla;
+                    successCount++;
+                }
+            });
+            
+            const avgSuccessSLA = successCount > 0 ? Math.ceil(successSLATotal / successCount) : 0;
+            
+            // คำนวณ SLA เฉลี่ยทั้งหมด
+            let totalSLA = 0;
+            let totalCount = 0;
+            
+            rows.forEach(row => {
+                const sla = parseFloat(row.c[37]?.v) || 0;
+                if (sla > 0) {
+                    totalSLA += sla;
+                    totalCount++;
+                }
+            });
+            
+            const avgTotalSLA = totalCount > 0 ? Math.ceil(totalSLA / totalCount) : 0;
+            
+            // อัปเดตการ์ด SLA
+            document.getElementById('sla-success-avg').textContent = avgSuccessSLA > 0 ? `${avgSuccessSLA} วัน` : '-';
+            document.getElementById('sla-overall-avg').textContent = avgTotalSLA > 0 ? `${avgTotalSLA} วัน` : '-';
+            
+            // ประเมินสถานะ SLA
+            let slaStatus = '';
+            let slaStatusColor = '';
+            if (avgSuccessSLA <= 30) {
+                slaStatus = 'ดีเยี่ยม';
+                slaStatusColor = '#28a745';
+            } else if (avgSuccessSLA <= 45) {
+                slaStatus = 'ปานกลาง';
+                slaStatusColor = '#ffc107';
+            } else {
+                slaStatus = 'ต้องปรับปรุง';
+                slaStatusColor = '#dc3545';
+            }
+            
+            const slaStatusElement = document.getElementById('sla-status');
+            if (slaStatusElement) {
+                slaStatusElement.textContent = slaStatus;
+                slaStatusElement.parentElement.parentElement.style.backgroundColor = slaStatusColor;
+            }
+            
+            // สร้างตาราง SLA Analysis
+            createSLAAnalysisTable(rows);
+            
+            // อัปเดตตัวชี้วัดประสิทธิภาพ
+            updateSLAPerformanceIndicators(rows);
+        }
+
+        // ฟังก์ชันสร้างตาราง SLA Analysis
+        function createSLAAnalysisTable(rows) {
+            const statusList = [
+                "ขึ้นทะเบียนเรียบร้อย",
+                "ช่างลาออก", 
+                "ตัวแทนยังไม่ส่งขึ้นทะเบียน",
+                "ติดประวัติอาชญากรรม",
+                "อยู่ระหว่างอบรมปฎิบัติ",
+                "เอกสารยังไม่ครบ",
+                "อยู่ระหว่างอบรมทฤษฎี",
+                "ไม่ผ่านอบรม"
+            ];
+            
+            const tbody = document.getElementById('sla-analysis-body');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            statusList.forEach(status => {
+                const statusRows = rows.filter(row => row.c[34]?.v === status);
+                const slaValues = statusRows.map(row => parseFloat(row.c[37]?.v) || 0).filter(sla => sla > 0);
+                
+                if (statusRows.length > 0) {
+                    const avgSLA = slaValues.length > 0 ? Math.ceil(slaValues.reduce((a, b) => a + b, 0) / slaValues.length) : 0;
+                    const maxSLA = slaValues.length > 0 ? Math.max(...slaValues) : 0;
+                    const minSLA = slaValues.length > 0 ? Math.min(...slaValues) : 0;
+                    
+                    let assessment = '';
+                    let assessmentColor = '';
+                    
+                    if (status === "ขึ้นทะเบียนเรียบร้อย") {
+                        if (avgSLA <= 30) {
+                            assessment = 'ดีเยี่ยม';
+                            assessmentColor = '#28a745';
+                        } else if (avgSLA <= 45) {
+                            assessment = 'ปานกลาง';
+                            assessmentColor = '#ffc107';
+                        } else {
+                            assessment = 'ต้องปรับปรุง';
+                            assessmentColor = '#dc3545';
+                        }
+                    } else {
+                        assessment = 'ต้องติดตาม';
+                        assessmentColor = '#6c757d';
+                    }
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td style="padding: 8px; border: 1px solid #ddd;">${status}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${statusRows.length}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${avgSLA > 0 ? avgSLA : '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${maxSLA > 0 ? Math.ceil(maxSLA) : '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${minSLA > 0 ? Math.ceil(minSLA) : '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; background-color: ${assessmentColor}; color: white; font-weight: bold;">${assessment}</td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                }
+            });
+        }
+
+        // ฟังก์ชันอัปเดตตัวชี้วัดประสิทธิภาพ SLA
+        function updateSLAPerformanceIndicators(rows) {
+            const successRows = rows.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย");
+            const totalRows = rows.filter(row => {
+                const sla = parseFloat(row.c[37]?.v) || 0;
+                return sla > 0;
+            });
+            
+            // คำนวณเปอร์เซ็นต์ขึ้นทะเบียนตรงเวลา (SLA <= 30 วัน)
+            const onTimeCount = successRows.filter(row => {
+                const sla = parseFloat(row.c[37]?.v) || 0;
+                return sla > 0 && sla <= 30;
+            }).length;
+            
+            const onTimePercentage = successRows.length > 0 ? ((onTimeCount / successRows.length) * 100).toFixed(1) : 0;
+            
+            // คำนวณเปอร์เซ็นต์เกินกำหนด SLA (SLA > 30 วัน)
+            const overdueCount = totalRows.filter(row => {
+                const sla = parseFloat(row.c[37]?.v) || 0;
+                return sla > 30;
+            }).length;
+            
+            const overduePercentage = totalRows.length > 0 ? ((overdueCount / totalRows.length) * 100).toFixed(1) : 0;
+            
+            // นับกรณีที่ต้องติดตาม (สถานะที่ไม่ใช่ขึ้นทะเบียนเรียบร้อย)
+            const followUpCount = rows.filter(row => {
+                const status = row.c[34]?.v;
+                return status && status !== "ขึ้นทะเบียนเรียบร้อย" && status !== "ช่างลาออก";
+            }).length;
+            
+            // อัปเดตค่าในการ์ด
+            document.getElementById('sla-ontime-percentage').textContent = `${onTimePercentage}%`;
+            document.getElementById('sla-overdue-percentage').textContent = `${overduePercentage}%`;
+            document.getElementById('sla-followup-count').textContent = `${followUpCount} คน`;
         }
 
         // ฟังก์ชันเพื่ออัปเดต Line Chart
