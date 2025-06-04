@@ -1,254 +1,315 @@
-// script.js
-// เพิ่มการจัดการการเลือกข้อความในตาราง
-document.addEventListener('DOMContentLoaded', function() {
-    const dataTable = document.getElementById('data-table');
-    if (dataTable) {
-        // เพิ่มการจัดการการเลือกข้อความ
-        dataTable.addEventListener('mousedown', function(e) {
-            if (e.target.tagName === 'TD') {
-                const selection = window.getSelection();
-                const range = document.createRange();
-                range.selectNodeContents(e.target);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            }
-        });
+// script.js - Navigation System Only
 
-        // ป้องกันการเลือกข้อความถูกยกเลิกเมื่อลากเมาส์
-        dataTable.addEventListener('selectstart', function(e) {
-            if (e.target.tagName === 'TD') {
-                e.preventDefault();
-            }
-        });
+// Navigation and Section Management
+class NavigationManager {
+    constructor() {
+        this.navLinks = document.querySelectorAll('.nav-link');
+        this.sections = document.querySelectorAll('.content-section');
+        
+        // ตรวจสอบว่ามี navigation elements หรือไม่
+        if (this.navLinks.length > 0 && this.sections.length > 0) {
+            this.init();
+        } else {
+            console.warn('Navigation elements not found');
+        }
+    }
 
-        // อนุญาตให้เลือกข้อความได้หลายเซลล์
-        dataTable.addEventListener('mousemove', function(e) {
-            if (e.buttons === 1 && e.target.tagName === 'TD') {
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    range.setEndAfter(e.target);
-                }
-            }
+    init() {
+        this.bindEvents();
+        this.setInitialState();
+    }
+
+    bindEvents() {
+        this.navLinks.forEach(link => {
+            // ใช้ namespace เพื่อไม่ให้กระทบกับ event listeners อื่น
+            link.addEventListener('click', (e) => this.handleNavClick(e), { passive: false });
         });
     }
 
-    // โค้ดสำหรับกราฟ
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Project A', 'Project B', 'Project C', 'Project D'],
-            datasets: [{
-                label: 'Progress (%)',
-                data: [80, 65, 90, 70],
-                backgroundColor: [
-                    'rgba(255, 99, 132, 0.2)',
-                    'rgba(54, 162, 235, 0.2)',
-                    'rgba(255, 206, 86, 0.2)',
-                    'rgba(75, 192, 192, 0.2)'
-                ],
-                borderColor: [
-                    'rgba(255, 99, 132, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(75, 192, 192, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'left',
-                    onClick: function(e, legendItem, legend) {
-                        const index = legendItem.datasetIndex;
-                        const ci = legend.chart;
-                        const meta = ci.getDatasetMeta(index);
-                        
-                        // ถ้ากดปุ่ม Ctrl/Cmd
-                        if (e.ctrlKey || e.metaKey) {
-                            meta.hidden = !meta.hidden;
-                        } else {
-                            // ซ่อน/แสดงเฉพาะรายการที่เลือก
-                            ci.data.datasets.forEach(function(dataset, i) {
-                                const meta = ci.getDatasetMeta(i);
-                                meta.hidden = i !== index;
-                            });
-                        }
-                        
-                        // อัพเดทตารางตาม Legend ที่เลือก
-                        const selectedStatus = ci.data.datasets[index].label;
-                        const filteredRows = filteredData2025.filter(row => {
-                            if (e.ctrlKey || e.metaKey) {
-                                // ถ้าเลือกหลายรายการ
-                                return !meta.hidden ? row.c[34]?.v === selectedStatus : true;
-                            } else {
-                                // ถ้าเลือกรายการเดียว
-                                return i === index ? row.c[34]?.v === selectedStatus : false;
-                            }
-                        });
-                        
-                        // อัพเดทตารางข้อมูล
-                        window.tableData = filteredRows.map(row => ({
-                            area: row.c[26]?.v || '',
-                            roundDate: row.c[27]?.v || '',
-                            trainingMonth: row.c[28]?.v || '',
-                            week: row.c[39]?.v || '',
-                            name: row.c[3]?.v || '',
-                            company: row.c[6]?.v || '',
-                            agentCode: row.c[7]?.v || '',
-                            province: row.c[8]?.v || '',
-                            workStatus: row.c[13]?.v || '',
-                            registerResult: row.c[33]?.v || '',
-                            latestStatus: row.c[34]?.v || '',
-                            startDate: row.c[35]?.v || '',
-                            endDate: row.c[36]?.v || '',
-                            sla: row.c[37]?.v || '',
-                            year: row.c[41]?.v || ''
-                        }));
-                        
-                        renderTableData(window.tableData);
-                        ci.update();
-                        updateTotal();
+    handleNavClick(e) {
+        e.preventDefault();
+        
+        const targetSection = e.target.getAttribute('data-section');
+        
+        // Update navigation state
+        this.updateNavState(e.target);
+        
+        // Switch sections
+        this.switchSection(targetSection);
+        
+        // Update page title
+        this.updatePageTitle(targetSection);
+        
+        // Trigger custom event for section change
+        this.triggerSectionChangeEvent(targetSection);
+    }
+
+    updateNavState(activeLink) {
+        // Remove active class from all nav links
+        this.navLinks.forEach(link => {
+            link.classList.remove('active');
+        });
+        
+        // Add active class to clicked nav link
+        activeLink.classList.add('active');
+    }
+
+    switchSection(targetSectionId) {
+        // Hide all sections
+        this.sections.forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Show target section
+        const targetElement = document.getElementById(targetSectionId);
+        if (targetElement) {
+            targetElement.classList.add('active');
+        }
+    }
+
+    updatePageTitle(sectionId) {
+        const titles = {
+            'training-status': 'ข้อมูลแดชบอร์ดสถานะการอบรมช่างใหม่(2025)',
+            'remain-par-group-code': 'ข้อมูลแดชบอร์ด - Remain Par By Group Code (2025)',
+            'remain-par-group-team': 'ข้อมูลแดชบอร์ด - Remain Par By Group-Team (2025)'
+        };
+        
+        const headerTitle = document.querySelector('.header-container h1');
+        const newTitle = titles[sectionId] || 'ข้อมูลแดชบอร์ดสถานะการอบรมช่างใหม่(2025)';
+        
+        if (headerTitle) {
+            headerTitle.textContent = newTitle;
+        }
+    }
+
+    setInitialState() {
+        // ไม่ต้องเปลี่ยน title เพราะจะกระทบกับ title เดิม
+        // this.updatePageTitle('training-status');
+        
+        // Ensure training-status section is active by default
+        const trainingStatusSection = document.getElementById('training-status');
+        if (trainingStatusSection) {
+            trainingStatusSection.classList.add('active');
+        }
+    }
+
+    triggerSectionChangeEvent(sectionId) {
+        // Dispatch custom event for other scripts to listen to
+        const event = new CustomEvent('sectionChanged', {
+            detail: { sectionId: sectionId }
+        });
+        document.dispatchEvent(event);
+    }
+
+    // Public method to programmatically switch sections
+    switchToSection(sectionId) {
+        const targetLink = document.querySelector(`[data-section="${sectionId}"]`);
+        if (targetLink) {
+            this.updateNavState(targetLink);
+            this.switchSection(sectionId);
+            this.updatePageTitle(sectionId);
+            this.triggerSectionChangeEvent(sectionId);
+        }
+    }
+
+    // Get current active section
+    getCurrentSection() {
+        const activeSection = document.querySelector('.content-section.active');
+        return activeSection ? activeSection.id : null;
+    }
+}
+
+// Section Content Manager
+class SectionContentManager {
+    constructor() {
+        this.init();
+    }
+
+    init() {
+        // Listen for section changes
+        document.addEventListener('sectionChanged', (e) => {
+            this.handleSectionChange(e.detail.sectionId);
+        });
+    }
+
+    handleSectionChange(sectionId) {
+        console.log(`Switched to section: ${sectionId}`);
+        
+        // Handle specific section logic
+        switch(sectionId) {
+            case 'training-status':
+                this.loadTrainingStatusContent();
+                break;
+            case 'remain-par-group-code':
+                this.loadRemainParGroupCodeContent();
+                break;
+            case 'remain-par-group-team':
+                this.loadRemainParGroupTeamContent();
+                break;
+        }
+        
+        // Scroll to top when switching sections
+        NavigationUtils.scrollToTop();
+    }
+
+    loadTrainingStatusContent() {
+        // Content is already loaded in HTML
+        // This method can be used for dynamic loading if needed
+        console.log('Training Status content loaded');
+    }
+
+    loadRemainParGroupCodeContent() {
+        console.log('Loading Remain Par By Group Code content...');
+        
+        // แสดง loading indicator
+        this.showLoadingIndicator('remain-par-group-code');
+        
+        // รอให้ DOM พร้อม แล้วค่อยโหลดข้อมูล
+        setTimeout(() => {
+            if (typeof window.loadGroupCodeData === 'function') {
+                console.log('Calling loadGroupCodeData function...');
+                window.loadGroupCodeData();
+            } else {
+                console.warn('loadGroupCodeData function not found, will try again...');
+                // ลองอีกครั้งหลังจาก 500ms
+                setTimeout(() => {
+                    if (typeof window.loadGroupCodeData === 'function') {
+                        console.log('Retrying loadGroupCodeData function...');
+                        window.loadGroupCodeData();
+                    } else {
+                        console.error('loadGroupCodeData function still not available');
+                        this.hideLoadingIndicator('remain-par-group-code');
                     }
-                }
-            },
-            onClick: function(e) {
-                // คลิกพื้นที่ว่างเพื่อรีเซ็ต
-                if (e.target === this.chart) {
-                    this.data.datasets.forEach(function(dataset, i) {
-                        const meta = this.getDatasetMeta(i);
-                        meta.hidden = false;
-                    }, this);
-                    this.update();
-                    updateTotal();
-                    // อัพเดทตารางให้แสดงข้อมูลทั้งหมด
-                    updateTables(filteredData2025);
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+                }, 500);
+            }
+        }, 200); // รอ 200ms เพื่อให้ section แสดงผลเสร็จก่อน
+    }
+
+    showLoadingIndicator(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.add('loading');
+            
+            // เพิ่ม loading message
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = `${sectionId}-loading`;
+            loadingDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 51, 102, 0.9);
+                color: white;
+                padding: 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                text-align: center;
+            `;
+            loadingDiv.innerHTML = `
+                <div style="margin-bottom: 10px;">กำลังโหลดข้อมูล...</div>
+                <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #003366; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            `;
+            document.body.appendChild(loadingDiv);
+        }
+    }
+
+    hideLoadingIndicator(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.remove('loading');
+            
+            // ลบ loading message
+            const loadingDiv = document.getElementById(`${sectionId}-loading`);
+            if (loadingDiv) {
+                loadingDiv.remove();
             }
         }
-    });
-
-    // ฟังก์ชันคำนวณและอัพเดทผลรวม
-    function updateTotal() {
-        const visibleData = myChart.data.datasets.reduce((sum, dataset, i) => {
-            if (!myChart.getDatasetMeta(i).hidden) {
-                return sum + dataset.data.reduce((a, b) => a + b, 0);
-            }
-            return sum;
-        }, 0);
-        
-        document.getElementById('totalValue').textContent = `Total: ${visibleData}`;
     }
 
-    // คำนวณผลรวมครั้งแรก
-    updateTotal();
-
-    function initializeLegendHandlers() {
-        const legendItems = document.querySelectorAll('.legend-item');
-        const datasets = myChart.data.datasets;
-        let selectedItems = new Set(); // เก็บรายการที่ถูกเลือก
+    loadRemainParGroupTeamContent() {
+        // Placeholder for future content loading
+        console.log('Remain Par By Group-Team content loaded');
         
-        // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง
-        document.addEventListener('click', (event) => {
-            // ตรวจสอบว่าคลิกที่ legend-item หรือไม่
-            const clickedLegend = event.target.closest('.legend-item');
-            const clickedChart = event.target.closest('canvas');
-            
-            // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ ให้แสดงทุกรายการ
-            if (!clickedLegend && !clickedChart) {
-                selectedItems.clear();
-                legendItems.forEach((item, i) => {
-                    item.classList.remove('selected');
-                    datasets[i].hidden = false;
-                });
-                myChart.update();
-                updateTotal();
-                // อัพเดทตารางให้แสดงข้อมูลทั้งหมด
-                updateTables(filteredData2025);
-            }
-        });
-
-        // จัดการการคลิกที่ Legend items
-        legendItems.forEach((item, index) => {
-            item.addEventListener('click', (event) => {
-                event.stopPropagation();
-                
-                if (event.ctrlKey || event.metaKey) {
-                    // ถ้ากด Ctrl/Cmd + คลิก เพื่อเลือกหลายรายการ
-                    if (selectedItems.has(index)) {
-                        selectedItems.delete(index);
-                        item.classList.remove('selected');
-                    } else {
-                        selectedItems.add(index);
-                        item.classList.add('selected');
-                    }
-                } else {
-                    // คลิกปกติ เลือกเฉพาะรายการเดียว
-                    selectedItems.clear();
-                    selectedItems.add(index);
-                    legendItems.forEach((otherItem, i) => {
-                        if (i === index) {
-                            otherItem.classList.add('selected');
-                        } else {
-                            otherItem.classList.remove('selected');
-                        }
-                    });
-                }
-
-                // อัพเดทการแสดงผลกราฟ
-                datasets.forEach((dataset, i) => {
-                    if (selectedItems.size === 0) {
-                        // ถ้าไม่มีรายการที่ถูกเลือก แสดงทุกรายการ
-                        dataset.hidden = false;
-                    } else {
-                        // ซ่อนรายการที่ไม่ได้เลือก
-                        dataset.hidden = !selectedItems.has(i);
-                    }
-                });
-
-                myChart.update();
-                updateTotal();
-
-                // อัพเดทตารางตาม Legend ที่เลือก
-                const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
-                const filteredRows = filteredData2025.filter(row => {
-                    if (selectedItems.size === 0) {
-                        return true; // แสดงข้อมูลทั้งหมด
-                    } else {
-                        return selectedStatuses.includes(row.c[34]?.v);
-                    }
-                });
-                
-                // อัพเดทตารางข้อมูล
-                window.tableData = filteredRows.map(row => ({
-                    area: row.c[26]?.v || '',
-                    roundDate: row.c[27]?.v || '',
-                    trainingMonth: row.c[28]?.v || '',
-                    week: row.c[39]?.v || '',
-                    name: row.c[3]?.v || '',
-                    company: row.c[6]?.v || '',
-                    agentCode: row.c[7]?.v || '',
-                    province: row.c[8]?.v || '',
-                    workStatus: row.c[13]?.v || '',
-                    registerResult: row.c[33]?.v || '',
-                    latestStatus: row.c[34]?.v || '',
-                    startDate: row.c[35]?.v || '',
-                    endDate: row.c[36]?.v || '',
-                    sla: row.c[37]?.v || '',
-                    year: row.c[41]?.v || ''
-                }));
-                
-                renderTableData(window.tableData);
-            });
-        });
+        // Example: You can add dynamic content loading here
+        // this.createGroupTeamDashboard();
     }
+
+    // Example method for creating dynamic content
+    createGroupCodeDashboard() {
+        const section = document.getElementById('remain-par-group-code');
+        const placeholderContent = section.querySelector('.placeholder-content');
+        
+        if (placeholderContent) {
+            placeholderContent.innerHTML = `
+                <div class="dashboard-content">
+                    <h3>Group Code Dashboard</h3>
+                    <p>Dynamic content will be loaded here</p>
+                </div>
+            `;
+        }
+    }
+
+    createGroupTeamDashboard() {
+        const section = document.getElementById('remain-par-group-team');
+        const placeholderContent = section.querySelector('.placeholder-content');
+        
+        if (placeholderContent) {
+            placeholderContent.innerHTML = `
+                <div class="dashboard-content">
+                    <h3>Group-Team Dashboard</h3>
+                    <p>Dynamic content will be loaded here</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// Utility functions
+const NavigationUtils = {
+    // Smooth scroll to top when switching sections
+    scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    },
+
+    // Show loading indicator
+    showLoading(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.add('loading');
+        }
+    },
+
+    // Hide loading indicator
+    hideLoading(sectionId) {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.classList.remove('loading');
+        }
+    }
+};
+
+// Initialize navigation system when DOM is loaded
+// ใช้ setTimeout เพื่อให้ JavaScript หลักโหลดเสร็จก่อน
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        // Initialize navigation manager
+        window.navigationManager = new NavigationManager();
+        
+        // Initialize section content manager
+        window.sectionContentManager = new SectionContentManager();
+        
+        console.log('Navigation system initialized');
+    }, 100); // รอ 100ms เพื่อให้ JavaScript หลักโหลดเสร็จ
 });
+
+// Export for use in other scripts
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        NavigationManager,
+        SectionContentManager,
+        NavigationUtils
+    };
+}
