@@ -757,6 +757,7 @@
         </div>
     </div>
 
+    <!-- ปุ่มตรวจสอบข้อมูลการ์ด -->
     <!-- SLA Analysis Section -->
     <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: 20px 0; padding: 20px;">
         <h3 style="color: #003366; text-align: center; margin-bottom: 20px;">การวิเคราะห์ SLA (Service Level Agreement)</h3>
@@ -1360,15 +1361,15 @@
             rows.forEach(row => {
                 if (row.c[34]?.v === status) {
                     const sla = parseFloat(row.c[37]?.v) || 0;
+                    count++; // นับทุกแถวที่มีสถานะตรงกัน ไม่ว่าจะมี SLA หรือไม่
                     if (sla > 0) {
                         totalSLA += sla;
-                        count++;
                     }
                 }
             });
             
             return {
-                average: count > 0 ? Math.ceil(totalSLA / count) : '-',
+                average: count > 0 && totalSLA > 0 ? Math.ceil(totalSLA / count) : '-',
                 count: count
             };
         }
@@ -1625,6 +1626,10 @@
             // ตรวจสอบสถานะก่อนอัปเดต
             validateStatusCards(rows);
             
+            // Debug การนับ "ช่างลาออก"
+            const resignedCount = debugStatusCount(rows, 'ช่างลาออก');
+            console.log('จำนวน "ช่างลาออก" ที่นับได้:', resignedCount);
+            
             const statuses = [
                 { id: 'sla-incomplete-docs', status: 'เอกสารยังไม่ครบ' },
                 { id: 'sla-not-attend', status: 'ไม่เข้าอบรม' },
@@ -1640,6 +1645,11 @@
                 const result = calculateStatusSLA(rows, item.status);
                 const element = document.getElementById(item.id);
                 if (element) {
+                    // Debug การ์ด "ช่างลาออก"
+                    if (item.status === 'ช่างลาออก') {
+                        console.log('ผลลัพธ์การคำนวณ "ช่างลาออก":', result);
+                    }
+                    
                     // แสดงทั้งจำนวนคนและ SLA เฉลี่ย
                     if (result.count > 0 && result.average !== '-') {
                         element.textContent = `${result.count} คน (${result.average} วัน)`;
@@ -1727,6 +1737,7 @@
                 "อยู่ระหว่างอบรมปฎิบัติ",
                 "เอกสารยังไม่ครบ",
                 "อยู่ระหว่างอบรมทฤษฎี",
+                "ไม่เข้าอบรม",
                 "ไม่ผ่านอบรม"
             ];
             
@@ -1737,10 +1748,12 @@
             
             statusList.forEach(status => {
                 const statusRows = rows.filter(row => row.c[34]?.v === status);
-                const slaValues = statusRows.map(row => parseFloat(row.c[37]?.v) || 0).filter(sla => sla > 0);
                 
                 if (statusRows.length > 0) {
-                    const avgSLA = slaValues.length > 0 ? Math.ceil(slaValues.reduce((a, b) => a + b, 0) / slaValues.length) : 0;
+                    // ใช้ฟังก์ชัน calculateStatusSLA เพื่อให้ผลลัพธ์ตรงกับการ์ด
+                    const result = calculateStatusSLA(rows, status);
+                    const slaValues = statusRows.map(row => parseFloat(row.c[37]?.v) || 0).filter(sla => sla > 0);
+                    
                     const maxSLA = slaValues.length > 0 ? Math.max(...slaValues) : 0;
                     const minSLA = slaValues.length > 0 ? Math.min(...slaValues) : 0;
                     
@@ -1748,16 +1761,23 @@
                     let assessmentColor = '';
                     
                     if (status === "ขึ้นทะเบียนเรียบร้อย") {
-                        if (avgSLA <= 30) {
+                        const avgSLANum = result.average !== '-' ? parseInt(result.average) : 0;
+                        if (avgSLANum > 0 && avgSLANum <= 30) {
                             assessment = 'ดีเยี่ยม';
                             assessmentColor = '#28a745';
-                        } else if (avgSLA <= 45) {
+                        } else if (avgSLANum > 30 && avgSLANum <= 45) {
                             assessment = 'ปานกลาง';
                             assessmentColor = '#ffc107';
-                        } else {
+                        } else if (avgSLANum > 45) {
                             assessment = 'ต้องปรับปรุง';
                             assessmentColor = '#dc3545';
+                        } else {
+                            assessment = 'ต้องติดตาม';
+                            assessmentColor = '#6c757d';
                         }
+                    } else if (status === "ช่างลาออก") {
+                        assessment = 'ไม่ต้องติดตาม';
+                        assessmentColor = '#28a745';
                     } else {
                         assessment = 'ต้องติดตาม';
                         assessmentColor = '#6c757d';
@@ -1766,8 +1786,8 @@
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td style="padding: 8px; border: 1px solid #ddd;">${status}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${statusRows.length}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${avgSLA > 0 ? avgSLA : '-'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${result.count}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${result.average}</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${maxSLA > 0 ? Math.ceil(maxSLA) : '-'}</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${minSLA > 0 ? Math.ceil(minSLA) : '-'}</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center; background-color: ${assessmentColor}; color: white; font-weight: bold;">${assessment}</td>
@@ -1802,7 +1822,7 @@
             
             const overduePercentage = totalRows.length > 0 ? ((overdueCount / totalRows.length) * 100).toFixed(1) : 0;
             
-            // นับกรณีที่ต้องติดตาม (สถานะที่ไม่ใช่ขึ้นทะเบียนเรียบร้อย)
+            // นับกรณีที่ต้องติดตาม - คำนวณจากทุกสถานะยกเว้น "ขึ้นทะเบียนเรียบร้อย" และ "ช่างลาออก"
             const followUpCount = rows.filter(row => {
                 const status = row.c[34]?.v;
                 return status && status !== "ขึ้นทะเบียนเรียบร้อย" && status !== "ช่างลาออก";
@@ -2326,6 +2346,126 @@
             renderTableData(window.originalTableData);
         }
 
+        // เพิ่มฟังก์ชัน debug เพื่อตรวจสอบข้อมูล
+        function debugStatusCount(rows, targetStatus) {
+            console.log(`=== Debug สถานะ: ${targetStatus} ===`);
+            console.log('ข้อมูลทั้งหมด:', rows.length, 'แถว');
+            
+            const matchedRows = rows.filter(row => row.c[34]?.v === targetStatus);
+            console.log(`แถวที่ตรงกับสถานะ "${targetStatus}":`, matchedRows.length);
+            
+            // แสดงตัวอย่าง 5 แถวแรก
+            matchedRows.slice(0, 5).forEach((row, index) => {
+                console.log(`แถวที่ ${index + 1}:`, {
+                    name: row.c[3]?.v,
+                    status: row.c[34]?.v,
+                    sla: row.c[37]?.v,
+                    month: row.c[28]?.v
+                });
+            });
+            
+            return matchedRows.length;
+        }
+
+        // ฟังก์ชันตรวจสอบความถูกต้องของการนับ
+        function validateAllStatusCounts(rows) {
+            console.log('\n=== ตรวจสอบความถูกต้องของการนับทั้งหมด ===');
+            
+            const statuses = [
+                'เอกสารยังไม่ครบ',
+                'ไม่เข้าอบรม',
+                'ไม่ผ่านอบรม',
+                'ช่างลาออก',
+                'ตัวแทนยังไม่ส่งขึ้นทะเบียน',
+                'ติดประวัติอาชญากรรม',
+                'อยู่ระหว่างอบรมทฤษฎี',
+                'อยู่ระหว่างอบรมปฎิบัติ',
+                'ขึ้นทะเบียนเรียบร้อย'
+            ];
+
+            const validationResults = {};
+            
+            statuses.forEach(status => {
+                // นับจากข้อมูลจริง
+                const actualCount = rows.filter(row => row.c[34]?.v === status).length;
+                
+                // คำนวณจาก calculateStatusSLA
+                const calculatedResult = calculateStatusSLA(rows, status);
+                
+                validationResults[status] = {
+                    actualCount: actualCount,
+                    calculatedCount: calculatedResult.count,
+                    match: actualCount === calculatedResult.count,
+                    slaAverage: calculatedResult.average
+                };
+                
+                console.log(`${status}:`);
+                console.log(`  - นับจริง: ${actualCount} คน`);
+                console.log(`  - นับจากฟังก์ชัน: ${calculatedResult.count} คน`);
+                console.log(`  - SLA เฉลี่ย: ${calculatedResult.average}`);
+                console.log(`  - ตรงกัน: ${actualCount === calculatedResult.count ? '✓' : '✗'}`);
+                console.log('');
+            });
+
+            // แสดงผลสรุป
+            const mismatches = Object.entries(validationResults)
+                .filter(([_, result]) => !result.match);
+            
+            if (mismatches.length === 0) {
+                console.log('✅ การนับทั้งหมดถูกต้อง!');
+            } else {
+                console.warn('❌ พบความไม่ตรงกัน:');
+                mismatches.forEach(([status, result]) => {
+                    console.warn(`  - ${status}: จริง ${result.actualCount} vs คำนวณ ${result.calculatedCount}`);
+                });
+            }
+
+            return validationResults;
+        }
+
+        // ฟังก์ชันแสดงสรุปข้อมูลการ์ดทั้งหมด
+        function showStatusCardsSummary() {
+            if (!filteredData2025) {
+                alert('ยังไม่มีข้อมูล กรุณารอสักครู่แล้วลองใหม่');
+                return;
+            }
+
+            const validation = validateAllStatusCounts(filteredData2025);
+            
+            let summaryText = 'สรุปการ์ดสถานะทั้งหมด:\n\n';
+            
+            const cardElements = [
+                { id: 'sla-incomplete-docs', name: 'เอกสารยังไม่ครบ' },
+                { id: 'sla-not-attend', name: 'ไม่เข้าอบรม' },
+                { id: 'sla-failed-training', name: 'ไม่ผ่านอบรม' },
+                { id: 'sla-resigned', name: 'ช่างลาออก' },
+                { id: 'sla-not-submitted', name: 'ตัวแทนยังไม่ส่งขึ้นทะเบียน' },
+                { id: 'sla-criminal-record', name: 'ติดประวัติอาชญากรรม' },
+                { id: 'sla-theory-training', name: 'อยู่ระหว่างอบรมทฤษฎี' },
+                { id: 'sla-practical-training', name: 'อยู่ระหว่างอบรมปฎิบัติ' }
+            ];
+
+            cardElements.forEach(card => {
+                const element = document.getElementById(card.id);
+                const displayValue = element ? element.textContent : 'ไม่พบ';
+                const validationData = validation[card.name];
+                
+                summaryText += `${card.name}:\n`;
+                summaryText += `  การ์ดแสดง: ${displayValue}\n`;
+                summaryText += `  ข้อมูลจริง: ${validationData.actualCount} คน\n`;
+                summaryText += `  สถานะ: ${validationData.match ? '✓ ถูกต้อง' : '✗ ไม่ตรงกัน'}\n\n`;
+            });
+
+            // เพิ่มข้อมูลรวม
+            const totalCount = filteredData2025.length;
+            const registeredCount = filteredData2025.filter(row => row.c[34]?.v === 'ขึ้นทะเบียนเรียบร้อย').length;
+            
+            summaryText += `ข้อมูลรวม:\n`;
+            summaryText += `จำนวนช่างทั้งหมด: ${totalCount} คน\n`;
+            summaryText += `ขึ้นทะเบียนเรียบร้อย: ${registeredCount} คน\n`;
+
+            alert(summaryText);
+        }
     </script>
 </body>
 </html>
