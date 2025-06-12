@@ -1775,7 +1775,7 @@
                             assessment = 'ต้องติดตาม';
                             assessmentColor = '#6c757d';
                         }
-                    } else if (status === "ช่างลาออก") {
+                    } else if (status === "ช่างลาออก" || status === "ติดประวัติอาชญากรรม" || status === "ไม่เข้าอบรม") {
                         assessment = 'ไม่ต้องติดตาม';
                         assessmentColor = '#28a745';
                     } else {
@@ -1822,10 +1822,13 @@
             
             const overduePercentage = totalRows.length > 0 ? ((overdueCount / totalRows.length) * 100).toFixed(1) : 0;
             
-            // นับกรณีที่ต้องติดตาม - คำนวณจากทุกสถานะยกเว้น "ขึ้นทะเบียนเรียบร้อย" และ "ช่างลาออก"
+            // นับกรณีที่ต้องติดตาม - คำนวณจากทุกสถานะยกเว้นสถานะที่ "ไม่ต้องติดตาม"
             const followUpCount = rows.filter(row => {
                 const status = row.c[34]?.v;
-                return status && status !== "ขึ้นทะเบียนเรียบร้อย" && status !== "ช่างลาออก";
+                return status && status !== "ขึ้นทะเบียนเรียบร้อย" && 
+                       status !== "ช่างลาออก" && 
+                       status !== "ติดประวัติอาชญากรรม" && 
+                       status !== "ไม่เข้าอบรม";
             }).length;
             
             // อัปเดตค่าในการ์ด
