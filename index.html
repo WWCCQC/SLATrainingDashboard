@@ -662,36 +662,7 @@
             </div>
         </div>
 
-        <!-- Problem Categories -->
-        <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #dc3545; margin-bottom: 20px;">🚨 ปัญหาที่ต้องติดตาม</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                <div style="padding: 15px; border-left: 4px solid #dc3545; background-color: #fff5f5;">
-                    <strong style="color: #dc3545;">ไม่เข้าอบรม</strong>
-                    <div id="daily-not-attend" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-                <div style="padding: 15px; border-left: 4px solid #e83e8c; background-color: #fdf2f8;">
-                    <strong style="color: #e83e8c;">ไม่ผ่านอบรม</strong>
-                    <div id="daily-failed-training" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-                <div style="padding: 15px; border-left: 4px solid #fd7e14; background-color: #fff8f0;">
-                    <strong style="color: #fd7e14;">ช่างลาออก</strong>
-                    <div id="daily-resigned" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-                <div style="padding: 15px; border-left: 4px solid #6f42c1; background-color: #f8f5ff;">
-                    <strong style="color: #6f42c1;">ติดประวัติอาชญากรรม</strong>
-                    <div id="daily-criminal-record" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-                <div style="padding: 15px; border-left: 4px solid #20c997; background-color: #f0fdf9;">
-                    <strong style="color: #20c997;">เอกสารยังไม่ครบ</strong>
-                    <div id="daily-incomplete-docs" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-                <div style="padding: 15px; border-left: 4px solid #17a2b8; background-color: #f0fdff;">
-                    <strong style="color: #17a2b8;">ตัวแทนยังไม่ส่งขึ้นทะเบียน</strong>
-                    <div id="daily-not-submitted" style="font-size: 18px; font-weight: bold; margin-top: 5px;">-</div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Problem Details Table -->
         <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -703,13 +674,14 @@
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">ชื่อ-นามสกุล</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">พื้นที่</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">สถานะปัญหา</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">เอกสารที่ขาด</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">SLA (วัน)</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">ตัวแทน</th>
                         </tr>
                     </thead>
                     <tbody id="daily-problems-body">
                         <tr>
-                            <td colspan="5" style="padding: 20px; text-align: center; color: #666;">กำลังโหลดข้อมูล...</td>
+                            <td colspan="6" style="padding: 20px; text-align: center; color: #666;">กำลังโหลดข้อมูล...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1107,13 +1079,7 @@
                 startDate: row.c[35]?.v || '',
                 endDate: row.c[36]?.v || '',
                 sla: row.c[37]?.v || '',
-                year: row.c[41]?.v || '',
-                // เพิ่มคอลัมน์ใหม่ R,S,U,W,X (index 17,18,20,22,23)
-                columnR: row.c[17]?.v || '',
-                columnS: row.c[18]?.v || '',
-                columnU: row.c[20]?.v || '',
-                columnW: row.c[22]?.v || '',
-                columnX: row.c[23]?.v || ''
+                year: row.c[41]?.v || ''
             }));
             
             // เก็บข้อมูลต้นฉบับไว้
@@ -2536,22 +2502,7 @@
             document.getElementById('daily-issues-count').textContent = issuesCount + ' คน';
             document.getElementById('daily-success-rate').textContent = successRate + '%';
 
-            // อัปเดตปัญหาแต่ละประเภท
-            const problemCounts = {
-                'daily-not-attend': currentMonthData.filter(row => row.c[34]?.v === 'ไม่เข้าอบรม').length,
-                'daily-failed-training': currentMonthData.filter(row => row.c[34]?.v === 'ไม่ผ่านอบรม').length,
-                'daily-resigned': currentMonthData.filter(row => row.c[34]?.v === 'ช่างลาออก').length,
-                'daily-criminal-record': currentMonthData.filter(row => row.c[34]?.v === 'ติดประวัติอาชญากรรม').length,
-                'daily-incomplete-docs': currentMonthData.filter(row => row.c[34]?.v === 'เอกสารยังไม่ครบ').length,
-                'daily-not-submitted': currentMonthData.filter(row => row.c[34]?.v === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน').length
-            };
 
-            Object.entries(problemCounts).forEach(([id, count]) => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.textContent = count + ' คน';
-                }
-            });
 
             // สร้างตารางรายชื่อช่างที่มีปัญหา
             createProblemsTable(currentMonthData, problemStatuses);
@@ -2562,58 +2513,110 @@
             console.log('✅ โหลดรายงานประจำวันเสร็จสิ้น');
         }
 
-        // ฟังก์ชันสร้างตารางรายชื่อช่างที่มีปัญหา
-        function createProblemsTable(data, problemStatuses) {
-            const tbody = document.getElementById('daily-problems-body');
-            if (!tbody) return;
+                 // ฟังก์ชันสร้างตารางรายชื่อช่างที่มีปัญหา
+         function createProblemsTable(data, problemStatuses) {
+             const tbody = document.getElementById('daily-problems-body');
+             if (!tbody) return;
 
-            // กรองเฉพาะช่างที่มีปัญหา
-            const problemData = data.filter(row => problemStatuses.includes(row.c[34]?.v));
-            
-            tbody.innerHTML = '';
+             // กำหนดชื่อเอกสารตามคอลัมน์
+             const documentTypes = {
+                 'R': 'บัตรประชาชน',
+                 'S': 'วุฒิการศึกษา', 
+                 'U': 'ใบรับรองแพทย์',
+                 'W': 'ใบขับขี่',
+                 'X': 'เอกสารประวัติอาชญากรรม'
+             };
 
-            if (problemData.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #28a745;">🎉 ไม่มีช่างที่มีปัญหาในเดือนนี้</td></tr>';
-                return;
-            }
+             // รวมข้อมูลช่างที่มีปัญหาและเอกสารที่ขาด
+             const allProblemsData = [];
+             
+             data.forEach(row => {
+                 const status = row.c[34]?.v || '';
+                 const name = row.c[3]?.v || '-';
+                 const area = row.c[26]?.v || '-';
+                 const sla = row.c[37]?.v || '-';
+                 const agent = row.c[4]?.v || '-';
+                 
+                 // ตรวจสอบเอกสารที่ขาด
+                 const missingDocuments = [];
+                 const documentColumns = {
+                     'R': row.c[17]?.v || '',
+                     'S': row.c[18]?.v || '',
+                     'U': row.c[20]?.v || '',
+                     'W': row.c[22]?.v || '',
+                     'X': row.c[23]?.v || ''
+                 };
+                 
+                 Object.keys(documentColumns).forEach(colKey => {
+                     const docValue = documentColumns[colKey];
+                     const docType = documentTypes[colKey];
+                     
+                     if (docValue && docValue.includes('ยังไม่ส่งเอกสาร')) {
+                         missingDocuments.push(docType);
+                     }
+                 });
+                 
+                 // เพิ่มข้อมูลถ้ามีปัญหาหรือมีเอกสารขาด
+                 if (problemStatuses.includes(status) || missingDocuments.length > 0) {
+                     allProblemsData.push({
+                         name: name,
+                         area: area,
+                         status: status,
+                         missingDocs: missingDocuments,
+                         sla: sla,
+                         agent: agent,
+                         slaNumber: parseFloat(sla) || 0
+                     });
+                 }
+             });
+             
+             tbody.innerHTML = '';
 
-            // เรียงลำดับตาม SLA จากมากไปน้อย
-            problemData.sort((a, b) => {
-                const slaA = parseFloat(a.c[37]?.v) || 0;
-                const slaB = parseFloat(b.c[37]?.v) || 0;
-                return slaB - slaA;
-            });
+             if (allProblemsData.length === 0) {
+                 tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #28a745;">🎉 ไม่มีช่างที่มีปัญหาในเดือนนี้</td></tr>';
+                 return;
+             }
 
-            problemData.forEach(row => {
-                const name = row.c[3]?.v || '-';
-                const area = row.c[26]?.v || '-';
-                const status = row.c[34]?.v || '-';
-                const sla = row.c[37]?.v || '-';
-                const agent = row.c[4]?.v || '-';
+             // เรียงลำดับตาม SLA จากมากไปน้อย
+             allProblemsData.sort((a, b) => b.slaNumber - a.slaNumber);
 
-                // กำหนดสีตามประเภทปัญหา
-                let statusColor = '#dc3545';
-                if (status === 'ช่างลาออก') statusColor = '#fd7e14';
-                else if (status === 'ติดประวัติอาชญากรรม') statusColor = '#6f42c1';
-                else if (status === 'เอกสารยังไม่ครบ') statusColor = '#20c997';
-                else if (status === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน') statusColor = '#17a2b8';
+             allProblemsData.forEach(item => {
+                 // กำหนดสีตามประเภทปัญหา
+                 let statusColor = '#dc3545';
+                 if (item.status === 'ช่างลาออก') statusColor = '#fd7e14';
+                 else if (item.status === 'ติดประวัติอาชญากรรม') statusColor = '#6f42c1';
+                 else if (item.status === 'เอกสารยังไม่ครบ') statusColor = '#20c997';
+                 else if (item.status === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน') statusColor = '#17a2b8';
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 8px; border: 1px solid #ddd;">${name}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${area}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                        <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                            ${status}
-                        </span>
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
-                        ${sla !== '-' ? sla + ' วัน' : '-'}
-                    </td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${agent}</td>
-                `;
-                tbody.appendChild(tr);
-                         });
+                 // สร้างรายการเอกสารที่ขาด
+                 let missingDocsHtml = '';
+                 if (item.missingDocs.length > 0) {
+                     missingDocsHtml = item.missingDocs.map(doc => 
+                         `<span style="background-color: #ffc107; color: #212529; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 1px; display: inline-block;">${doc}</span>`
+                     ).join(' ');
+                 } else {
+                     missingDocsHtml = '<span style="color: #28a745;">ครบถ้วน</span>';
+                 }
+
+                 const tr = document.createElement('tr');
+                 tr.innerHTML = `
+                     <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.area}</td>
+                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                         <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                             ${item.status}
+                         </span>
+                     </td>
+                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                         ${missingDocsHtml}
+                     </td>
+                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
+                         ${item.sla !== '-' ? item.sla + ' วัน' : '-'}
+                     </td>
+                     <td style="padding: 8px; border: 1px solid #ddd;">${item.agent}</td>
+                 `;
+                 tbody.appendChild(tr);
+             });
          }
 
          // ฟังก์ชันสร้างกราฟรายวันของเดือนปัจจุบัน
@@ -2638,50 +2641,90 @@
                  window.dailyChart.destroy();
              }
 
-             // จัดกลุ่มข้อมูลตามวันสิ้นสุดและสถานะ
-             const dailyData = {};
-             const allStatuses = new Set();
+             // จัดกลุ่มข้อมูลตามสถานะ+วันที่และประเภทเอกสารที่ขาด
+             const statusDateDocumentData = {}; // เก็บข้อมูลเอกสารที่ขาดแยกตามสถานะและวันที่
+             const allStatusDateKeys = new Set();
+             
+             // กำหนดชื่อเอกสารตามคอลัมน์
+             const documentTypes = {
+                 'R': 'บัตรประชาชน',
+                 'S': 'วุฒิการศึกษา', 
+                 'U': 'ใบรับรองแพทย์',
+                 'W': 'ใบขับขี่',
+                 'X': 'เอกสารประวัติอาชญากรรม'
+             };
              
              data.forEach((row, index) => {
-                 const endDate = row.c[36]?.v; // คอลัมน์ "วันสิ้นสุด"
                  const status = row.c[34]?.v; // สถานะ
+                 const endDate = row.c[36]?.v; // วันสิ้นสุด
+                 
+                 // ตรวจสอบคอลัมน์ R,S,U,W,X สำหรับ "ยังไม่ส่งเอกสาร"
+                 const documentColumns = {
+                     'R': row.c[17]?.v || '', // คอลัมน์ R - บัตรประชาชน
+                     'S': row.c[18]?.v || '', // คอลัมน์ S - วุฒิการศึกษา
+                     'U': row.c[20]?.v || '', // คอลัมน์ U - ใบรับรองแพทย์
+                     'W': row.c[22]?.v || '', // คอลัมน์ W - ใบขับขี่
+                     'X': row.c[23]?.v || ''  // คอลัมน์ X - เอกสารประวัติอาชญากรรม
+                 };
                  
                  if (index < 5) { // Debug แค่ 5 รายการแรก
                      console.log(`รายการที่ ${index + 1}:`, {
-                         endDate: endDate,
                          status: status,
-                         name: row.c[3]?.v
+                         endDate: endDate,
+                         name: row.c[3]?.v,
+                         documents: documentColumns
                      });
                  }
                  
-                 if (endDate && status) {
-                     // แปลงวันที่เป็นรูปแบบที่อ่านง่าย
-                     const dateKey = formatDateForChart(endDate);
+                 if (status && endDate) {
+                     // สร้าง key ที่รวมสถานะและวันที่
+                     const dateFormatted = formatDateForChart(endDate);
+                     const statusDateKey = `${status} (${dateFormatted})`;
                      
-                     if (!dailyData[dateKey]) {
-                         dailyData[dateKey] = {};
+                     allStatusDateKeys.add(statusDateKey);
+                     
+                     // เริ่มต้นข้อมูลสถานะ+วันที่
+                     if (!statusDateDocumentData[statusDateKey]) {
+                         statusDateDocumentData[statusDateKey] = {};
+                         Object.values(documentTypes).forEach(docType => {
+                             statusDateDocumentData[statusDateKey][docType] = 0;
+                         });
                      }
                      
-                     if (!dailyData[dateKey][status]) {
-                         dailyData[dateKey][status] = 0;
-                     }
-                     
-                     dailyData[dateKey][status]++;
-                     allStatuses.add(status);
+                     // ตรวจสอบและนับ "ยังไม่ส่งเอกสาร" แยกตามประเภทเอกสาร
+                     Object.keys(documentColumns).forEach(colKey => {
+                         const docValue = documentColumns[colKey];
+                         const docType = documentTypes[colKey];
+                         
+                         if (docValue && docValue.includes('ยังไม่ส่งเอกสาร')) {
+                             statusDateDocumentData[statusDateKey][docType]++;
+                         }
+                     });
                  }
              });
 
-             console.log('📊 ข้อมูลรายวันที่ประมวลผล:', dailyData);
-             console.log('📋 สถานะทั้งหมด:', Array.from(allStatuses));
+             console.log('📊 ข้อมูลเอกสารที่ขาดตามสถานะและวันที่:', statusDateDocumentData);
+             console.log('📋 สถานะ+วันที่ทั้งหมด:', Array.from(allStatusDateKeys));
 
-             // เรียงลำดับวันที่
-             const sortedDates = Object.keys(dailyData).sort((a, b) => {
-                 return new Date(convertDateForSort(a)) - new Date(convertDateForSort(b));
+             // เรียงลำดับสถานะ+วันที่ (เรียงตามวันที่ก่อน แล้วตามสถานะ)
+             const sortedStatusDateKeys = Array.from(allStatusDateKeys).sort((a, b) => {
+                 // แยกวันที่และสถานะออกจาก key
+                 const dateA = a.match(/\(([^)]+)\)/)?.[1] || '';
+                 const dateB = b.match(/\(([^)]+)\)/)?.[1] || '';
+                 const statusA = a.replace(/\s*\([^)]+\)/, '');
+                 const statusB = b.replace(/\s*\([^)]+\)/, '');
+                 
+                 // เรียงตามวันที่ก่อน
+                 const dateComparison = new Date(convertDateForSort(dateA)) - new Date(convertDateForSort(dateB));
+                 if (dateComparison !== 0) return dateComparison;
+                 
+                 // ถ้าวันที่เท่ากัน เรียงตามสถานะ
+                 return statusA.localeCompare(statusB, 'th');
              });
 
              // ตรวจสอบว่ามีข้อมูลหรือไม่
-             if (sortedDates.length === 0) {
-                 console.warn('ไม่มีข้อมูลสำหรับสร้างกราฟรายวัน');
+             if (sortedStatusDateKeys.length === 0) {
+                 console.warn('ไม่มีข้อมูลสำหรับสร้างกราฟ');
                  const ctx = canvas.getContext('2d');
                  ctx.fillStyle = '#6c757d';
                  ctx.font = '16px Arial';
@@ -2690,31 +2733,31 @@
                  return;
              }
 
-             // กำหนดสีสำหรับแต่ละสถานะ
-             const statusColors = {
-                 'ขึ้นทะเบียนเรียบร้อย': '#28a745',
-                 'ช่างลาออก': '#fd7e14',
-                 'ตัวแทนยังไม่ส่งขึ้นทะเบียน': '#17a2b8',
-                 'ติดประวัติอาชญากรรม': '#6f42c1',
-                 'อยู่ระหว่างอบรมปฎิบัติ': '#20c997',
-                 'เอกสารยังไม่ครบ': '#ffc107',
-                 'อยู่ระหว่างอบรมทฤษฎี': '#007bff',
-                 'ไม่เข้าอบรม': '#dc3545',
-                 'ไม่ผ่านอบรม': '#e83e8c'
+             // กำหนดสีสำหรับเอกสารแต่ละประเภท
+             const documentColors = {
+                 'บัตรประชาชน': '#ff6b6b',
+                 'วุฒิการศึกษา': '#4ecdc4',
+                 'ใบรับรองแพทย์': '#45b7d1',
+                 'ใบขับขี่': '#f9ca24',
+                 'เอกสารประวัติอาชญากรรม': '#6c5ce7'
              };
 
-             // สร้าง datasets สำหรับแต่ละสถานะ
-             const datasets = Array.from(allStatuses).map(status => ({
-                 label: status,
-                 data: sortedDates.map(date => dailyData[date][status] || 0),
-                 backgroundColor: statusColors[status] || '#6c757d',
-                 borderColor: statusColors[status] || '#6c757d',
+             // สร้าง datasets สำหรับเอกสารแต่ละประเภท (stacked by document type)
+             const datasets = Object.values(documentTypes).map(docType => ({
+                 label: docType,
+                 data: sortedStatusDateKeys.map(statusDateKey => {
+                     return statusDateDocumentData[statusDateKey] && statusDateDocumentData[statusDateKey][docType] 
+                         ? statusDateDocumentData[statusDateKey][docType] 
+                         : 0;
+                 }),
+                 backgroundColor: documentColors[docType] || '#6c757d',
+                 borderColor: documentColors[docType] || '#6c757d',
                  borderWidth: 1
              }));
 
              // เตรียมข้อมูลสำหรับกราฟ
              const chartData = {
-                 labels: sortedDates,
+                 labels: sortedStatusDateKeys,
                  datasets: datasets
              };
 
@@ -2733,26 +2776,61 @@
                              tooltip: {
                                  callbacks: {
                                      footer: function(tooltipItems) {
-                                         const date = tooltipItems[0].label;
-                                         const dateData = dailyData[date];
-                                         const total = Object.values(dateData).reduce((sum, count) => sum + count, 0);
-                                         return `รวมทั้งหมด: ${total} คน`;
+                                         const statusDateKey = tooltipItems[0].label;
+                                         const statusDateData = statusDateDocumentData[statusDateKey] || {};
+                                         
+                                         // แยกสถานะและวันที่
+                                         const date = statusDateKey.match(/\(([^)]+)\)/)?.[1] || '';
+                                         const status = statusDateKey.replace(/\s*\([^)]+\)/, '');
+                                         
+                                         // คำนวณยอดรวมเอกสารที่ขาด
+                                         const totalMissingDocs = Object.values(statusDateData).reduce((sum, count) => sum + count, 0);
+                                         
+                                         let footer = `สถานะ: ${status}\nวันที่: ${date}\nรวมเอกสารที่ขาด: ${totalMissingDocs} รายการ`;
+                                         
+                                         // แสดงรายละเอียดเอกสารแต่ละประเภท
+                                         const docSummary = [];
+                                         Object.keys(statusDateData).forEach(docType => {
+                                             if (statusDateData[docType] > 0) {
+                                                 docSummary.push(`${docType}: ${statusDateData[docType]} รายการ`);
+                                             }
+                                         });
+                                         
+                                         if (docSummary.length > 0) {
+                                             footer += `\n\nรายละเอียด:\n${docSummary.join('\n')}`;
+                                         }
+                                         
+                                         return footer;
                                      }
                                  }
                              }
                          },
                          scales: {
                              x: {
+                                 stacked: true,
                                  title: {
                                      display: true,
-                                     text: 'วันที่'
+                                     text: 'สถานะของช่าง (วันที่)'
+                                 },
+                                 ticks: {
+                                     maxRotation: 45,
+                                     minRotation: 45,
+                                     callback: function(value, index, values) {
+                                         const label = this.getLabelForValue(value);
+                                         // ตัดข้อความให้สั้นลงถ้ายาวเกินไป
+                                         if (label.length > 25) {
+                                             return label.substring(0, 22) + '...';
+                                         }
+                                         return label;
+                                     }
                                  }
                              },
                              y: {
+                                 stacked: true,
                                  beginAtZero: true,
                                  title: {
                                      display: true,
-                                     text: 'จำนวน (คน)'
+                                     text: 'จำนวนเอกสารที่ขาด'
                                  },
                                  ticks: {
                                      stepSize: 1
