@@ -657,8 +657,8 @@
         <!-- Daily Chart Section -->
         <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%; margin-left: 0;">
             <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
-            <div style="position: relative; height: 600px; width: 100%;">
-                <canvas id="dailyChart" style="width: 100% !important; height: 600px !important;"></canvas>
+            <div style="position: relative; height: 450px; width: 100%; padding-top: 30px;">
+                <canvas id="dailyChart" style="width: 100% !important; height: 420px !important;"></canvas>
             </div>
         </div>
 
@@ -2778,7 +2778,7 @@
                              padding: {
                                  left: 10,
                                  right: 10,
-                                 top: 10,
+                                 top: 40,
                                  bottom: 10
                              }
                          },
@@ -2865,12 +2865,13 @@
                              y: {
                                  stacked: true,
                                  beginAtZero: true,
+                                 max: 150,
                                  title: {
                                      display: true,
                                      text: 'จำนวนเอกสารที่ขาด'
                                  },
                                  ticks: {
-                                     stepSize: 1
+                                     stepSize: 10
                                  }
                              }
                          }
