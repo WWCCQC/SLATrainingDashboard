@@ -347,7 +347,7 @@
         .table-buttons button svg {
             width: 16px;
             height: 16px;
-        }
+                }
         .legend-container {
             position: absolute;
             left: -200px;
@@ -655,10 +655,10 @@
         </div>
 
         <!-- Daily Chart Section -->
-        <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%; margin-left: 0;">
             <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
-            <div style="position: relative; height: 300px;">
-                <canvas id="dailyChart" width="400" height="300"></canvas>
+            <div style="position: relative; height: 600px; width: 100%;">
+                <canvas id="dailyChart" style="width: 100% !important; height: 600px !important;"></canvas>
             </div>
         </div>
 
@@ -672,11 +672,11 @@
                     <thead>
                         <tr style="background-color: #003366; color: white;">
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">ชื่อ-นามสกุล</th>
+                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">ตัวแทน</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">พื้นที่</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">สถานะปัญหา</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">เอกสารที่ขาด</th>
                             <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">SLA (วัน)</th>
-                            <th style="padding: 12px; border: 1px solid #ddd; text-align: center;">ตัวแทน</th>
                         </tr>
                     </thead>
                     <tbody id="daily-problems-body">
@@ -1305,7 +1305,7 @@
             });
 
             // อัพเดทเฉพาะตาราง Pivot ไม่กระทบตารางหลัก
-            updatePivotTable(filteredRows);
+                        updatePivotTable(filteredRows);
 
             // เรียกใช้ฟังก์ชันจัดการ Legend
             initializeLegendHandlers();
@@ -1886,7 +1886,7 @@
                 },
                 plugins: [ChartDataLabels]
             });
-        }
+                }
 
         // เพิ่มฟังก์ชันสำหรับจัดการ Legend
         function initializeLegendHandlers() {
@@ -2535,7 +2535,7 @@
                  const name = row.c[3]?.v || '-';
                  const area = row.c[26]?.v || '-';
                  const sla = row.c[37]?.v || '-';
-                 const agent = row.c[4]?.v || '-';
+                 const agent = row.c[6]?.v || '-'; // เปลี่ยนจาก index 4 เป็น 6 (คอลัมน์ G)
                  
                  // ตรวจสอบเอกสารที่ขาด
                  const missingDocuments = [];
@@ -2601,6 +2601,7 @@
                  const tr = document.createElement('tr');
                  tr.innerHTML = `
                      <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+                     <td style="padding: 8px; border: 1px solid #ddd;">${item.agent}</td>
                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.area}</td>
                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
                          <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
@@ -2613,7 +2614,6 @@
                      <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
                          ${item.sla !== '-' ? item.sla + ' วัน' : '-'}
                      </td>
-                     <td style="padding: 8px; border: 1px solid #ddd;">${item.agent}</td>
                  `;
                  tbody.appendChild(tr);
              });
@@ -2774,9 +2774,39 @@
                      options: {
                          responsive: true,
                          maintainAspectRatio: false,
+                         layout: {
+                             padding: {
+                                 left: 10,
+                                 right: 10,
+                                 top: 10,
+                                 bottom: 10
+                             }
+                         },
                          plugins: {
                              legend: {
-                                 position: 'top',
+                                 position: 'left',
+                                 align: 'start',
+                                 labels: {
+                                     boxWidth: 12,
+                                     padding: 10,
+                                     font: {
+                                         size: 11,
+                                         weight: 'bold'
+                                     },
+                                     usePointStyle: false
+                                 }
+                             },
+                             datalabels: {
+                                 color: 'white',
+                                 anchor: 'center',
+                                 align: 'center',
+                                 formatter: function(value, context) {
+                                     return value > 0 ? value : '';
+                                 },
+                                 font: {
+                                     weight: 'bold',
+                                     size: 10
+                                 }
                              },
                              tooltip: {
                                  callbacks: {
@@ -2822,11 +2852,13 @@
                                      minRotation: 45,
                                      callback: function(value, index, values) {
                                          const label = this.getLabelForValue(value);
-                                         // ตัดข้อความให้สั้นลงถ้ายาวเกินไป
-                                         if (label.length > 25) {
-                                             return label.substring(0, 22) + '...';
-                                         }
-                                         return label;
+                                         // แยกสถานะและวันที่เพื่อแสดงให้ชัดเจน
+                                         const dateMatch = label.match(/\(([^)]+)\)/);
+                                         const status = label.replace(/\s*\([^)]+\)/, '');
+                                         const date = dateMatch ? dateMatch[1] : '';
+                                         
+                                         // แสดงทั้งสถานะและวันที่ในบรรทัดแยก
+                                         return [status, date];
                                      }
                                  }
                              },
@@ -2842,7 +2874,49 @@
                                  }
                              }
                          }
-                     }
+                     },
+                     plugins: [ChartDataLabels, {
+                         // Plugin สำหรับแสดงยอดรวมบนแท่งกราฟ
+                         afterDatasetsDraw: function(chart) {
+                             const ctx = chart.ctx;
+                             const datasets = chart.data.datasets;
+                             const labels = chart.data.labels;
+                             
+                             labels.forEach((label, i) => {
+                                 let sum = 0;
+                                 datasets.forEach(ds => {
+                                     if (!ds.hidden) sum += ds.data[i] || 0;
+                                 });
+                                 
+                                 if (sum > 0) {
+                                     // หาตำแหน่ง y สูงสุดของแท่ง
+                                     let topY = null;
+                                     for (let d = datasets.length - 1; d >= 0; d--) {
+                                         if (!datasets[d].hidden && datasets[d].data[i] > 0) {
+                                             const meta = chart.getDatasetMeta(d);
+                                             if (meta && meta.data[i]) {
+                                                 topY = meta.data[i].y;
+                                                 break;
+                                             }
+                                         }
+                                     }
+                                     
+                                     if (topY !== null) {
+                                         const meta = chart.getDatasetMeta(0);
+                                         const x = meta.data[i].x;
+                                         const y = topY - 15;
+                                         
+                                         ctx.save();
+                                         ctx.font = 'bold 12px Arial';
+                                         ctx.fillStyle = '#000';
+                                         ctx.textAlign = 'center';
+                                         ctx.fillText(sum, x, y);
+                                         ctx.restore();
+                                     }
+                                 }
+                             });
+                         }
+                     }]
                  });
                  console.log('✅ สร้างกราฟรายวันสำเร็จ');
              } catch (error) {
