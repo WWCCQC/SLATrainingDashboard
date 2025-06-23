@@ -604,10 +604,10 @@
     <nav class="navbar">
         <div class="navbar-brand">📊 SLA Training Dashboard</div>
         <div class="navbar-menu">
-            <a href="#" class="nav-item active" onclick="goToHome()">
+            <a href="#" class="nav-item active" onclick="showHomePage()">
                 🏠 หน้าหลัก
             </a>
-            <a href="daily-report.html" class="nav-item">
+            <a href="#" class="nav-item" onclick="showDailyReport()">
                 📋 รายงานประจำวัน
             </a>
         </div>
@@ -617,6 +617,7 @@
     </nav>
 
     <!-- Training Status Section -->
+    <div id="main-page">
     <div id="training-status">
         <div class="controls">
             <div style="display: flex; gap: 20px; justify-content: flex-end;">
@@ -1037,6 +1038,87 @@
     </div>
     <!-- End Training Status Section -->
     </div>
+    </div> <!-- End main-page -->
+
+    <!-- Daily Report Page Section -->
+    <div id="daily-report-page" style="display: none;">
+        <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: 20px 0; padding: 30px;">
+            <h2 style="color: #003366; text-align: center; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 15px;">
+                📋 รายงานประจำวัน
+            </h2>
+            <p style="color: #6c757d; text-align: center; margin-bottom: 30px; font-size: 1.1rem;">
+                รายงานสถานะการอบรมช่างใหม่ ข้อมูลล่าสุด แบบเรียลไทม์
+            </p>
+
+            <!-- Daily Summary Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: linear-gradient(135deg, #003366, #004080); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,51,102,0.3); text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">👥</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px; color: #00ff88;" id="daily-total-registered-new">-</div>
+                    <div style="font-size: 1rem; opacity: 0.9;">ลงทะเบียนวันนี้</div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #003366, #004080); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,51,102,0.3); text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">✅</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px; color: #00ff88;" id="daily-success-new">-</div>
+                    <div style="font-size: 1rem; opacity: 0.9;">สำเร็จวันนี้</div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #003366, #004080); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,51,102,0.3); text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">📈</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px; color: #00ff88;" id="daily-success-rate-new">-</div>
+                    <div style="font-size: 1rem; opacity: 0.9;">อัตราความสำเร็จ</div>
+                </div>
+                
+                <div style="background: linear-gradient(135deg, #003366, #004080); color: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,51,102,0.3); text-align: center;">
+                    <div style="font-size: 2.5rem; margin-bottom: 15px;">⚠️</div>
+                    <div style="font-size: 2rem; font-weight: bold; margin-bottom: 8px; color: #00ff88;" id="daily-issues-new">-</div>
+                    <div style="font-size: 1rem; opacity: 0.9;">ปัญหาที่ต้องติดตาม</div>
+                </div>
+            </div>
+
+            <!-- Daily Report Charts Section -->
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #003366; margin-bottom: 20px; text-align: center;">📊 กราฟข้อมูลรายงานประจำวัน</h3>
+                <div style="text-align: center; padding: 50px; color: #6c757d;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📈</div>
+                    <p>กราฟข้อมูลรายงานประจำวันจะแสดงที่นี่</p>
+                    <p style="font-size: 14px; color: #999;">ข้อมูลจะถูกโหลดเมื่อมีการพัฒนาเพิ่มเติม</p>
+                </div>
+            </div>
+
+            <!-- Daily Report Table Section -->
+            <div style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <h3 style="color: #003366; margin-bottom: 20px;">📋 ตารางข้อมูลรายละเอียดประจำวัน</h3>
+                <div style="text-align: center; padding: 50px; color: #6c757d;">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">📊</div>
+                    <p>ตารางข้อมูลรายละเอียดจะแสดงที่นี่</p>
+                    <p style="font-size: 14px; color: #999;">สามารถเพิ่มข้อมูลใหม่ได้ตามต้องการ</p>
+                </div>
+            </div>
+
+            <!-- Back to Home Button -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="showHomePage()" style="
+                    background: linear-gradient(135deg, #003366, #004080);
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 10px;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,51,102,0.3)'" 
+                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    🏠 กลับไปหน้าหลัก
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         // ฟังก์ชันเพื่ออัปเดตวันที่และเวลาปัจจุบันในรูปแบบประเทศไทย
@@ -1072,45 +1154,59 @@
             updateNavbarStatus('❌ เกิดข้อผิดพลาดในการโหลดข้อมูล', false);
         }
 
-        // ฟังก์ชันสำหรับการนำทางไปยังส่วนต่างๆ
-        function scrollToSection(sectionId) {
-            const element = document.getElementById(sectionId);
-            if (element) {
-                element.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                
-                // อัปเดต active state ของเมนู
-                updateActiveNavItem(sectionId);
-            }
-        }
 
-        // ฟังก์ชันอัปเดต active state ของเมนู
-        function updateActiveNavItem(sectionId) {
+
+        // ฟังก์ชันสำหรับแสดงหน้าหลัก
+        function showHomePage() {
+            document.getElementById('main-page').style.display = 'block';
+            document.getElementById('daily-report-page').style.display = 'none';
+            
+            // อัปเดต active state ของเมนู
             const navItems = document.querySelectorAll('.nav-item');
-            navItems.forEach(item => {
-                item.classList.remove('active');
-            });
-
-            // ไฮไลต์เมนูที่ถูกคลิก
-            if (sectionId === 'daily-report') {
-                const dailyReportItem = document.querySelector('.nav-item[onclick*="daily-report"]');
-                if (dailyReportItem) dailyReportItem.classList.add('active');
-            } else {
-                // ถ้าไม่ใช่เมนูที่มี onclick ให้ไฮไลต์หน้าหลัก
-                const homeItem = document.querySelector('.nav-item:first-child');
-                if (homeItem) homeItem.classList.add('active');
-            }
-        }
-
-        // ฟังก์ชันสำหรับคลิกเมนูหน้าหลัก
-        function goToHome() {
+            navItems.forEach(item => item.classList.remove('active'));
+            document.querySelector('.nav-item[onclick*="showHomePage"]').classList.add('active');
+            
+            // เลื่อนไปด้านบน
             window.scrollTo({
                 top: 0,
                 behavior: 'smooth'
             });
-            updateActiveNavItem('home');
+        }
+
+        // ฟังก์ชันสำหรับแสดงหน้ารายงานประจำวัน
+        function showDailyReport() {
+            document.getElementById('main-page').style.display = 'none';
+            document.getElementById('daily-report-page').style.display = 'block';
+            
+            // อัปเดต active state ของเมนู
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => item.classList.remove('active'));
+            document.querySelector('.nav-item[onclick*="showDailyReport"]').classList.add('active');
+            
+            // เลื่อนไปด้านบน
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            // โหลดข้อมูลรายงานประจำวัน
+            loadDailyReportData();
+        }
+
+        // ฟังก์ชันโหลดข้อมูลรายงานประจำวัน
+        function loadDailyReportData() {
+            // อัปเดตสถานะ navbar
+            updateNavbarStatus('🔄 กำลังโหลดข้อมูลรายงานประจำวัน...', true);
+            
+            // Mock data - ในอนาคตจะเปลี่ยนเป็นการดึงข้อมูลจริง
+            setTimeout(() => {
+                document.getElementById('daily-total-registered-new').textContent = '45 คน';
+                document.getElementById('daily-success-new').textContent = '32 คน';
+                document.getElementById('daily-success-rate-new').textContent = '71.1%';
+                document.getElementById('daily-issues-new').textContent = '13 คน';
+                
+                updateNavbarStatus('✅ ข้อมูลรายงานประจำวันอัปเดตแล้ว', true);
+            }, 1500);
         }
 
         // URL for Google Sheets
