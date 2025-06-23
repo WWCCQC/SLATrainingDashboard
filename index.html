@@ -2926,15 +2926,25 @@
                 return;
             }
 
-            // ใช้ข้อมูลเดือนปัจจุบัน (Jun25)
-            const currentMonth = 'Jun25';
-            const currentMonthData = filteredData2025.filter(row => row.c[28]?.v === currentMonth);
-            
-            console.log(`ข้อมูลเดือน ${currentMonth}:`, currentMonthData.length, 'รายการ');
+            // ใช้ข้อมูลทั้งหมดของปี 2025 (ไม่กรองตาม trainingMonth)
+            console.log(`ข้อมูลทั้งหมดปี 2025:`, filteredData2025.length, 'รายการ');
+
+            // กรองข้อมูลที่มีวันที่เดือน 6 สำหรับการคำนวณสถิติ
+            const juneRelatedData = filteredData2025.filter(row => {
+                const endDate = row.c[36]?.v || '';
+                const startDate = row.c[35]?.v || '';
+                const trainingMonth = row.c[28]?.v || '';
+                
+                return (endDate.includes('/6/2025') || endDate.includes('/06/2025')) ||
+                       (startDate.includes('/6/2025') || startDate.includes('/06/2025')) ||
+                       trainingMonth === 'Jun25';
+            });
+
+            console.log(`ข้อมูลที่เกี่ยวข้องกับเดือน 6:`, juneRelatedData.length, 'รายการ');
 
             // คำนวณสถิติรายงานประจำวัน
-            const totalRegistered = currentMonthData.length;
-            const successCount = currentMonthData.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length;
+            const totalRegistered = juneRelatedData.length;
+            const successCount = juneRelatedData.filter(row => row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length;
             
             // นับปัญหาต่างๆ
             const problemStatuses = [
@@ -2942,13 +2952,13 @@
                 'ติดประวัติอาชญากรรม', 'เอกสารยังไม่ครบ', 'ตัวแทนยังไม่ส่งขึ้นทะเบียน'
             ];
             
-            const issuesCount = currentMonthData.filter(row => 
+            const issuesCount = juneRelatedData.filter(row => 
                 problemStatuses.includes(row.c[34]?.v)
             ).length;
             
             const successRate = totalRegistered > 0 ? ((successCount / totalRegistered) * 100).toFixed(1) : 0;
 
-            // อัปเดตการ์ดสรุป
+            // อัปเดตการ์ดสรุม
             document.getElementById('daily-total-registered').textContent = totalRegistered + ' คน';
             document.getElementById('daily-success-count').textContent = successCount + ' คน';
             document.getElementById('daily-issues-count').textContent = issuesCount + ' คน';
@@ -2956,11 +2966,11 @@
 
 
 
-            // สร้างตารางรายชื่อช่างที่มีปัญหา
-            createProblemsTable(currentMonthData, problemStatuses);
+            // สร้างตารางรายชื่อช่างที่มีปัญหา (ใช้ข้อมูลที่เกี่ยวข้องกับเดือน 6)
+            createProblemsTable(juneRelatedData, problemStatuses);
 
-            // สร้างกราฟรายวัน
-            createDailyChart(currentMonthData);
+            // สร้างกราฟรายวัน (ใช้ข้อมูลทั้งหมดปี 2025)
+            createDailyChart(filteredData2025);
 
             console.log('✅ โหลดรายงานประจำวันเสร็จสิ้น');
         }
@@ -3031,25 +3041,23 @@
 
          // ฟังก์ชันสร้างกราฟรายวันของเดือนปัจจุบัน
          function createDailyChart(data) {
-             console.log('🔍 เริ่มสร้างกราฟรายวัน, ข้อมูล:', data.length, 'รายการ');
-             
-             const canvas = document.getElementById('dailyChart');
-             if (!canvas) {
-                 console.error('❌ ไม่พบ canvas element สำหรับกราฟรายวัน');
-                 return;
-             }
+             try {
+                 const canvas = document.getElementById('dailyChart');
+                 if (!canvas) {
+                     console.error('❌ ไม่พบ canvas element สำหรับกราฟรายวัน');
+                     return;
+                 }
 
-             // ตรวจสอบว่า Chart.js โหลดแล้วหรือยัง
-             if (typeof Chart === 'undefined') {
-                 console.warn('Chart.js ยังไม่โหลด รอสักครู่...');
-                 setTimeout(() => createDailyChart(data), 1000);
-                 return;
-             }
+                 // ตรวจสอบว่า Chart.js โหลดแล้วหรือยัง
+                 if (typeof Chart === 'undefined') {
+                     setTimeout(() => createDailyChart(data), 1000);
+                     return;
+                 }
 
-             // ทำลายกราฟเดิมถ้ามี
-             if (window.dailyChart && typeof window.dailyChart.destroy === 'function') {
-                 window.dailyChart.destroy();
-             }
+                 // ทำลายกราฟเดิมถ้ามี
+                 if (window.dailyChart && typeof window.dailyChart.destroy === 'function') {
+                     window.dailyChart.destroy();
+                 }
 
              // จัดกลุ่มข้อมูลตามวันที่และสถานะ
              const dailyStatusData = {}; // เก็บข้อมูลสถานะแยกตามวันที่
@@ -3068,45 +3076,76 @@
                  "ไม่ผ่านอบรม"
              ];
              
+                          console.log('🔍 เริ่มประมวลผลข้อมูลกราฟรายวัน:', data.length, 'แถว');
+             
+             // ตรวจสอบข้อมูลที่มีวันที่เดือน 6 ทั้งหมดก่อน
+             let juneDataCount = 0;
+             let validDateCount = 0;
+             
              data.forEach((row, index) => {
-                 const endDate = row.c[36]?.v; // คอลัมน์ AK - วันสิ้นสุด
-                 const status = row.c[34]?.v; // คอลัมน์ AI - สถานะ
+                 if (!row || !row.c) return;
                  
-                 // ตรวจสอบว่าเป็นข้อมูลเดือน June หรือไม่
-                 if (!endDate || !endDate.includes('/6/2025')) {
-                     return;
-                 }
+                 // ค้นหาคอลัมน์ที่มีวันที่เดือน 6/2025 ในแถวนี้
+                 let endDate = row.c[36]?.v; // คอลัมน์ AK - วันสิ้นสุด (ตามสมมติฐาน)
+                 let startDate = row.c[35]?.v; // คอลัมน์ AJ - วันเริ่มต้น (ตามสมมติฐาน)
+                 let status = row.c[34]?.v; // คอลัมน์ AI - สถานะ (ตามสมมติฐาน)
+                 const trainingMonth = row.c[28]?.v; // คอลัมน์ AC - เดือนอบรม
                  
-                 if (index < 10) { // Debug แค่ 10 รายการแรก
-                     console.log(`รายการที่ ${index + 1}:`, {
-                         endDate: endDate,
-                         status: status,
-                         name: row.c[3]?.v
-                     });
-                 }
-                 
-                 if (endDate && status) {
-                     // แปลงวันที่เป็นรูปแบบ DD/MM
-                     const dateFormatted = formatDateForChart(endDate);
-                     allDates.add(dateFormatted);
-                     
-                     // เริ่มต้นข้อมูลวันที่
-                     if (!dailyStatusData[dateFormatted]) {
-                         dailyStatusData[dateFormatted] = {};
-                         statusList.forEach(statusType => {
-                             dailyStatusData[dateFormatted][statusType] = 0;
-                         });
+                 // หากไม่พบข้อมูลวันที่ในตำแหน่งที่คาดหวัง ให้ค้นหาทั่วทั้งแถว
+                 if (!endDate || !startDate) {
+                     for (let colIndex = 30; colIndex < row.c.length; colIndex++) {
+                         const cellValue = row.c[colIndex]?.v;
+                         if (cellValue && typeof cellValue === 'string' && 
+                             (cellValue.includes('/6/2025') || cellValue.includes('/06/2025'))) {
+                             
+                             if (!endDate && colIndex > 35) {
+                                 endDate = cellValue;
+                             } else if (!startDate && colIndex <= 35) {
+                                 startDate = cellValue;
+                             }
+                         }
                      }
+                 }
+                 
+                 // ตรวจสอบว่าแถวไหนมีข้อมูลเดือน 6
+                 const hasJuneEndDate = endDate && (endDate.includes('/6/2025') || endDate.includes('/06/2025'));
+                 const hasJuneStartDate = startDate && (startDate.includes('/6/2025') || startDate.includes('/06/2025'));
+                 const hasJuneTraining = trainingMonth === 'Jun25';
+                 
+                 if (hasJuneEndDate || hasJuneStartDate || hasJuneTraining) {
+                     juneDataCount++;
+                 }
+                 
+                 // ถ้าพบข้อมูลเดือน 6 ให้ประมวลผล (เน้นการตรวจสอบวันที่เป็นหลัก)
+                 if (hasJuneEndDate || hasJuneStartDate || hasJuneTraining) {
+                     // ใช้วันสิ้นสุดเป็นหลัก หากไม่มีใช้วันเริ่มต้น
+                     let dateToUse = endDate || startDate;
                      
-                     // นับจำนวนสถานะในแต่ละวัน
-                     if (statusList.includes(status)) {
-                         dailyStatusData[dateFormatted][status]++;
+                     // ตรวจสอบว่ามีวันที่และสถานะที่ถูกต้อง
+                     if (dateToUse && status && statusList.includes(status)) {
+                         // แปลงวันที่เป็นรูปแบบ DD/MM
+                         const dateFormatted = formatDateForChart(dateToUse);
+                         
+                         if (dateFormatted) {
+                             validDateCount++;
+                             allDates.add(dateFormatted);
+                             
+                             // เริ่มต้นข้อมูลวันที่
+                             if (!dailyStatusData[dateFormatted]) {
+                                 dailyStatusData[dateFormatted] = {};
+                                 statusList.forEach(statusType => {
+                                     dailyStatusData[dateFormatted][statusType] = 0;
+                                 });
+                             }
+                             
+                             // นับจำนวนสถานะในแต่ละวัน
+                             dailyStatusData[dateFormatted][status]++;
+                         }
                      }
                  }
              });
-
-             console.log('📊 ข้อมูลสถานะตามวันที่:', dailyStatusData);
-             console.log('📋 วันที่ทั้งหมด:', Array.from(allDates));
+             
+             console.log(`📊 สรุปการประมวลผล: พบข้อมูลเดือน 6 จำนวน ${juneDataCount} แถว, ประมวลผลได้ ${validDateCount} แถว, วันที่ทั้งหมด ${allDates.size} วัน`);
 
              // เรียงลำดับวันที่
              const sortedDates = Array.from(allDates).sort((a, b) => {
@@ -3156,7 +3195,6 @@
                  datasets: datasets
              };
 
-             try {
                  const ctx = canvas.getContext('2d');
                  window.dailyChart = new Chart(ctx, {
                      type: 'bar',
@@ -3300,11 +3338,14 @@
                  console.error('❌ เกิดข้อผิดพลาดในการสร้างกราฟรายวัน:', error);
                  
                  // แสดงข้อความ error ในกราฟ
-                 const ctx = canvas.getContext('2d');
-                 ctx.fillStyle = '#dc3545';
-                 ctx.font = '16px Arial';
-                 ctx.textAlign = 'center';
-                 ctx.fillText('ไม่สามารถโหลดกราฟได้', canvas.width / 2, canvas.height / 2);
+                 const canvas = document.getElementById('dailyChart');
+                 if (canvas) {
+                     const ctx = canvas.getContext('2d');
+                     ctx.fillStyle = '#dc3545';
+                     ctx.font = '16px Arial';
+                     ctx.textAlign = 'center';
+                     ctx.fillText('ไม่สามารถโหลดกราฟได้', canvas.width / 2, canvas.height / 2);
+                 }
              }
          }
 
@@ -3312,17 +3353,41 @@
          function formatDateForChart(dateString) {
              if (!dateString) return '';
              
-             // ถ้าเป็นรูปแบบ DD/MM/YYYY
+             // ถ้าเป็นรูปแบบ DD/MM/YYYY หรือ D/M/YYYY
              if (dateString.includes('/')) {
                  const parts = dateString.split('/');
                  if (parts.length === 3) {
-                     const day = parts[0].padStart(2, '0');
-                     const month = parts[1].padStart(2, '0');
-                     return `${day}/${month}`;
+                     const day = parseInt(parts[0]);
+                     const month = parseInt(parts[1]);
+                     const year = parseInt(parts[2]);
+                     
+                     // ตรวจสอบว่าเป็นเดือน 6 ปี 2025 หรือไม่
+                     if (month === 6 && year === 2025) {
+                         const dayFormatted = day.toString().padStart(2, '0');
+                         const monthFormatted = '06';
+                         return `${dayFormatted}/${monthFormatted}`;
+                     }
                  }
              }
              
-             return dateString;
+             // ลองแปลงรูปแบบอื่นๆ ที่อาจเป็นไปได้
+             const junePatterns = [
+                 /(\d{1,2})\/6\/2025/,
+                 /(\d{1,2})\/06\/2025/,
+                 /(\d{1,2})-6-2025/,
+                 /(\d{1,2})-06-2025/
+             ];
+             
+             for (const pattern of junePatterns) {
+                 const match = dateString.match(pattern);
+                 if (match) {
+                     const day = parseInt(match[1]);
+                     const dayFormatted = day.toString().padStart(2, '0');
+                     return `${dayFormatted}/06`;
+                 }
+             }
+             
+             return '';
          }
 
          // ฟังก์ชันแปลงวันที่สำหรับการเรียงลำดับ
