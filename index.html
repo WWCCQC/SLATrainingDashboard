@@ -520,6 +520,75 @@
             100% { transform: rotate(360deg); }
         }
     </style>
+    <!-- เพิ่ม CSS สำหรับ Simple Navbar -->
+    <style>
+        .navbar {
+            background: linear-gradient(135deg, #003366, #004080);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            margin-left: 15px;
+            gap: 10px;
+        }
+        
+        .nav-item {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-item.active {
+            background: rgba(255,255,255,0.2);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .navbar-status {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+            margin-left: auto;
+        }
+        
+        /* Responsive navbar */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            
+            .navbar-menu {
+                justify-content: center;
+                margin-left: 0;
+                flex-wrap: wrap;
+            }
+            
+            .navbar-status {
+                order: -1;
+            }
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -531,7 +600,21 @@
         <p id="current-date"></p>
     </div>
 
-
+    <!-- Simple Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-brand">📊 SLA Training Dashboard</div>
+        <div class="navbar-menu">
+            <a href="#" class="nav-item active" onclick="goToHome()">
+                🏠 หน้าหลัก
+            </a>
+            <a href="daily-report.html" class="nav-item">
+                📋 รายงานประจำวัน
+            </a>
+        </div>
+        <div class="navbar-status">
+            <span id="navbar-status">🔄 กำลังโหลดข้อมูล...</span>
+        </div>
+    </nav>
 
     <!-- Training Status Section -->
     <div id="training-status">
@@ -968,6 +1051,67 @@
 
         // เรียกฟังก์ชันเพื่ออัปเดตวันที่และเวลาในทุกๆ วินาที
         updateCurrentDateTime();
+        setInterval(updateCurrentDateTime, 1000);
+
+        // ฟังก์ชันอัปเดตสถานะใน navbar
+        function updateNavbarStatus(message, isSuccess = true) {
+            const statusElement = document.getElementById('navbar-status');
+            if (statusElement) {
+                statusElement.textContent = message;
+                statusElement.style.color = isSuccess ? '#00ff88' : '#ff6b6b';
+            }
+        }
+        
+        // อัปเดตสถานะ navbar เมื่อโหลดข้อมูลสำเร็จ
+        function updateNavbarOnDataLoad() {
+            updateNavbarStatus('✅ ข้อมูลอัปเดตล่าสุด', true);
+        }
+        
+        // อัปเดตสถานะ navbar เมื่อเกิดข้อผิดพลาด
+        function updateNavbarOnError() {
+            updateNavbarStatus('❌ เกิดข้อผิดพลาดในการโหลดข้อมูล', false);
+        }
+
+        // ฟังก์ชันสำหรับการนำทางไปยังส่วนต่างๆ
+        function scrollToSection(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // อัปเดต active state ของเมนู
+                updateActiveNavItem(sectionId);
+            }
+        }
+
+        // ฟังก์ชันอัปเดต active state ของเมนู
+        function updateActiveNavItem(sectionId) {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // ไฮไลต์เมนูที่ถูกคลิก
+            if (sectionId === 'daily-report') {
+                const dailyReportItem = document.querySelector('.nav-item[onclick*="daily-report"]');
+                if (dailyReportItem) dailyReportItem.classList.add('active');
+            } else {
+                // ถ้าไม่ใช่เมนูที่มี onclick ให้ไฮไลต์หน้าหลัก
+                const homeItem = document.querySelector('.nav-item:first-child');
+                if (homeItem) homeItem.classList.add('active');
+            }
+        }
+
+        // ฟังก์ชันสำหรับคลิกเมนูหน้าหลัก
+        function goToHome() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            updateActiveNavItem('home');
+        }
 
         // URL for Google Sheets
         const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLKGmFsdD4oMcVdnf_wyrwAD3-3R7Ys9hXCg2gwBsudfJIUliRymBnVYHapN7a3Yq08Lgxf9cYYV6Y/pub?gid=377151035&single=true&output=csv";
@@ -985,6 +1129,9 @@
         // ฟังก์ชันเพื่อดึงข้อมูลและอัปเดตตาราง
         function fetchDataAndUpdateTable() {
             console.log('=== เริ่มดึงข้อมูลจาก Google Sheets ===');
+            
+            // อัปเดตสถานะ navbar เมื่อเริ่มโหลด
+            updateNavbarStatus('🔄 กำลังโหลดข้อมูล...', true);
             
             return fetch(sheetUrl)
                 .then(response => {
@@ -1045,6 +1192,9 @@
                         existingError.remove();
                     }
                     
+                    // อัปเดตสถานะ navbar เมื่อโหลดสำเร็จ
+                    updateNavbarOnDataLoad();
+                    
                     return filteredData2025; // return ข้อมูลเพื่อให้ caller สามารถใช้ได้
                 })
                 .catch(error => {
@@ -1091,6 +1241,9 @@
                     if (headerContainer) {
                         headerContainer.insertAdjacentElement('afterend', messageDiv);
                     }
+                    
+                    // อัปเดตสถานะ navbar เมื่อเกิดข้อผิดพลาด
+                    updateNavbarOnError();
                     
                     throw error; // re-throw เพื่อให้ caller สามารถจัดการได้
                 });
