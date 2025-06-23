@@ -803,8 +803,43 @@
 
     <!-- Problem Details Table -->
     <div style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin: 20px 0; border-left: 4px solid #dc3545;">
-        <h3 style="color: #003366; margin-bottom: 20px;">📋 รายชื่อช่างที่มีปัญหา</h3>
-        <div style="overflow-x: auto;">
+        <div class="table-header-container">
+            <h3 style="color: #003366; margin: 0;">📋 รายชื่อช่างที่มีปัญหา</h3>
+            <div class="table-buttons" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <form class="search-container" onsubmit="event.preventDefault(); searchProblemsTable();">
+                    <input type="text" id="problems-search-input" class="search-input" placeholder="ค้นหาช่างที่มีปัญหา...">
+                    <button type="button" id="problems-search-button">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        ค้นหา
+                    </button>
+                </form>
+                <button id="problems-reset-filter-button" title="ล้างการกรอง">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3h18v18H3z"></path>
+                        <path d="M21 3l-9 9M3 21l9-9"></path>
+                    </svg>
+                    ล้างตัวกรอง
+                </button>
+                <button id="problems-refresh-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/>
+                    </svg>
+                    รีเฟรชข้อมูล
+                </button>
+                <button id="problems-download-button">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    ดาวน์โหลด
+                </button>
+            </div>
+        </div>
+        <div style="overflow-x: auto; margin-top: 20px;">
             <table id="daily-problems-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background-color: #003366; color: white;">
@@ -1061,6 +1096,134 @@
                 });
         }
         
+        // ตัวแปรเก็บข้อมูลตารางปัญหา
+        let originalProblemsData = [];
+        let filteredProblemsData = [];
+
+        // ฟังก์ชันค้นหาในตารางปัญหา
+        function searchProblemsTable() {
+            const searchTerm = document.getElementById('problems-search-input').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                renderProblemsTable(originalProblemsData);
+                return;
+            }
+
+            const filteredData = originalProblemsData.filter(item => {
+                return item.name.toLowerCase().includes(searchTerm) ||
+                       item.agent.toLowerCase().includes(searchTerm) ||
+                       item.area.toLowerCase().includes(searchTerm) ||
+                       item.status.toLowerCase().includes(searchTerm) ||
+                       item.missingDocs.some(doc => doc.toLowerCase().includes(searchTerm));
+            });
+
+            renderProblemsTable(filteredData);
+        }
+
+        // ฟังก์ชันรีเซ็ตตารางปัญหา
+        function resetProblemsTable() {
+            document.getElementById('problems-search-input').value = '';
+            renderProblemsTable(originalProblemsData);
+        }
+
+        // ฟังก์ชันรีเฟรชตารางปัญหา
+        function refreshProblemsTable() {
+            loadDailyReport();
+        }
+
+        // ฟังก์ชันดาวน์โหลดตารางปัญหา
+        function downloadProblemsTable() {
+            if (!window.XLSX) {
+                alert('ไม่สามารถโหลด Excel library ได้ กรุณาลองใหม่อีกครั้ง');
+                return;
+            }
+
+            if (originalProblemsData.length === 0) {
+                alert('ไม่มีข้อมูลปัญหาที่จะดาวน์โหลด');
+                return;
+            }
+
+            // สร้างข้อมูลสำหรับ Excel
+            const excelData = originalProblemsData.map(item => ({
+                'ชื่อ-นามสกุล': item.name,
+                'ตัวแทน': item.agent,
+                'พื้นที่': item.area,
+                'สถานะปัญหา': item.status,
+                'เอกสารที่ขาด': item.missingDocs.join(', ') || 'ครบถ้วน',
+                'SLA (วัน)': item.sla !== '-' ? item.sla : '-'
+            }));
+
+            try {
+                const worksheet = XLSX.utils.json_to_sheet(excelData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "ช่างที่มีปัญหา");
+                
+                const now = new Date();
+                const datePart = now.toLocaleDateString('th-TH', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).replace(/\//g, '-');
+                
+                const filename = `รายชื่อช่างที่มีปัญหา_${datePart}.xlsx`;
+                XLSX.writeFile(workbook, filename);
+            } catch (error) {
+                console.error('เกิดข้อผิดพลาดในการสร้างไฟล์ Excel:', error);
+                alert('เกิดข้อผิดพลาดในการดาวน์โหลดไฟล์');
+            }
+        }
+
+        // ฟังก์ชันแสดงผลตารางปัญหา
+        function renderProblemsTable(data) {
+            const tbody = document.getElementById('daily-problems-body');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #28a745;">🎉 ไม่มีช่างที่มีปัญหาในเดือนนี้</td></tr>';
+                return;
+            }
+
+            data.forEach(item => {
+                // กำหนดสีตามประเภทปัญหา
+                let statusColor = '#dc3545';
+                if (item.status === 'ช่างลาออก') statusColor = '#fd7e14';
+                else if (item.status === 'ติดประวัติอาชญากรรม') statusColor = '#6f42c1';
+                else if (item.status === 'เอกสารยังไม่ครบ') statusColor = '#20c997';
+                else if (item.status === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน') statusColor = '#17a2b8';
+
+                // สร้างรายการเอกสารที่ขาด
+                let missingDocsHtml = '';
+                if (item.missingDocs.length > 0) {
+                    missingDocsHtml = item.missingDocs.map(doc => 
+                        `<span style="background-color: #ffc107; color: #212529; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 1px; display: inline-block;">${doc}</span>`
+                    ).join(' ');
+                } else {
+                    missingDocsHtml = '<span style="color: #28a745;">ครบถ้วน</span>';
+                }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${item.agent}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.area}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                        <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                            ${item.status}
+                        </span>
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                        ${missingDocsHtml}
+                    </td>
+                    <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
+                        ${item.sla !== '-' ? item.sla + ' วัน' : '-'}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // ฟังก์ชันสำหรับอัปเดตเฉพาะตารางหลัก
         function updateMainTable(rows) {
             // กรองข้อมูลเฉพาะปี 2025
@@ -1565,6 +1728,38 @@
                     this.style.color = 'white';
                 });
             });
+
+            // Event Listeners สำหรับตารางปัญหา
+            const problemsSearchButton = document.getElementById('problems-search-button');
+            const problemsSearchInput = document.getElementById('problems-search-input');
+            const problemsResetButton = document.getElementById('problems-reset-filter-button');
+            const problemsRefreshButton = document.getElementById('problems-refresh-button');
+            const problemsDownloadButton = document.getElementById('problems-download-button');
+
+            if (problemsSearchButton) {
+                problemsSearchButton.addEventListener('click', searchProblemsTable);
+            }
+
+            if (problemsSearchInput) {
+                problemsSearchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchProblemsTable();
+                    }
+                });
+            }
+
+            if (problemsResetButton) {
+                problemsResetButton.addEventListener('click', resetProblemsTable);
+            }
+
+            if (problemsRefreshButton) {
+                problemsRefreshButton.addEventListener('click', refreshProblemsTable);
+            }
+
+            if (problemsDownloadButton) {
+                problemsDownloadButton.addEventListener('click', downloadProblemsTable);
+            }
 
 
 
@@ -2518,9 +2713,6 @@
 
                  // ฟังก์ชันสร้างตารางรายชื่อช่างที่มีปัญหา
          function createProblemsTable(data, problemStatuses) {
-             const tbody = document.getElementById('daily-problems-body');
-             if (!tbody) return;
-
              // กำหนดชื่อเอกสารตามคอลัมน์
              const documentTypes = {
                  'R': 'บัตรประชาชน',
@@ -2573,53 +2765,14 @@
                  }
              });
              
-             tbody.innerHTML = '';
-
-             if (allProblemsData.length === 0) {
-                 tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #28a745;">🎉 ไม่มีช่างที่มีปัญหาในเดือนนี้</td></tr>';
-                 return;
-             }
-
              // เรียงลำดับตาม SLA จากมากไปน้อย
              allProblemsData.sort((a, b) => b.slaNumber - a.slaNumber);
 
-             allProblemsData.forEach(item => {
-                 // กำหนดสีตามประเภทปัญหา
-                 let statusColor = '#dc3545';
-                 if (item.status === 'ช่างลาออก') statusColor = '#fd7e14';
-                 else if (item.status === 'ติดประวัติอาชญากรรม') statusColor = '#6f42c1';
-                 else if (item.status === 'เอกสารยังไม่ครบ') statusColor = '#20c997';
-                 else if (item.status === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน') statusColor = '#17a2b8';
-
-                 // สร้างรายการเอกสารที่ขาด
-                 let missingDocsHtml = '';
-                 if (item.missingDocs.length > 0) {
-                     missingDocsHtml = item.missingDocs.map(doc => 
-                         `<span style="background-color: #ffc107; color: #212529; padding: 2px 6px; border-radius: 3px; font-size: 11px; margin: 1px; display: inline-block;">${doc}</span>`
-                     ).join(' ');
-                 } else {
-                     missingDocsHtml = '<span style="color: #28a745;">ครบถ้วน</span>';
-                 }
-
-                 const tr = document.createElement('tr');
-                 tr.innerHTML = `
-                     <td style="padding: 8px; border: 1px solid #ddd;">${item.name}</td>
-                     <td style="padding: 8px; border: 1px solid #ddd;">${item.agent}</td>
-                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.area}</td>
-                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                         <span style="background-color: ${statusColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-                             ${item.status}
-                         </span>
-                     </td>
-                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
-                         ${missingDocsHtml}
-                     </td>
-                     <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">
-                         ${item.sla !== '-' ? item.sla + ' วัน' : '-'}
-                     </td>
-                 `;
-                 tbody.appendChild(tr);
-             });
+             // เก็บข้อมูลไว้ในตัวแปร global
+             originalProblemsData = allProblemsData;
+             
+             // แสดงผลตาราง
+             renderProblemsTable(allProblemsData);
          }
 
          // ฟังก์ชันสร้างกราฟรายวันของเดือนปัจจุบัน
