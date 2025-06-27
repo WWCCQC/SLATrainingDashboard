@@ -1586,6 +1586,28 @@
             });
         }
 
+        // ฟังก์ชันแปลงวันที่เป็นรูปแบบเดือน
+        function getMonthFromEndDate(dateString) {
+            if (!dateString || dateString === '-') return null;
+            
+            // รองรับรูปแบบ dd/mm/yyyy หรือ dd/m/yyyy
+            const dateMatch = dateString.match(/\d{1,2}\/(\d{1,2})\/(\d{4})/);
+            if (!dateMatch) return null;
+            
+            const month = parseInt(dateMatch[1]);
+            const year = parseInt(dateMatch[2]);
+            
+            // แปลงเป็นรูปแบบ MonthYY ตามที่ใช้ในกราฟ
+            const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const yearShort = year.toString().slice(-2);
+            
+            if (month >= 1 && month <= 12) {
+                return monthNames[month] + yearShort;
+            }
+            
+            return null;
+        }
+
         // ฟังก์ชันเพื่ออัปเดตกราฟและตาราง
         function updateChartAndTables(rows, selectedMonth = null, selectedStatus = null) {
             const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25', 'Jun25'];
@@ -1594,7 +1616,11 @@
 
             let filteredRows = rows;
             if (selectedMonth) {
-                filteredRows = filteredRows.filter(row => row.c[28]?.v === selectedMonth);
+                // เปลี่ยนจากการกรองด้วยคอลัมน์ 28 เป็นคอลัมน์ 36 (วันสิ้นสุด)
+                filteredRows = filteredRows.filter(row => {
+                    const endDateMonth = getMonthFromEndDate(row.c[36]?.v);
+                    return endDateMonth === selectedMonth;
+                });
             }
             if (selectedStatus) {
                 filteredRows = filteredRows.filter(row => row.c[34]?.v === selectedStatus);
@@ -1605,7 +1631,11 @@
                 datasets: statusList.map((status, index) => ({
                     label: status,
                     data: monthOrder.map(month => {
-                        return filteredRows.filter(row => row.c[28]?.v === month && row.c[34]?.v === status).length;
+                        // เปลี่ยนจากการใช้คอลัมน์ 28 เป็นคอลัมน์ 36 (วันสิ้นสุด)
+                        return filteredRows.filter(row => {
+                            const endDateMonth = getMonthFromEndDate(row.c[36]?.v);
+                            return endDateMonth === month && row.c[34]?.v === status;
+                        }).length;
                     }),
                     backgroundColor: colors[index],
                     hidden: false // เริ่มต้นไม่ซ่อน จะจัดการ legend ทีหลัง
@@ -2296,7 +2326,11 @@
                 datasets: [{
                     label: 'จำนวนการขึ้นทะเบียนช่างใหม่',
                     data: monthOrder.map(month => {
-                        return rows.filter(row => row.c[28]?.v === month && row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย").length;
+                        // เปลี่ยนจากการใช้คอลัมน์ 28 เป็นคอลัมน์ 36 (วันสิ้นสุด)
+                        return rows.filter(row => {
+                            const endDateMonth = getMonthFromEndDate(row.c[36]?.v);
+                            return endDateMonth === month && row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย";
+                        }).length;
                     }),
                     backgroundColor: '#006400',
                     borderColor: '#006400',
@@ -2725,9 +2759,10 @@
 
             // สร้างข้อมูลตาราง
             areas.forEach(area => {
-                const areaData = rows.filter(row => 
-                    row.c[26]?.v === area && row.c[28]?.v === currentMonth
-                );
+                const areaData = rows.filter(row => {
+                    const endDateMonth = getMonthFromEndDate(row.c[36]?.v);
+                    return row.c[26]?.v === area && endDateMonth === currentMonth;
+                });
 
                 if (areaData.length > 0) {
                     const rowData = [
@@ -2977,6 +3012,11 @@
 
                  // ฟังก์ชันสร้างตารางรายชื่อช่างที่มีปัญหา
          function createProblemsTable(data, problemStatuses) {
+             // กรองสถานะที่ไม่ต้องการแสดงในตารางปัญหา
+             const filteredProblemStatuses = problemStatuses.filter(status => 
+                 status !== 'ช่างลาออก' && status !== 'ติดประวัติอาชญากรรม'
+             );
+             
              // กำหนดชื่อเอกสารตามคอลัมน์
              const documentTypes = {
                  'R': 'บัตรประชาชน',
@@ -3010,13 +3050,24 @@
                      const docValue = documentColumns[colKey];
                      const docType = documentTypes[colKey];
                      
-                     if (docValue && docValue.includes('ยังไม่ส่งเอกสาร')) {
+                     // ตรวจสอบเอกสารที่ขาด
+                     let isMissing = false;
+                     
+                     if (colKey === 'S') {
+                         // คอลัมน์วุฒิการศึกษา (คอลัมน์ 18) - มีคำอะไรก็ได้ถือว่าครบ ยกเว้น "ยังไม่ส่งเอกสาร" และค่าว่าง
+                         isMissing = !docValue || docValue.trim() === '' || docValue.includes('ยังไม่ส่งเอกสาร');
+                     } else {
+                         // คอลัมน์อื่นๆ - ตรวจสอบค่าว่างหรือมีคำว่า "ยังไม่ส่งเอกสาร"
+                         isMissing = !docValue || docValue.trim() === '' || docValue.includes('ยังไม่ส่งเอกสาร');
+                     }
+                     
+                     if (isMissing) {
                          missingDocuments.push(docType);
                      }
                  });
                  
-                 // เพิ่มข้อมูลถ้ามีปัญหาหรือมีเอกสารขาด
-                 if (problemStatuses.includes(status) || missingDocuments.length > 0) {
+                 // เพิ่มข้อมูลถ้ามีปัญหาหรือมีเอกสารขาด (ใช้ filteredProblemStatuses แทน)
+                 if ((filteredProblemStatuses.includes(status) || missingDocuments.length > 0) && status !== 'ขึ้นทะเบียนเรียบร้อย' && status !== 'ช่างลาออก' && status !== 'ไม่เข้าอบรม') {
                      allProblemsData.push({
                          name: name,
                          area: area,
