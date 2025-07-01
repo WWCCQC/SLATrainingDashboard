@@ -168,15 +168,37 @@
             text-align: left;
         }
         #chart-container {
-            margin-left: 320px;
+            margin-left: 0px;
+            padding-left: 220px;
             position: relative;
             display: flex;
-            gap: 20px;
+            flex-direction: column;
+            gap: 30px;
+            width: calc(100% - 220px);
+        }
+        
+        /* Responsive design สำหรับกราฟ */
+        @media (max-width: 1200px) {
+            #chart-container {
+                margin-left: 0;
+                padding-left: 220px;
+                width: calc(100% - 220px);
+            }
+        }
+        
+        /* ให้แน่ใจว่า body และ parent containers ไม่ซ่อน legend */
+        body {
+            overflow-x: visible;
+        }
+        
+        .main-page {
+            overflow: visible;
         }
         .chart-wrapper {
             flex: 1;
             min-width: 0;
             position: relative;
+            overflow: visible;
         }
         .total-display {
             position: absolute;
@@ -350,10 +372,10 @@
                 }
         .legend-container {
             position: absolute;
-            left: -200px;
+            left: -190px;
             top: 50%;
             transform: translateY(-50%);
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             gap: 10px;
             padding: 15px;
@@ -361,9 +383,10 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             width: 180px;
+            z-index: 1000;
         }
         .legend-item {
-            display: flex;
+            display: flex !important;
             align-items: center;
             gap: 8px;
             font-size: 14px;
@@ -371,6 +394,13 @@
             padding: 5px;
             border-radius: 4px;
             transition: background-color 0.2s;
+        }
+        
+        /* Force legend visibility สำหรับกราฟหลัก */
+        #chart-container .chart-wrapper:first-child .legend-container {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         .legend-item:hover {
             background-color: #f5f5f5;
@@ -705,7 +735,7 @@
 
 
 
-    <div id="chart-container">
+    <div id="chart-container" style="display: flex; gap: 20px; margin: 20px 0;">
         <div class="chart-wrapper">
             <div class="legend-container">
                 <div class="legend-item">
@@ -743,6 +773,48 @@
             </div>
             <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
+        </div>
+        
+        <!-- Daily Chart Section -->
+        <div class="chart-wrapper" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div class="legend-container">
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #006400;"></div>
+                    <span>ขึ้นทะเบียนเรียบร้อย</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF6B00;"></div>
+                    <span>ช่างลาออก</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF1493;"></div>
+                    <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4169E1;"></div>
+                    <span>ติดประวัติอาชญากรรม</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #90EE90;"></div>
+                    <span>อยู่ระหว่างอบรมปฎิบัติ</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #008080;"></div>
+                    <span>เอกสารยังไม่ครบ</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4CA64C;"></div>
+                    <span>อยู่ระหว่างอบรมทฤษฎี</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #FF69B4;"></div>
+                    <span>ไม่ผ่านอบรม</span>
+                </div>
+            </div>
+            <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
+            <div style="position: relative; height: 450px; width: 100%; padding-top: 30px;">
+                <canvas id="dailyChart" style="width: 100% !important; height: 420px !important;"></canvas>
+            </div>
         </div>
     </div>
 
@@ -864,13 +936,7 @@
             </div>
         </div>
 
-        <!-- Daily Chart Section -->
-        <div style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 100%; margin-left: 0;">
-            <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
-            <div style="position: relative; height: 450px; width: 100%; padding-top: 30px;">
-                <canvas id="dailyChart" style="width: 100% !important; height: 420px !important;"></canvas>
-            </div>
-        </div>
+
     </div>
     <!-- End Daily Report Section -->
 
@@ -1598,6 +1664,29 @@
             
             if (month >= 1 && month <= 12) {
                 return monthNames[month] + yearShort;
+            }
+            
+            return null;
+        }
+
+        // ฟังก์ชันแปลงวันที่สำหรับกราฟรายวัน
+        function formatDateForChart(dateString) {
+            if (!dateString || dateString === '-') return null;
+            
+            // รองรับรูปแบบ dd/mm/yyyy หรือ dd/m/yyyy
+            const dateMatch = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (!dateMatch) return null;
+            
+            const day = parseInt(dateMatch[1]);
+            const month = parseInt(dateMatch[2]);
+            const year = parseInt(dateMatch[3]);
+            
+            // ตรวจสอบความถูกต้องของวันที่
+            if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 2020) {
+                // แปลงเป็นรูปแบบ dd/mm/yyyy
+                const dayFormatted = day.toString().padStart(2, '0');
+                const monthFormatted = month.toString().padStart(2, '0');
+                return `${dayFormatted}/${monthFormatted}/${year}`;
             }
             
             return null;
@@ -3085,9 +3174,9 @@
                      window.dailyChart.destroy();
                  }
 
-             // จัดกลุ่มข้อมูลตามเดือนและสถานะ
-             const monthlyStatusData = {}; // เก็บข้อมูลสถานะแยกตามเดือน
-             const allMonths = new Set();
+             // จัดกลุ่มข้อมูลตามวันและสถานะ
+             const dailyStatusData = {}; // เก็บข้อมูลสถานะแยกตามวัน
+             const allDates = new Set();
              
              // กำหนดสถานะต่างๆ และสี
              const statusList = [
@@ -3102,7 +3191,7 @@
                  "ไม่ผ่านอบรม"
              ];
              
-                          console.log('🔍 เริ่มประมวลผลข้อมูลกราฟรายเดือน:', data.length, 'แถว');
+                          console.log('🔍 เริ่มประมวลผลข้อมูลกราฟรายวัน:', data.length, 'แถว');
              
              // ตรวจสอบข้อมูลที่มีวันสิ้นสุดทั้งหมดก่อน
              let totalDataCount = 0;
@@ -3120,67 +3209,79 @@
                  
                  if (hasValidEndDate) {
                      totalDataCount++;
-                     
-
                  }
                  
                  // ประมวลผลข้อมูลที่มีวันสิ้นสุดและสถานะที่ถูกต้อง
                  if (hasValidEndDate && status && statusList.includes(status)) {
-                     // แปลงวันที่เป็นเดือน/ปี
-                     const monthYear = extractMonthYear(endDate);
+                     // ใช้วันที่โดยตรง แทนการแปลงเป็นเดือน/ปี
+                     const dateString = formatDateForChart(endDate);
                      
-
-                     
-                     if (monthYear) {
-                         validDateCount++;
-                         allMonths.add(monthYear);
-                         
-                         // เริ่มต้นข้อมูลเดือน
-                         if (!monthlyStatusData[monthYear]) {
-                             monthlyStatusData[monthYear] = {};
-                             statusList.forEach(statusType => {
-                                 monthlyStatusData[monthYear][statusType] = 0;
-                             });
+                     if (dateString) {
+                         // กรองเฉพาะเดือน June (6) และ July (7)
+                         const dateMatch = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                         if (dateMatch) {
+                             const month = parseInt(dateMatch[2]);
+                             
+                             // แสดงเฉพาะเดือน June (6) และ July (7)
+                             if (month === 6 || month === 7) {
+                                 validDateCount++;
+                                 allDates.add(dateString);
+                                 
+                                 // เริ่มต้นข้อมูลวัน
+                                 if (!dailyStatusData[dateString]) {
+                                     dailyStatusData[dateString] = {};
+                                     statusList.forEach(statusType => {
+                                         dailyStatusData[dateString][statusType] = 0;
+                                     });
+                                 }
+                                 
+                                 // นับจำนวนสถานะในแต่ละวัน
+                                 dailyStatusData[dateString][status]++;
+                             }
                          }
-                         
-                         // นับจำนวนสถานะในแต่ละเดือน
-                         monthlyStatusData[monthYear][status]++;
                      }
                  }
              });
              
-             console.log(`📊 สรุปการประมวลผล: พบข้อมูลที่มีวันสิ้นสุด ${totalDataCount} แถว, ประมวลผลได้ ${validDateCount} แถว, เดือนทั้งหมด ${allMonths.size} เดือน`);
+             console.log(`📊 สรุปการประมวลผล: พบข้อมูลที่มีวันสิ้นสุด ${totalDataCount} แถว, ประมวลผลได้ ${validDateCount} แถว, วันทั้งหมด ${allDates.size} วัน`);
              
-             // Debug: แสดงเดือนทั้งหมดที่ถูกประมวลผล
-             const sortedAllMonths = Array.from(allMonths).sort();
-             console.log('📅 เดือนทั้งหมดที่ประมวลผล:', sortedAllMonths);
+             // Debug: แสดงวันทั้งหมดที่ถูกประมวลผล
+             const sortedAllDates = Array.from(allDates).sort();
+             console.log('📅 วันทั้งหมดที่ประมวลผล:', sortedAllDates);
              
-             // Debug: แสดงจำนวนข้อมูลแต่ละเดือน
-             const monthCount = {};
-             sortedAllMonths.forEach(month => {
-                 const totalCount = Object.values(monthlyStatusData[month] || {}).reduce((sum, count) => sum + count, 0);
-                 monthCount[month] = totalCount;
+             // Debug: แสดงจำนวนข้อมูลแต่ละวัน
+             const dateCount = {};
+             sortedAllDates.forEach(date => {
+                 const totalCount = Object.values(dailyStatusData[date] || {}).reduce((sum, count) => sum + count, 0);
+                 dateCount[date] = totalCount;
              });
-             console.log('📊 จำนวนคนในแต่ละเดือน:', monthCount);
+             console.log('📊 จำนวนคนในแต่ละวัน:', dateCount);
              
-             // Debug: แสดงข้อมูลตัวอย่างจาก monthlyStatusData
-             console.log('🗓️ ตัวอย่างข้อมูล monthlyStatusData:');
-             let monthIndex = 0;
-             for (const [month, statusData] of Object.entries(monthlyStatusData)) {
-                 if (monthIndex < 5) {
+             // Debug: แสดงข้อมูลตัวอย่างจาก dailyStatusData
+             console.log('🗓️ ตัวอย่างข้อมูล dailyStatusData:');
+             let dateIndex = 0;
+             for (const [date, statusData] of Object.entries(dailyStatusData)) {
+                 if (dateIndex < 5) {
                      const total = Object.values(statusData).reduce((sum, count) => sum + count, 0);
-                     console.log(`  ${month}: รวม ${total} คน`, statusData);
-                     monthIndex++;
+                     console.log(`  ${date}: รวม ${total} คน`, statusData);
+                     dateIndex++;
                  }
              }
 
-             // เรียงลำดับเดือน
-             const sortedMonths = Array.from(allMonths).sort((a, b) => {
-                 return convertMonthForSort(a) - convertMonthForSort(b);
+             // เรียงลำดับวันตามเวลาจริง
+             const sortedDates = Array.from(allDates).sort((a, b) => {
+                 // แปลงจาก dd/mm/yyyy เป็น Date object เพื่อเปรียบเทียบ
+                 const [dayA, monthA, yearA] = a.split('/').map(Number);
+                 const [dayB, monthB, yearB] = b.split('/').map(Number);
+                 
+                 const dateA = new Date(yearA, monthA - 1, dayA);
+                 const dateB = new Date(yearB, monthB - 1, dayB);
+                 
+                 return dateA - dateB;
              });
 
              // ตรวจสอบว่ามีข้อมูลหรือไม่
-             if (sortedMonths.length === 0) {
+             if (sortedDates.length === 0) {
                  console.warn('ไม่มีข้อมูลสำหรับสร้างกราฟ');
                  const ctx = canvas.getContext('2d');
                  ctx.fillStyle = '#6c757d';
@@ -3191,8 +3292,8 @@
              }
              
              // Debug: ตรวจสอบจำนวนข้อมูล
-             console.log('📊 จำนวนเดือนที่จะแสดงในกราฟ:', sortedMonths.length);
-             console.log('📊 เดือนที่เรียงลำดับแล้ว:', sortedMonths);
+             console.log('📊 จำนวนวันที่จะแสดงในกราฟ:', sortedDates.length);
+             console.log('📊 วันที่เรียงลำดับแล้ว:', sortedDates);
 
              // กำหนดสีสำหรับสถานะแต่ละประเภท (ใช้สีเดียวกับกราฟหลัก)
              const statusColors = [
@@ -3210,9 +3311,9 @@
              // สร้าง datasets สำหรับสถานะแต่ละประเภท (stacked by status)
              const datasets = statusList.map((status, index) => ({
                  label: status,
-                 data: sortedMonths.map(month => {
-                     return monthlyStatusData[month] && monthlyStatusData[month][status] 
-                         ? monthlyStatusData[month][status] 
+                 data: sortedDates.map(date => {
+                     return dailyStatusData[date] && dailyStatusData[date][status] 
+                         ? dailyStatusData[date][status] 
                          : 0;
                  }),
                  backgroundColor: statusColors[index] || '#6c757d',
@@ -3222,23 +3323,23 @@
 
              // เตรียมข้อมูลสำหรับกราฟ
              const chartData = {
-                 labels: sortedMonths,
+                 labels: sortedDates,
                  datasets: datasets
              };
 
-            // คำนวณค่า max สำหรับ Monthly Chart
-            const maxMonthlyValue = Math.max(...sortedMonths.map(month => {
+            // คำนวณค่า max สำหรับ Daily Chart
+            const maxDailyValue = Math.max(...sortedDates.map(date => {
                 return datasets.reduce((sum, dataset) => {
-                    const monthIndex = sortedMonths.indexOf(month);
-                    return sum + (dataset.data[monthIndex] || 0);
+                    const dateIndex = sortedDates.indexOf(date);
+                    return sum + (dataset.data[dateIndex] || 0);
                 }, 0);
             }));
             
             // กำหนด max ของแกน Y ให้เหมาะสมกับข้อมูล
-            const dynamicMonthlyMax = Math.max(50, Math.ceil(maxMonthlyValue * 1.2 / 10) * 10);
+            const dynamicDailyMax = Math.max(50, Math.ceil(maxDailyValue * 1.2 / 10) * 10);
 
                                       // Debug: แสดงข้อมูลกราฟ
-             console.log('📊 ข้อมูลสำหรับกราฟรายเดือน:', sortedMonths.length, 'เดือน');
+             console.log('📊 ข้อมูลสำหรับกราฟรายวัน:', sortedDates.length, 'วัน');
 
                 const ctx = canvas.getContext('2d');
                 
@@ -3293,19 +3394,19 @@
                             tooltip: {
                                 callbacks: {
                                     footer: function(tooltipItems) {
-                                        const monthKey = tooltipItems[0].label;
-                                        const monthData = monthlyStatusData[monthKey] || {};
+                                        const dateKey = tooltipItems[0].label;
+                                        const dateData = dailyStatusData[dateKey] || {};
                                         
                                         // คำนวณยอดรวมสถานะ
-                                        const totalStatuses = Object.values(monthData).reduce((sum, count) => sum + count, 0);
+                                        const totalStatuses = Object.values(dateData).reduce((sum, count) => sum + count, 0);
                                         
-                                        let footer = `เดือน: ${monthKey}\nรวมทั้งหมด: ${totalStatuses} คน`;
+                                        let footer = `วันที่: ${dateKey}\nรวมทั้งหมด: ${totalStatuses} คน`;
                                         
                                         // แสดงรายละเอียดสถานะแต่ละประเภท
                                         const statusSummary = [];
-                                        Object.keys(monthData).forEach(statusType => {
-                                            if (monthData[statusType] > 0) {
-                                                statusSummary.push(`${statusType}: ${monthData[statusType]} คน`);
+                                        Object.keys(dateData).forEach(statusType => {
+                                            if (dateData[statusType] > 0) {
+                                                statusSummary.push(`${statusType}: ${dateData[statusType]} คน`);
                                             }
                                         });
                                         
@@ -3323,7 +3424,7 @@
                                 stacked: true,
                                 title: {
                                     display: true,
-                                    text: 'เดือน'
+                                    text: 'วันที่'
                                 },
                                 ticks: {
                                     maxRotation: 45,
@@ -3333,13 +3434,13 @@
                             y: {
                                 stacked: true,
                                 beginAtZero: true,
-                                max: dynamicMonthlyMax,
+                                max: dynamicDailyMax,
                                 title: {
                                     display: true,
                                     text: 'จำนวนช่าง (คน)'
                                 },
                                 ticks: {
-                                    stepSize: Math.max(5, Math.ceil(dynamicMonthlyMax / 20))
+                                    stepSize: Math.max(5, Math.ceil(dynamicDailyMax / 20))
                                 }
                             }
                         }
@@ -3388,9 +3489,9 @@
                     }]
                 });
                 
-                console.log('✅ สร้างกราฟรายเดือนสำเร็จ');
+                console.log('✅ สร้างกราฟรายวันสำเร็จ');
              } catch (error) {
-                 console.error('❌ เกิดข้อผิดพลาดในการสร้างกราฟรายเดือน:', error);
+                 console.error('❌ เกิดข้อผิดพลาดในการสร้างกราฟรายวัน:', error);
                  
                  // แสดงข้อความ error ในกราฟ
                  const canvas = document.getElementById('dailyChart');
