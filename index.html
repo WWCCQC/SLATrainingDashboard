@@ -402,6 +402,12 @@
             visibility: visible !important;
             opacity: 1 !important;
         }
+        /* Force legend visibility สำหรับกราฟ Daily */
+        #chart-container .chart-wrapper:last-child .legend-container {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
         .legend-item:hover {
             background-color: #f5f5f5;
         }
@@ -771,15 +777,54 @@
                     <span>ไม่ผ่านอบรม</span>
                 </div>
             </div>
+            <h3 style="color: #003366; margin-bottom: 20px; text-align: center;">📊 สถานะช่างอบรม by Month</h3>
             <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
         
         <!-- Daily Chart Section -->
-        <div class="chart-wrapper" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
-            <div style="position: relative; height: 450px; width: 100%; padding-top: 30px;">
-                <canvas id="dailyChart" style="width: 100% !important; height: 420px !important;"></canvas>
+        <div class="chart-wrapper">
+            <div class="legend-container" id="daily-legend-container">
+                <div class="legend-item" data-dataset="0">
+                    <div class="legend-color" style="background-color: #006400;"></div>
+                    <span>ขึ้นทะเบียนเรียบร้อย</span>
+                </div>
+                <div class="legend-item" data-dataset="1">
+                    <div class="legend-color" style="background-color: #FF6B00;"></div>
+                    <span>ช่างลาออก</span>
+                </div>
+                <div class="legend-item" data-dataset="2">
+                    <div class="legend-color" style="background-color: #FF1493;"></div>
+                    <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
+                </div>
+                <div class="legend-item" data-dataset="3">
+                    <div class="legend-color" style="background-color: #4169E1;"></div>
+                    <span>ติดประวัติอาชญากรรม</span>
+                </div>
+                <div class="legend-item" data-dataset="4">
+                    <div class="legend-color" style="background-color: #90EE90;"></div>
+                    <span>อยู่ระหว่างอบรมปฎิบัติ</span>
+                </div>
+                <div class="legend-item" data-dataset="5">
+                    <div class="legend-color" style="background-color: #008080;"></div>
+                    <span>เอกสารยังไม่ครบ</span>
+                </div>
+                <div class="legend-item" data-dataset="6">
+                    <div class="legend-color" style="background-color: #4CA64C;"></div>
+                    <span>อยู่ระหว่างอบรมทฤษฎี</span>
+                </div>
+                <div class="legend-item" data-dataset="7">
+                    <div class="legend-color" style="background-color: #DC143C;"></div>
+                    <span>ไม่เข้าอบรม</span>
+                </div>
+                <div class="legend-item" data-dataset="8">
+                    <div class="legend-color" style="background-color: #FF69B4;"></div>
+                    <span>ไม่ผ่านอบรม</span>
+                </div>
+            </div>
+            <h3 style="color: #003366; margin-bottom: 20px; text-align: center;">📊 สถานะช่างอบรม by Daily</h3>
+            <div style="position: relative; height: 600px; width: 100%; overflow: visible;">
+                <canvas id="dailyChart" style="width: 100% !important; height: 580px !important;"></canvas>
             </div>
         </div>
     </div>
@@ -2404,40 +2449,57 @@
 
 
 
-        // เพิ่มฟังก์ชันสำหรับจัดการ Legend
+        // เพิ่มฟังก์ชันสำหรับจัดการ Legend สำหรับกราฟ Month เท่านั้น
         function initializeLegendHandlers() {
-            const legendItems = document.querySelectorAll('.legend-item');
+            // เลือกเฉพาะ legend items ของกราฟ Month เท่านั้น (ไม่รวม Daily)
+            const legendItems = document.querySelectorAll('#chart-container .chart-wrapper:first-child .legend-item');
             if (!chart || !chart.data || legendItems.length === 0) {
                 return; // ถ้าไม่มีกราฟหรือ legend items ให้ข้ามไป
             }
             
             const datasets = chart.data.datasets;
-            let selectedItems = window.selectedLegendItems || new Set();
-            window.selectedLegendItems = selectedItems;
+            // ใช้ namespace แยกสำหรับกราฟ Month เท่านั้น
+            let selectedItems = window.monthChartSelectedItems || new Set();
+            window.monthChartSelectedItems = selectedItems;
             
-            // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง
+            // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง - เฉพาะกราฟ Month
             document.addEventListener('click', (event) => {
-                // ตรวจสอบว่าคลิกที่ legend-item หรือไม่
-                const clickedLegend = event.target.closest('.legend-item');
-                const clickedChart = event.target.closest('canvas');
+                // ตรวจสอบว่าคลิกที่ legend-item ของกราฟ Month หรือไม่
+                const clickedLegend = event.target.closest('#chart-container .chart-wrapper:first-child .legend-item');
+                const clickedChart = event.target.closest('#myChart');
+                const clickedDailyArea = event.target.closest('#chart-container .chart-wrapper:last-child');
                 
-                // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ ให้แสดงทุกรายการ
+                // ถ้าคลิกในพื้นที่ของกราฟ Daily ให้ข้ามการประมวลผล
+                if (clickedDailyArea) {
+                    return;
+                }
+                
+                // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ Month ให้แสดงทุกรายการ
                 if (!clickedLegend && !clickedChart) {
                     selectedItems.clear();
                     legendItems.forEach((item, i) => {
                         item.classList.remove('selected');
                         if (datasets[i]) datasets[i].hidden = false;
                     });
-                    if (chart) chart.update();
+                    // อัปเดตเฉพาะกราฟ Month (chart) ไม่ส่งผลต่อกราฟ Daily
+                    if (chart && chart !== window.dailyChart) {
+                        chart.update('none');
+                    }
                     // อัพเดทเฉพาะแผนภูมิและตาราง pivot โดยไม่กระทบตารางหลัก
                     updatePivotTable(filteredData2025);
                 }
             });
 
-            // จัดการการคลิกที่ Legend items
+            // จัดการการคลิกที่ Legend items ของกราฟ Month เท่านั้น
             legendItems.forEach((item, index) => {
                 item.addEventListener('click', (event) => {
                     event.stopPropagation();
+                    event.preventDefault();
+                    
+                    // ตรวจสอบว่าเป็น legend ของกราฟ Month จริงๆ
+                    if (!event.target.closest('#chart-container .chart-wrapper:first-child')) {
+                        return; // ถ้าไม่ใช่ ให้ข้ามการประมวลผล
+                    }
                     if (event.ctrlKey || event.metaKey) {
                         if (selectedItems.has(index)) {
                             selectedItems.delete(index);
@@ -2457,7 +2519,7 @@
                             }
                         });
                     }
-                    window.selectedLegendItems = selectedItems;
+                    window.monthChartSelectedItems = selectedItems;
                     // อัพเดทการแสดงผลกราฟ
                     datasets.forEach((dataset, i) => {
                         if (selectedItems.size === 0) {
@@ -2469,7 +2531,10 @@
                         }
                     });
 
-                    if (chart) chart.update();
+                    // อัปเดตเฉพาะกราฟ Month (chart) ไม่ส่งผลต่อกราฟ Daily
+                    if (chart && chart !== window.dailyChart) {
+                        chart.update('none');
+                    }
                     
                     // อัพเดทเฉพาะตาราง pivot ไม่กระทบตารางหลัก
                     const selectedStatuses = Array.from(selectedItems).map(i => datasets[i].label);
@@ -3310,10 +3375,10 @@
                 const ctx = canvas.getContext('2d');
                 
                 // ตั้งค่าขนาด canvas
-                canvas.width = 1200;
-                canvas.height = 600;
+                canvas.width = 1400;
+                canvas.height = 700;
                 canvas.style.width = '100%';
-                canvas.style.height = '400px';
+                canvas.style.height = '580px';
                 
 
                 
@@ -3329,46 +3394,16 @@
                         },
                         layout: {
                             padding: {
-                                left: 10,
-                                right: 10,
-                                top: 40,
-                                bottom: 10
+                                left: 200,
+                                right: 20,
+                                top: 30,
+                                bottom: 30
                             }
                         },
-                        onClick: (e, activeElements) => {
-                            if (activeElements.length > 0) {
-                                const element = activeElements[0];
-                                const dateKey = chartData.labels[element.index];
-                                const dateData = dailyStatusData[dateKey] || {};
-                                
-                                console.log(`คลิกที่วันที่: ${dateKey}`, dateData);
-                                
-                                // แสดงรายละเอียดข้อมูล
-                                const totalCount = Object.values(dateData).reduce((sum, count) => sum + count, 0);
-                                let details = `วันที่: ${dateKey}\nรวมทั้งหมด: ${totalCount} คน\n\nรายละเอียด:\n`;
-                                
-                                Object.keys(dateData).forEach(status => {
-                                    if (dateData[status] > 0) {
-                                        details += `• ${status}: ${dateData[status]} คน\n`;
-                                    }
-                                });
-                                
-                                alert(details);
-                            }
-                        },
+
                         plugins: {
                             legend: {
-                                position: 'left',
-                                align: 'start',
-                                labels: {
-                                    boxWidth: 12,
-                                    padding: 10,
-                                    font: {
-                                        size: 11,
-                                        weight: 'bold'
-                                    },
-                                    usePointStyle: false
-                                }
+                                display: false
                             },
                             datalabels: {
                                 color: 'white',
@@ -3379,10 +3414,24 @@
                                 },
                                 font: {
                                     weight: 'bold',
-                                    size: 10
+                                    size: 11
                                 }
                             },
                             tooltip: {
+                                titleFont: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 11
+                                },
+                                footerFont: {
+                                    size: 10
+                                },
+                                filter: function(tooltipItem) {
+                                    // แสดงเฉพาะ tooltipItem ที่มีค่าไม่เท่ากับ 0
+                                    return tooltipItem.raw !== 0;
+                                },
                                 callbacks: {
                                     footer: function(tooltipItems) {
                                         const dateKey = tooltipItems[0].label;
@@ -3393,7 +3442,7 @@
                                         
                                         let footer = `วันที่: ${dateKey}\nรวมทั้งหมด: ${totalStatuses} คน`;
                                         
-                                        // แสดงรายละเอียดสถานะแต่ละประเภท
+                                        // แสดงรายละเอียดสถานะแต่ละประเภท (เฉพาะที่ไม่เท่ากับ 0)
                                         const statusSummary = [];
                                         Object.keys(dateData).forEach(statusType => {
                                             if (dateData[statusType] > 0) {
@@ -3415,11 +3464,18 @@
                                 stacked: true,
                                 title: {
                                     display: true,
-                                    text: 'วันที่'
+                                    text: 'วันที่',
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
                                 },
                                 ticks: {
                                     maxRotation: 45,
-                                    minRotation: 45
+                                    minRotation: 45,
+                                    font: {
+                                        size: 10
+                                    }
                                 }
                             },
                             y: {
@@ -3428,10 +3484,17 @@
                                 max: dynamicDailyMax,
                                 title: {
                                     display: true,
-                                    text: 'จำนวนช่าง (คน)'
+                                    text: 'จำนวนช่าง (คน)',
+                                    font: {
+                                        size: 12,
+                                        weight: 'bold'
+                                    }
                                 },
                                 ticks: {
-                                    stepSize: Math.max(5, Math.ceil(dynamicDailyMax / 20))
+                                    stepSize: Math.max(5, Math.ceil(dynamicDailyMax / 20)),
+                                    font: {
+                                        size: 10
+                                    }
                                 }
                             }
                         }
@@ -3468,7 +3531,7 @@
                                         const y = topY - 15;
                                         
                                         ctx.save();
-                                        ctx.font = 'bold 12px Arial';
+                                        ctx.font = 'bold 11px Arial';
                                         ctx.fillStyle = '#000';
                                         ctx.textAlign = 'center';
                                         ctx.fillText(sum + ' คน', x, y);
@@ -3481,6 +3544,116 @@
                 });
                 
                 console.log('✅ สร้างกราฟรายวันสำเร็จ');
+                
+                // สร้าง namespace แยกสำหรับกราฟ Daily เท่านั้น
+                window.dailyChartController = {
+                    selectedDataset: null,
+                    
+                    initLegendEvents: function() {
+                        // เลือกเฉพาะ legend items ของกราฟ Daily เท่านั้น
+                        const dailyOnlyLegendItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        
+                        dailyOnlyLegendItems.forEach((legendItem, index) => {
+                            legendItem.addEventListener('click', function(event) {
+                                // หยุดการ propagate event เพื่อไม่ให้ส่งผลต่อกราฟอื่น
+                                event.stopPropagation();
+                                event.preventDefault();
+                                
+                                const datasetIndex = parseInt(this.getAttribute('data-dataset'));
+                                
+                                // ตรวจสอบเฉพาะ dailyChart เท่านั้น
+                                if (window.dailyChart && window.dailyChart.data && window.dailyChart.data.datasets[datasetIndex]) {
+                                    
+                                    // ถ้าคลิกที่ dataset เดิมให้แสดงทั้งหมด
+                                    if (window.dailyChartController.selectedDataset === datasetIndex) {
+                                        window.dailyChartController.showAllDatasets();
+                                    } else {
+                                        window.dailyChartController.showOnlyDataset(datasetIndex);
+                                    }
+                                }
+                            });
+                        });
+                    },
+                    
+                    showAllDatasets: function() {
+                        this.selectedDataset = null;
+                        
+                        // แสดงทั้งหมดในกราฟ Daily เท่านั้น
+                        if (window.dailyChart && window.dailyChart.data) {
+                            window.dailyChart.data.datasets.forEach((dataset, i) => {
+                                const meta = window.dailyChart.getDatasetMeta(i);
+                                if (meta) meta.hidden = false;
+                            });
+                        }
+                        
+                        // รีเซ็ต legend styles เฉพาะของ Daily
+                        const dailyOnlyItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        dailyOnlyItems.forEach(item => {
+                            item.style.opacity = '1';
+                            item.style.backgroundColor = '';
+                            item.classList.remove('selected');
+                        });
+                        
+                        // อัปเดตกราฟ Daily เท่านั้น
+                        if (window.dailyChart) {
+                            window.dailyChart.update('none');
+                        }
+                    },
+                    
+                    showOnlyDataset: function(datasetIndex) {
+                        this.selectedDataset = datasetIndex;
+                        
+                        // ซ่อนทั้งหมดยกเว้นที่เลือกในกราฟ Daily เท่านั้น
+                        if (window.dailyChart && window.dailyChart.data) {
+                            window.dailyChart.data.datasets.forEach((dataset, i) => {
+                                const meta = window.dailyChart.getDatasetMeta(i);
+                                if (meta) meta.hidden = (i !== datasetIndex);
+                            });
+                        }
+                        
+                        // อัปเดต legend styles เฉพาะของ Daily
+                        const dailyOnlyItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        dailyOnlyItems.forEach((item) => {
+                            const itemDatasetIndex = parseInt(item.getAttribute('data-dataset'));
+                            if (itemDatasetIndex === datasetIndex) {
+                                item.style.opacity = '1';
+                                item.style.backgroundColor = '#e3f2fd';
+                                item.classList.add('selected');
+                            } else {
+                                item.style.opacity = '0.5';
+                                item.style.backgroundColor = '';
+                                item.classList.remove('selected');
+                            }
+                        });
+                        
+                        // อัปเดตกราฟ Daily เท่านั้น
+                        if (window.dailyChart) {
+                            window.dailyChart.update('none');
+                        }
+                    }
+                };
+                
+                // เริ่มต้น legend events สำหรับกราฟ Daily เท่านั้น
+                window.dailyChartController.initLegendEvents();
+                
+                // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง - เฉพาะกราฟ Daily
+                document.addEventListener('click', function(event) {
+                    // ตรวจสอบว่าคลิกที่ legend-item ของกราฟ Daily หรือไม่
+                    const clickedDailyLegend = event.target.closest('#daily-legend-container .legend-item');
+                    const clickedDailyChart = event.target.closest('#dailyChart');
+                    const clickedMonthArea = event.target.closest('#chart-container .chart-wrapper:first-child');
+                    
+                    // ถ้าคลิกในพื้นที่ของกราฟ Month ให้ข้ามการประมวลผล
+                    if (clickedMonthArea) {
+                        return;
+                    }
+                    
+                    // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ Daily ให้แสดงทุกสถานะ
+                    if (!clickedDailyLegend && !clickedDailyChart && window.dailyChartController.selectedDataset !== null) {
+                        window.dailyChartController.showAllDatasets();
+                    }
+                });
+                
              } catch (error) {
                  console.error('❌ เกิดข้อผิดพลาดในการสร้างกราฟรายวัน:', error);
                  
