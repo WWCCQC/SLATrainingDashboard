@@ -777,40 +777,6 @@
         
         <!-- Daily Chart Section -->
         <div class="chart-wrapper" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div class="legend-container">
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #006400;"></div>
-                    <span>ขึ้นทะเบียนเรียบร้อย</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #FF6B00;"></div>
-                    <span>ช่างลาออก</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #FF1493;"></div>
-                    <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #4169E1;"></div>
-                    <span>ติดประวัติอาชญากรรม</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #90EE90;"></div>
-                    <span>อยู่ระหว่างอบรมปฎิบัติ</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #008080;"></div>
-                    <span>เอกสารยังไม่ครบ</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #4CA64C;"></div>
-                    <span>อยู่ระหว่างอบรมทฤษฎี</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #FF69B4;"></div>
-                    <span>ไม่ผ่านอบรม</span>
-                </div>
-            </div>
             <h3 style="color: #003366; margin-bottom: 20px;">📈 กราฟรายวันของเดือนปัจจุบัน</h3>
             <div style="position: relative; height: 450px; width: 100%; padding-top: 30px;">
                 <canvas id="dailyChart" style="width: 100% !important; height: 420px !important;"></canvas>
@@ -3357,12 +3323,37 @@
                     options: {
                         responsive: false,
                         maintainAspectRatio: false,
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
                         layout: {
                             padding: {
                                 left: 10,
                                 right: 10,
                                 top: 40,
                                 bottom: 10
+                            }
+                        },
+                        onClick: (e, activeElements) => {
+                            if (activeElements.length > 0) {
+                                const element = activeElements[0];
+                                const dateKey = chartData.labels[element.index];
+                                const dateData = dailyStatusData[dateKey] || {};
+                                
+                                console.log(`คลิกที่วันที่: ${dateKey}`, dateData);
+                                
+                                // แสดงรายละเอียดข้อมูล
+                                const totalCount = Object.values(dateData).reduce((sum, count) => sum + count, 0);
+                                let details = `วันที่: ${dateKey}\nรวมทั้งหมด: ${totalCount} คน\n\nรายละเอียด:\n`;
+                                
+                                Object.keys(dateData).forEach(status => {
+                                    if (dateData[status] > 0) {
+                                        details += `• ${status}: ${dateData[status]} คน\n`;
+                                    }
+                                });
+                                
+                                alert(details);
                             }
                         },
                         plugins: {
