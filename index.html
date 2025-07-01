@@ -1707,8 +1707,8 @@
         function updateChartAndTables(rows, selectedMonth = null, selectedStatus = null) {
             const allMonthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25', 'Jun25', 'Jul25', 'Aug25', 'Sep25', 'Oct25', 'Nov25', 'Dec25'];
             const allMonthLabels = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ", "อยู่ระหว่างอบรมทฤษฎี", "ไม่ผ่านอบรม"];
-            const colors = ['#006400', '#FF6B00', '#FF1493', '#4169E1', '#90EE90', '#008080', '#4CA64C', '#FF69B4'];
+            const statusList = ["ขึ้นทะเบียนเรียบร้อย", "ช่างลาออก", "ตัวแทนยังไม่ส่งขึ้นทะเบียน", "ติดประวัติอาชญากรรม", "อยู่ระหว่างอบรมปฎิบัติ", "เอกสารยังไม่ครบ", "อยู่ระหว่างอบรมทฤษฎี", "ไม่เข้าอบรม", "ไม่ผ่านอบรม"];
+            const colors = ['#006400', '#FF6B00', '#FF1493', '#4169E1', '#90EE90', '#008080', '#4CA64C', '#DC143C', '#FF69B4'];
 
             let filteredRows = rows;
             if (selectedMonth) {
