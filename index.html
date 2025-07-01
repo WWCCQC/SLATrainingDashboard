@@ -194,7 +194,7 @@
             font-size: 16px;
             font-weight: bold;
         }
-        canvas#myChart, canvas#lineChart {
+        canvas#myChart {
             height: 500px !important; /* เพิ่มความสูงของกราฟ */
             max-height: 500px !important;
         }
@@ -744,9 +744,6 @@
             <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
-        <div class="chart-wrapper">
-            <canvas id="lineChart" width="400" height="400"></canvas>
-        </div>
     </div>
 
     <!-- SLA Analysis Section -->
@@ -1220,7 +1217,6 @@
         let chart;
         let originalData;
         let filteredData2025;
-        let lineChart;
 
         // ตัวแปรสำหรับการแบ่งหน้า
         let currentPage = 1;
@@ -1253,7 +1249,6 @@
                     
                     // แยกการอัปเดตตารางหลักออกจากการอัปเดตกราฟและ pivot table
                     updateChartAndTables(filteredData2025);
-                    updateLineChart(filteredData2025);
                     
                     // อัปเดตตารางหลักเพียงครั้งเดียวเมื่อโหลดข้อมูล
                     updateMainTable(filteredData2025);
@@ -2352,67 +2347,7 @@
             document.getElementById('sla-followup-count').textContent = `${followUpCount} คน`;
         }
 
-        // ฟังก์ชันเพื่ออัปเดต Line Chart
-        function updateLineChart(rows) {
-            const monthOrder = ['Jan25', 'Feb25', 'Mar25', 'Apr25', 'May25', 'Jun25'];
-            const lineChartCanvas = document.getElementById('lineChart').getContext('2d');
 
-            const lineChartData = {
-                labels: monthOrder,
-                datasets: [{
-                    label: 'จำนวนการขึ้นทะเบียนช่างใหม่',
-                    data: monthOrder.map(month => {
-                        // เปลี่ยนจากการใช้คอลัมน์ 28 เป็นคอลัมน์ 36 (วันสิ้นสุด)
-                        return rows.filter(row => {
-                            const endDateMonth = getMonthFromEndDate(row.c[36]?.v);
-                            return endDateMonth === month && row.c[34]?.v === "ขึ้นทะเบียนเรียบร้อย";
-                        }).length;
-                    }),
-                    backgroundColor: '#006400',
-                    borderColor: '#006400',
-                    fill: true
-                }]
-            };
-
-            // คำนวณค่า max สำหรับ Line Chart
-            const maxLineValue = Math.max(...lineChartData.datasets[0].data);
-            const dynamicLineMax = Math.max(50, Math.ceil(maxLineValue * 1.2 / 10) * 10);
-
-            if (lineChart) {
-                lineChart.destroy();
-            }
-
-            lineChart = new Chart(lineChartCanvas, {
-                type: 'bar',
-                data: lineChartData,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: function(value) {
-                                return value === 0 ? '' : Math.round(value);
-                            },
-                            font: {
-                                weight: 'bold',
-                                size: 14
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: dynamicLineMax,
-                            ticks: {
-                                stepSize: Math.max(5, Math.ceil(dynamicLineMax / 20))
-                            }
-                        }
-                    }
-                },
-                plugins: [ChartDataLabels]
-            });
-                }
 
         // เพิ่มฟังก์ชันสำหรับจัดการ Legend
         function initializeLegendHandlers() {
