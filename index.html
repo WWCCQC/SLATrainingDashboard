@@ -173,8 +173,9 @@
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 5px; /* ลดจาก 15px เป็น 5px */
             width: calc(100% - 220px);
+            margin-bottom: 0px; /* ลบ margin-bottom */
         }
         
         /* Responsive design สำหรับกราฟ */
@@ -402,12 +403,52 @@
             visibility: visible !important;
             opacity: 1 !important;
         }
-        /* Force legend visibility สำหรับกราฟ Daily */
+        /* Force legend visibility สำหรับกราฟ Daily - จัดแนวตั้ง */
         #chart-container .chart-wrapper:last-child .legend-container {
-            display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
         }
+        
+        /* ปรับแต่งกราฟ Daily Chart ให้ Legend อยู่ข้างๆ กราฟ */
+        #chart-container .chart-wrapper:last-child {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #chart-container .chart-wrapper:last-child h3 {
+            margin-top: 0px !important;
+            margin-bottom: 10px !important;
+            order: -1; /* ให้ title อยู่ด้านบน */
+        }
+        
+        /* สร้าง container ใหม่สำหรับ legend และ chart ให้อยู่แนวนอน */
+        .legend-and-chart-container {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+            width: 100% !important;
+        }
+        
+        /* ให้ canvas ขยายเต็มพื้นที่ */
+        #dailyChart {
+            margin-top: 0px !important;
+            padding-top: 0px !important;
+        }
+        
+        /* ปรับแต่ง chart container ให้รองรับ layout แบบ row */
+        #chart-container .chart-wrapper:last-child .legend-and-chart-container > div:last-child {
+            min-width: 0; /* ป้องกันการ overflow */
+        }
+        
+        /* ปรับแต่ง legend items สำหรับ daily chart ให้เหมาะสมกับการจัดแนวตั้ง */
+        #chart-container .chart-wrapper:last-child .legend-item {
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
         .legend-item:hover {
             background-color: #f5f5f5;
         }
@@ -624,6 +665,42 @@
                 order: -1;
             }
         }
+        
+        /* CSS แก้ไข Daily Chart Layout - FORCE LAYOUT */
+        .legend-and-chart-container {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: flex-start !important;
+            gap: 20px !important;
+            width: 100% !important;
+        }
+        
+        .legend-and-chart-container .legend-container {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 200px !important;
+            flex-shrink: 0 !important;
+            margin-right: 20px !important;
+            margin-bottom: 0px !important;
+        }
+        
+        .legend-and-chart-container > div:last-child {
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+        
+        /* Force Daily Legend items เป็นแนวตั้ง */
+        #daily-legend-container {
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        #daily-legend-container .legend-item {
+            display: flex !important;
+            align-items: center !important;
+            margin-bottom: 8px !important;
+            padding: 8px 12px !important;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -784,53 +861,58 @@
         
         <!-- Daily Chart Section -->
         <div class="chart-wrapper">
-            <div class="legend-container" id="daily-legend-container">
-                <div class="legend-item" data-dataset="0">
-                    <div class="legend-color" style="background-color: #006400;"></div>
-                    <span>ขึ้นทะเบียนเรียบร้อย</span>
-                </div>
-                <div class="legend-item" data-dataset="1">
-                    <div class="legend-color" style="background-color: #FF6B00;"></div>
-                    <span>ช่างลาออก</span>
-                </div>
-                <div class="legend-item" data-dataset="2">
-                    <div class="legend-color" style="background-color: #FF1493;"></div>
-                    <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
-                </div>
-                <div class="legend-item" data-dataset="3">
-                    <div class="legend-color" style="background-color: #4169E1;"></div>
-                    <span>ติดประวัติอาชญากรรม</span>
-                </div>
-                <div class="legend-item" data-dataset="4">
-                    <div class="legend-color" style="background-color: #90EE90;"></div>
-                    <span>อยู่ระหว่างอบรมปฎิบัติ</span>
-                </div>
-                <div class="legend-item" data-dataset="5">
-                    <div class="legend-color" style="background-color: #008080;"></div>
-                    <span>เอกสารยังไม่ครบ</span>
-                </div>
-                <div class="legend-item" data-dataset="6">
-                    <div class="legend-color" style="background-color: #4CA64C;"></div>
-                    <span>อยู่ระหว่างอบรมทฤษฎี</span>
-                </div>
-                <div class="legend-item" data-dataset="7">
-                    <div class="legend-color" style="background-color: #DC143C;"></div>
-                    <span>ไม่เข้าอบรม</span>
-                </div>
-                <div class="legend-item" data-dataset="8">
-                    <div class="legend-color" style="background-color: #FF69B4;"></div>
-                    <span>ไม่ผ่านอบรม</span>
-                </div>
-            </div>
             <h3 style="color: #003366; margin-bottom: 20px; text-align: center;">📊 สถานะช่างอบรม by Daily</h3>
-            <div style="position: relative; height: 600px; width: 100%; overflow: visible;">
-                <canvas id="dailyChart" style="width: 100% !important; height: 580px !important;"></canvas>
+            <div style="display: flex; align-items: flex-start; gap: 20px; justify-content: center;">
+                <!-- Custom Legend -->
+                <div class="legend-container" id="daily-legend-container" style="display: flex; flex-direction: column; gap: 10px; padding: 15px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 200px; flex-shrink: 0;">
+                    <div class="legend-item" data-dataset="0" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #006400; border-radius: 2px;"></div>
+                        <span>ขึ้นทะเบียนเรียบร้อย</span>
+                    </div>
+                    <div class="legend-item" data-dataset="1" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #FF6B00; border-radius: 2px;"></div>
+                        <span>ช่างลาออก</span>
+                    </div>
+                    <div class="legend-item" data-dataset="2" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #FF1493; border-radius: 2px;"></div>
+                        <span>ตัวแทนยังไม่ส่งขึ้นทะเบียน</span>
+                    </div>
+                    <div class="legend-item" data-dataset="3" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #4169E1; border-radius: 2px;"></div>
+                        <span>ติดประวัติอาชญากรรม</span>
+                    </div>
+                    <div class="legend-item" data-dataset="4" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #90EE90; border-radius: 2px;"></div>
+                        <span>อยู่ระหว่างอบรมปฎิบัติ</span>
+                    </div>
+                    <div class="legend-item" data-dataset="5" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #008080; border-radius: 2px;"></div>
+                        <span>เอกสารยังไม่ครบ</span>
+                    </div>
+                    <div class="legend-item" data-dataset="6" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #4CA64C; border-radius: 2px;"></div>
+                        <span>อยู่ระหว่างอบรมทฤษฎี</span>
+                    </div>
+                    <div class="legend-item" data-dataset="7" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #DC143C; border-radius: 2px;"></div>
+                        <span>ไม่เข้าอบรม</span>
+                    </div>
+                    <div class="legend-item" data-dataset="8" style="display: flex; align-items: center; gap: 8px; font-size: 14px; cursor: pointer; padding: 5px; border-radius: 4px; transition: background-color 0.2s;">
+                        <div class="legend-color" style="width: 15px; height: 15px; background-color: #FF69B4; border-radius: 2px;"></div>
+                        <span>ไม่ผ่านอบรม</span>
+                    </div>
+                </div>
+                
+                <!-- Chart Container -->
+                <div style="flex: 1; min-width: 600px;">
+                    <canvas id="dailyChart" width="400" height="400"></canvas>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- SLA Analysis Section -->
-    <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: 20px 0; padding: 20px;">
+    <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: -10px 0 20px 0; padding: 20px;">
         <h3 style="color: #003366; text-align: center; margin-bottom: 20px;">การวิเคราะห์ SLA (Service Level Agreement)</h3>
         
         <!-- SLA Summary Cards -->
@@ -3374,11 +3456,11 @@
 
                 const ctx = canvas.getContext('2d');
                 
-                // ตั้งค่าขนาด canvas
-                canvas.width = 1400;
-                canvas.height = 700;
-                canvas.style.width = '100%';
-                canvas.style.height = '580px';
+                // ใช้ขนาดที่เหมาะสมเหมือนกราฟหลัก
+                canvas.width = 800;
+                canvas.height = 400;
+                canvas.style.maxWidth = '800px';
+                canvas.style.maxHeight = '400px';
                 
 
                 
@@ -3386,15 +3468,15 @@
                     type: 'bar',
                     data: chartData,
                     options: {
-                        responsive: false,
-                        maintainAspectRatio: false,
+                        responsive: true,
+                        maintainAspectRatio: true,
                         interaction: {
                             intersect: false,
                             mode: 'index'
                         },
                         layout: {
                             padding: {
-                                left: 200,
+                                left: 20,
                                 right: 20,
                                 top: 30,
                                 bottom: 30
@@ -3545,25 +3627,21 @@
                 
                 console.log('✅ สร้างกราฟรายวันสำเร็จ');
                 
-                // สร้าง namespace แยกสำหรับกราฟ Daily เท่านั้น
+                // เพิ่ม dailyChartController สำหรับ custom legend
                 window.dailyChartController = {
                     selectedDataset: null,
                     
                     initLegendEvents: function() {
-                        // เลือกเฉพาะ legend items ของกราฟ Daily เท่านั้น
-                        const dailyOnlyLegendItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        const dailyLegendItems = document.querySelectorAll('#daily-legend-container .legend-item');
                         
-                        dailyOnlyLegendItems.forEach((legendItem, index) => {
+                        dailyLegendItems.forEach((legendItem) => {
                             legendItem.addEventListener('click', function(event) {
-                                // หยุดการ propagate event เพื่อไม่ให้ส่งผลต่อกราฟอื่น
                                 event.stopPropagation();
                                 event.preventDefault();
                                 
                                 const datasetIndex = parseInt(this.getAttribute('data-dataset'));
                                 
-                                // ตรวจสอบเฉพาะ dailyChart เท่านั้น
                                 if (window.dailyChart && window.dailyChart.data && window.dailyChart.data.datasets[datasetIndex]) {
-                                    
                                     // ถ้าคลิกที่ dataset เดิมให้แสดงทั้งหมด
                                     if (window.dailyChartController.selectedDataset === datasetIndex) {
                                         window.dailyChartController.showAllDatasets();
@@ -3578,7 +3656,7 @@
                     showAllDatasets: function() {
                         this.selectedDataset = null;
                         
-                        // แสดงทั้งหมดในกราฟ Daily เท่านั้น
+                        // แสดงทั้งหมดในกราฟ Daily
                         if (window.dailyChart && window.dailyChart.data) {
                             window.dailyChart.data.datasets.forEach((dataset, i) => {
                                 const meta = window.dailyChart.getDatasetMeta(i);
@@ -3586,15 +3664,15 @@
                             });
                         }
                         
-                        // รีเซ็ต legend styles เฉพาะของ Daily
-                        const dailyOnlyItems = document.querySelectorAll('#daily-legend-container .legend-item');
-                        dailyOnlyItems.forEach(item => {
+                        // รีเซ็ต legend styles
+                        const dailyLegendItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        dailyLegendItems.forEach(item => {
                             item.style.opacity = '1';
                             item.style.backgroundColor = '';
                             item.classList.remove('selected');
                         });
                         
-                        // อัปเดตกราฟ Daily เท่านั้น
+                        // อัปเดตกราฟ
                         if (window.dailyChart) {
                             window.dailyChart.update('none');
                         }
@@ -3603,7 +3681,7 @@
                     showOnlyDataset: function(datasetIndex) {
                         this.selectedDataset = datasetIndex;
                         
-                        // ซ่อนทั้งหมดยกเว้นที่เลือกในกราฟ Daily เท่านั้น
+                        // ซ่อนทั้งหมดยกเว้นที่เลือก
                         if (window.dailyChart && window.dailyChart.data) {
                             window.dailyChart.data.datasets.forEach((dataset, i) => {
                                 const meta = window.dailyChart.getDatasetMeta(i);
@@ -3611,9 +3689,9 @@
                             });
                         }
                         
-                        // อัปเดต legend styles เฉพาะของ Daily
-                        const dailyOnlyItems = document.querySelectorAll('#daily-legend-container .legend-item');
-                        dailyOnlyItems.forEach((item) => {
+                        // อัปเดต legend styles
+                        const dailyLegendItems = document.querySelectorAll('#daily-legend-container .legend-item');
+                        dailyLegendItems.forEach((item) => {
                             const itemDatasetIndex = parseInt(item.getAttribute('data-dataset'));
                             if (itemDatasetIndex === datasetIndex) {
                                 item.style.opacity = '1';
@@ -3626,29 +3704,22 @@
                             }
                         });
                         
-                        // อัปเดตกราฟ Daily เท่านั้น
+                        // อัปเดตกราฟ
                         if (window.dailyChart) {
                             window.dailyChart.update('none');
                         }
                     }
                 };
                 
-                // เริ่มต้น legend events สำหรับกราฟ Daily เท่านั้น
+                // เริ่มต้น legend events
                 window.dailyChartController.initLegendEvents();
                 
-                // เพิ่ม event listener สำหรับคลิกพื้นที่ว่าง - เฉพาะกราฟ Daily
+                // Event listener สำหรับคลิกพื้นที่ว่าง
                 document.addEventListener('click', function(event) {
-                    // ตรวจสอบว่าคลิกที่ legend-item ของกราฟ Daily หรือไม่
                     const clickedDailyLegend = event.target.closest('#daily-legend-container .legend-item');
                     const clickedDailyChart = event.target.closest('#dailyChart');
-                    const clickedMonthArea = event.target.closest('#chart-container .chart-wrapper:first-child');
                     
-                    // ถ้าคลิกในพื้นที่ของกราฟ Month ให้ข้ามการประมวลผล
-                    if (clickedMonthArea) {
-                        return;
-                    }
-                    
-                    // ถ้าไม่ได้คลิกที่ legend-item และไม่ได้คลิกที่กราฟ Daily ให้แสดงทุกสถานะ
+                    // ถ้าไม่ได้คลิกที่ legend หรือกราฟ ให้แสดงทุกสถานะ
                     if (!clickedDailyLegend && !clickedDailyChart && window.dailyChartController.selectedDataset !== null) {
                         window.dailyChartController.showAllDatasets();
                     }
