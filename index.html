@@ -667,6 +667,50 @@
         }
         
         /* CSS แก้ไข Daily Chart Layout - FORCE LAYOUT */
+        
+        /* Responsive design สำหรับกราฟ Daily */
+        @media (max-width: 1000px) {
+            .chart-wrapper div[style*="display: flex"] {
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 15px !important;
+            }
+            
+            .legend-container#daily-legend-container {
+                width: auto !important;
+                min-width: 300px !important;
+                max-width: 100% !important;
+            }
+            
+            #dailyChart {
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
+        
+        /* สำหรับซูมมากกว่า 80% หรือหน้าจอแคบ */
+        @media (max-width: 800px) {
+            .chart-wrapper div[style*="display: flex"] {
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 15px !important;
+                max-width: 100% !important;
+                overflow-x: visible !important;
+            }
+            
+            .legend-container#daily-legend-container {
+                width: 100% !important;
+                max-width: 500px !important;
+                margin: 0 auto !important;
+            }
+            
+            #dailyChart {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+            }
+        }
         .legend-and-chart-container {
             display: flex !important;
             flex-direction: row !important;
@@ -862,7 +906,7 @@
         <!-- Daily Chart Section -->
         <div class="chart-wrapper">
             <h3 style="color: #003366; margin-bottom: 20px; text-align: center;">📊 สถานะช่างอบรม by Daily</h3>
-            <div style="display: flex; align-items: flex-start; gap: 20px; justify-content: center;">
+            <div style="display: flex; align-items: flex-start; gap: 20px; justify-content: center; flex-wrap: wrap; max-width: 100%; overflow-x: auto;">
                 <!-- Custom Legend -->
                 <div class="legend-container" id="daily-legend-container" style="display: flex; flex-direction: column; gap: 4px; padding: 12px; background-color: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 180px; flex-shrink: 0;">
                     <div class="legend-item" data-dataset="0" style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 3px; border-radius: 4px; transition: background-color 0.2s;">
@@ -904,7 +948,7 @@
                 </div>
                 
                 <!-- Chart Container -->
-                <div style="flex: 1; min-width: 600px;">
+                <div style="flex: 1; min-width: 400px; max-width: 100%;">
                     <canvas id="dailyChart" width="400" height="400"></canvas>
                 </div>
             </div>
@@ -3456,11 +3500,13 @@
 
                 const ctx = canvas.getContext('2d');
                 
-                // ใช้ขนาดที่เหมาะสมเหมือนกราฟหลัก
+                // ใช้ขนาดที่เหมาะสมและ responsive
                 canvas.width = 800;
                 canvas.height = 400;
-                canvas.style.maxWidth = '800px';
+                canvas.style.maxWidth = '100%';
                 canvas.style.maxHeight = '400px';
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
                 
 
                 
@@ -3469,7 +3515,7 @@
                     data: chartData,
                     options: {
                         responsive: true,
-                        maintainAspectRatio: true,
+                        maintainAspectRatio: false,
                         interaction: {
                             intersect: false,
                             mode: 'index'
