@@ -894,6 +894,10 @@
                     <span>อยู่ระหว่างอบรมทฤษฎี</span>
                 </div>
                 <div class="legend-item">
+                    <div class="legend-color" style="background-color: #DC143C;"></div>
+                    <span>ไม่เข้าอบรม</span>
+                </div>
+                <div class="legend-item">
                     <div class="legend-color" style="background-color: #FF69B4;"></div>
                     <span>ไม่ผ่านอบรม</span>
                 </div>
@@ -1038,44 +1042,7 @@
         </div>
     </div>
 
-    <!-- Daily Report Section -->
-    <div id="daily-report" style="margin-top: 40px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
-        <h2 style="color: #003366; text-align: center; margin-bottom: 30px;">📊 รายงานแสดงผลอบรมช่างประจำวัน</h2>
-        
-        <!-- Daily Summary Cards -->
-        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 30px; justify-content: center;">
-            <div class="card" style="background-color: #007bff; color: white; min-width: 200px; padding: 15px 20px;">
-                <div class="card-content">
-                    <div class="card-title" style="font-size: 16px; color: white;">สถานะช่าง ณ.เดือนปัจจุบัน</div>
-                    <div class="card-value" id="daily-total-registered" style="font-size: 24px; color: white;">-</div>
-                </div>
-            </div>
-            
-            <div class="card" style="background-color: #28a745; color: white; min-width: 200px; padding: 15px 20px;">
-                <div class="card-content">
-                    <div class="card-title" style="font-size: 16px; color: white;">ขึ้นทะเบียนสำเร็จ</div>
-                    <div class="card-value" id="daily-success-count" style="font-size: 24px; color: white;">-</div>
-                </div>
-            </div>
-            
-            <div class="card" style="background-color: #dc3545; color: white; min-width: 200px; padding: 15px 20px;">
-                <div class="card-content">
-                    <div class="card-title" style="font-size: 16px; color: white;">มีปัญหา/ไม่สำเร็จ</div>
-                    <div class="card-value" id="daily-issues-count" style="font-size: 24px; color: white;">-</div>
-                </div>
-            </div>
-            
-            <div class="card" style="background-color: #ffc107; color: #212529; min-width: 200px; padding: 15px 20px;">
-                <div class="card-content">
-                    <div class="card-title" style="font-size: 16px;">อัตราความสำเร็จ</div>
-                    <div class="card-value" id="daily-success-rate" style="font-size: 24px;">-</div>
-                </div>
-            </div>
-        </div>
 
-
-    </div>
-    <!-- End Daily Report Section -->
 
     <h2 id="pivot-table-title">สถานะการอบรมช่างใหม่รายพื้นที่</h2>
     <table id="pivot-table" class="pivot-table">
@@ -2953,15 +2920,16 @@
                 "อยู่ระหว่างอบรมปฎิบัติ",
                 "เอกสารยังไม่ครบ",
                 "อยู่ระหว่างอบรมทฤษฎี",
+                "ไม่เข้าอบรม",
                 "ไม่ผ่านอบรม",
                 "Grand Total"
             ];
 
-            // เฉพาะเดือนปัจจุบัน (Jun25)
-            const currentMonth = 'Jun25';
+            // เฉพาะเดือนปัจจุบัน (Jul25)
+            const currentMonth = 'Jul25';
             
             // อัพเดทชื่อตาราง
-            document.getElementById('pivot-table-title').textContent = `สถานะการอบรมช่างใหม่รายพื้นที่ June 2025`;
+            document.getElementById('pivot-table-title').textContent = `สถานะการอบรมช่างใหม่รายพื้นที่ July 2025`;
             
             // สร้างส่วนหัวตาราง
             pivotHeader.innerHTML = `
@@ -2994,6 +2962,7 @@
                         areaData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมปฎิบัติ").length,
                         areaData.filter(row => row.c[34]?.v === "เอกสารยังไม่ครบ").length,
                         areaData.filter(row => row.c[34]?.v === "อยู่ระหว่างอบรมทฤษฎี").length,
+                        areaData.filter(row => row.c[34]?.v === "ไม่เข้าอบรม").length,
                         areaData.filter(row => row.c[34]?.v === "ไม่ผ่านอบรม").length
                     ];
 
@@ -3214,11 +3183,7 @@
             
             const successRate = totalRegistered > 0 ? ((successCount / totalRegistered) * 100).toFixed(1) : 0;
 
-            // อัปเดตการ์ดสรุม
-            document.getElementById('daily-total-registered').textContent = totalRegistered + ' คน';
-            document.getElementById('daily-success-count').textContent = successCount + ' คน';
-            document.getElementById('daily-issues-count').textContent = issuesCount + ' คน';
-            document.getElementById('daily-success-rate').textContent = successRate + '%';
+            // การ์ดสรุมถูกลบออกแล้ว
 
 
 
