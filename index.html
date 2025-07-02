@@ -3253,7 +3253,14 @@
                  });
                  
                  // เพิ่มข้อมูลถ้ามีปัญหาหรือมีเอกสารขาด (ใช้ filteredProblemStatuses แทน)
-                 if ((filteredProblemStatuses.includes(status) || missingDocuments.length > 0) && status !== 'ขึ้นทะเบียนเรียบร้อย' && status !== 'ช่างลาออก' && status !== 'ไม่เข้าอบรม') {
+                 // ไม่แสดงช่างที่มีสถานะ "ตัวแทนยังไม่ส่งขึ้นทะเบียน" และเอกสารครบถ้วน
+                 const shouldExclude = status === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน' && missingDocuments.length === 0;
+                 
+                 if ((filteredProblemStatuses.includes(status) || missingDocuments.length > 0) 
+                     && status !== 'ขึ้นทะเบียนเรียบร้อย' 
+                     && status !== 'ช่างลาออก' 
+                     && status !== 'ไม่เข้าอบรม'
+                     && !shouldExclude) {
                      allProblemsData.push({
                          name: name,
                          area: area,
