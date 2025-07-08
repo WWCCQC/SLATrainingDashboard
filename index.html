@@ -3849,8 +3849,13 @@
                         }
                     },
                     plugins: [ChartDataLabels, {
-                        // Plugin สำหรับแสดงยอดรวมบนแท่งกราห
+                        // Plugin สำหรับแสดงยอดรวมบนแท่งกราห (ซ่อนเมื่อเลือก legend)
                         afterDatasetsDraw: function(chart) {
+                            // ซ่อนยอดรวมเมื่อมีการเลือก legend specific dataset
+                            if (window.dailyChartController && window.dailyChartController.selectedDataset !== null) {
+                                return;
+                            }
+                            
                             const ctx = chart.ctx;
                             const datasets = chart.data.datasets;
                             const labels = chart.data.labels;
