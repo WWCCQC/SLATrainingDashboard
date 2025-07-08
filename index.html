@@ -3793,19 +3793,8 @@
                                         // คำนวณยอดรวมสถานะ
                                         const totalStatuses = Object.values(dateData).reduce((sum, count) => sum + count, 0);
                                         
+                                        // แสดงเฉพาะส่วนบน (วันที่และรวมทั้งหมด)
                                         let footer = `วันที่: ${dateKey}\nรวมทั้งหมด: ${totalStatuses} คน`;
-                                        
-                                        // แสดงรายละเอียดสถานะแต่ละประเภท (เฉพาะที่ไม่เท่ากับ 0)
-                                        const statusSummary = [];
-                                        Object.keys(dateData).forEach(statusType => {
-                                            if (dateData[statusType] > 0) {
-                                                statusSummary.push(`${statusType}: ${dateData[statusType]} คน`);
-                                            }
-                                        });
-                                        
-                                        if (statusSummary.length > 0) {
-                                            footer += `\n\nรายละเอียด:\n${statusSummary.join('\n')}`;
-                                        }
                                         
                                         return footer;
                                     }
