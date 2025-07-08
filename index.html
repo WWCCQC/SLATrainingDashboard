@@ -1361,7 +1361,6 @@
                     <div>
                         <div style="font-size: 2.2rem; font-weight: bold; margin-bottom: 5px;" id="daily-success-count">-</div>
                         <div style="font-size: 14px; opacity: 0.9;">ขึ้นทะเบียนเรียบร้อย</div>
-                        <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;" id="daily-success-trend">-</div>
                     </div>
                     <div style="font-size: 3rem; opacity: 0.8;">✅</div>
                 </div>
@@ -1374,7 +1373,6 @@
                     <div>
                         <div style="font-size: 2.2rem; font-weight: bold; margin-bottom: 5px;" id="daily-pending-count">-</div>
                         <div style="font-size: 14px; opacity: 0.9;">ต้องติดตาม</div>
-                        <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;" id="daily-pending-trend">-</div>
                     </div>
                     <div style="font-size: 3rem; opacity: 0.8;">⚠️</div>
                 </div>
@@ -1387,7 +1385,6 @@
                     <div>
                         <div style="font-size: 2.2rem; font-weight: bold; margin-bottom: 5px;" id="daily-closed-count">-</div>
                         <div style="font-size: 14px; opacity: 0.9;">ไม่ต้องติดตาม</div>
-                        <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;" id="daily-closed-trend">-</div>
                     </div>
                     <div style="font-size: 3rem; opacity: 0.8;">❌</div>
                 </div>
@@ -1400,7 +1397,6 @@
                     <div>
                         <div style="font-size: 2.2rem; font-weight: bold; margin-bottom: 5px;" id="daily-total-count">-</div>
                         <div style="font-size: 14px; opacity: 0.9;">รวมทั้งหมด</div>
-                        <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;" id="daily-total-trend">-</div>
                     </div>
                     <div style="font-size: 3rem; opacity: 0.8;">📊</div>
                 </div>
@@ -1843,11 +1839,7 @@
             const totalCount = todayData.length;
             updateElement('daily-total-count', totalCount);
             
-            // Trend - จำลองข้อมูล
-            updateElement('daily-success-trend', '+5% จากเมื่อวาน');
-            updateElement('daily-pending-trend', '-2% จากเมื่อวาน');
-            updateElement('daily-closed-trend', '+1% จากเมื่อวาน');
-            updateElement('daily-total-trend', '+3% จากเมื่อวาน');
+
         }
 
         // ฟังก์ชันอัปเดตตัวชี้วัดประสิทธิภาพ
