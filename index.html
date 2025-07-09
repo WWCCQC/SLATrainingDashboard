@@ -1406,18 +1406,15 @@
 
         <!-- Detailed Table Section -->
         <div style="background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            <div style="margin-bottom: 20px;">
+            <!-- Header with Search -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="color: #003366; margin: 0; font-size: 20px;" id="daily-table-title">📋 รายละเอียดข้อมูล - วันที่ล่าสุด</h3>
-            </div>
-            
-            <!-- Search -->
-            <div style="margin-bottom: 15px;">
                 <input type="text" id="daily-search-input" placeholder="🔍 ค้นหา..." style="
                     padding: 8px 12px;
                     border: 1px solid #ddd;
                     border-radius: 6px;
                     font-size: 14px;
-                    width: 100%;
+                    width: 300px;
                     max-width: 400px;
                 ">
             </div>
@@ -1847,9 +1844,24 @@
                 'อยู่ระหว่างขออนุมัติรถ': '#00CED1'
             };
             
+            // ฟังก์ชันคำนวณ SLA เฉลี่ยสำหรับสถานะเฉพาะ
+            function calculateStatusAvgSLA(data, targetStatus) {
+                const statusData = data.filter(row => row[34] === targetStatus);
+                if (statusData.length === 0) return 0;
+                
+                const slaValues = statusData
+                    .map(row => parseFloat(row[37]))
+                    .filter(val => !isNaN(val) && val > 0);
+                
+                if (slaValues.length === 0) return 0;
+                
+                const avgSLA = slaValues.reduce((sum, val) => sum + val, 0) / slaValues.length;
+                return Math.round(avgSLA);
+            }
+            
             container.innerHTML = '';
             
-            // เพิ่มการ์ดจำนวนรวมด้านหน้าสุด
+            // เพิ่มการ์ดจำนวนรวมด้านหน้าสุด (ไม่แสดง SLA)
             const totalCard = document.createElement('div');
             totalCard.style.cssText = `
                 background: linear-gradient(135deg, #003366, #004080);
@@ -1862,6 +1874,10 @@
                 transition: transform 0.2s;
                 position: relative;
                 overflow: hidden;
+                height: 120px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
             `;
             totalCard.innerHTML = `
                 <div style="font-size: 32px; margin-bottom: 5px;">📊</div>
@@ -1880,6 +1896,9 @@
             
             sortedStatuses.forEach(([status, count]) => {
                 const color = statusColors[status] || '#6c757d';
+                const avgSLA = calculateStatusAvgSLA(todayData, status);
+                const slaText = avgSLA > 0 ? ` (${avgSLA} วัน)` : '';
+                
                 const card = document.createElement('div');
                 card.style.cssText = `
                     background: ${color};
@@ -1890,10 +1909,14 @@
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     cursor: pointer;
                     transition: transform 0.2s;
+                    height: 120px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
                 `;
                 card.innerHTML = `
-                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">${count}</div>
-                    <div style="font-size: 12px; opacity: 0.9;">${status}</div>
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">${count}${slaText}</div>
+                    <div style="font-size: 12px; opacity: 0.9; line-height: 1.3;">${status}</div>
                 `;
                 card.onmouseover = () => card.style.transform = 'translateY(-3px)';
                 card.onmouseout = () => card.style.transform = 'translateY(0)';
