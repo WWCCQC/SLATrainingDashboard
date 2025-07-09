@@ -1874,7 +1874,7 @@
                 transition: transform 0.2s;
                 position: relative;
                 overflow: hidden;
-                height: 120px;
+                height: 90px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -1909,7 +1909,7 @@
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                     cursor: pointer;
                     transition: transform 0.2s;
-                    height: 120px;
+                    height: 90px;
                     display: flex;
                     flex-direction: column;
                     justify-content: center;
@@ -2326,8 +2326,8 @@
                         padding: {
                             top: 20,
                             bottom: 20,
-                            left: 5,
-                            right: 5
+                            left: 10,
+                            right: 150  // เพิ่ม padding ด้านขวาเพื่อให้มีที่สำหรับข้อความ
                         }
                     },
                     plugins: {
@@ -2461,24 +2461,55 @@
                                     ctx.textBaseline = 'bottom';
                                     ctx.fillText(dayData.total, position.x, position.y - 8);
                                     
-                                    // 2. แสดงสถานะใต้ตัวเลขจำนวนรวม
+                                    // 2. แสดงสถานะด้านขวาของแท่งกราฟ (เฉพาะวันที่ล่าสุด)
                                     if (sortedStatuses.length > 0) {
                                         ctx.fillStyle = '#333333';
                                         ctx.font = '9px Arial';
-                                        ctx.textAlign = 'center';
-                                        ctx.textBaseline = 'top';
                                         
                                         const lineHeight = 12;
-                                        const startY = position.y - 2; // เริ่มใต้ตัวเลขจำนวนรวมโดยตรง
                                         
-                                        sortedStatuses.forEach(([status, count], statusIndex) => {
-                                            // แสดงชื่อสถานะแบบเต็ม (ไม่ตัด)
-                                            const fullStatus = status;
+                                        // ตรวจสอบว่าเป็นแท่งกราฟของวันที่ล่าสุดหรือไม่
+                                        const isLastDay = index === last7DaysData.length - 1;
+                                        
+                                        console.log(`Debug: วันที่ ${dayData.date}, index: ${index}, isLastDay: ${isLastDay}, total bars: ${last7DaysData.length}`);
+                                        
+                                        if (isLastDay) {
+                                            // สำหรับวันที่ล่าสุด: แสดงใต้ตัวเลขจำนวนรวม
+                                            ctx.fillStyle = '#333333';
+                                            ctx.font = '9px Arial';
+                                            ctx.textAlign = 'left';
+                                            ctx.textBaseline = 'top';
                                             
-                                            const yPosition = startY + (statusIndex * lineHeight);
+                                            const lineHeight = 12;
+                                            const startY = position.y + 5; // เริ่มใต้ตัวเลขจำนวนรวม
                                             
-                                            ctx.fillText(`${fullStatus}: ${count}`, position.x, yPosition);
-                                        });
+                                            // คำนวณตำแหน่ง X ให้ชิดซ้ายและตรงกัน
+                                            const barWidth = element.width || 40;
+                                            const leftAlignX = position.x - (barWidth / 2) + 5; // ชิดซ้ายของแท่งกราฟ + padding 5px
+                                            
+                                            console.log(`Debug: วันที่ล่าสุด - แสดงสถานะใต้จำนวนรวม`);
+                                            console.log(`Debug: leftAlignX: ${leftAlignX}, startY: ${startY}`);
+                                            
+                                            sortedStatuses.forEach(([status, count], statusIndex) => {
+                                                const yPosition = startY + (statusIndex * lineHeight);
+                                                ctx.fillText(`${status}: ${count}`, leftAlignX, yPosition);
+                                                console.log(`Debug: แสดง "${status}: ${count}" ที่ (${leftAlignX}, ${yPosition})`);
+                                            });
+                                        } else {
+                                            // สำหรับวันอื่นๆ: แสดงเหนือแท่งกราฟแบบเดิม
+                                            ctx.font = '9px Arial';
+                                            ctx.fillStyle = '#333333';
+                                            ctx.textAlign = 'center';
+                                            ctx.textBaseline = 'bottom';
+                                            
+                                            const lineHeight = 10;
+                                            const startY = position.y - 25; // เริ่มเหนือตัวเลขจำนวนรวม
+                                            
+                                            sortedStatuses.forEach(([status, count], statusIndex) => {
+                                                const yPosition = startY - (statusIndex * lineHeight);
+                                                ctx.fillText(`${status}: ${count}`, position.x, yPosition);
+                                            });
+                                        }
                                     } else {
                                         console.log('ไม่มีข้อมูลสถานะสำหรับวันนี้');
                                     }
