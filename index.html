@@ -1845,6 +1845,31 @@
             
             container.innerHTML = '';
             
+            // เพิ่มการ์ดจำนวนรวมด้านหน้าสุด
+            const totalCard = document.createElement('div');
+            totalCard.style.cssText = `
+                background: linear-gradient(135deg, #003366, #004080);
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                text-align: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                cursor: pointer;
+                transition: transform 0.2s;
+                position: relative;
+                overflow: hidden;
+            `;
+            totalCard.innerHTML = `
+                <div style="font-size: 32px; margin-bottom: 5px;">📊</div>
+                <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">${todayData.length}</div>
+                <div style="font-size: 14px; opacity: 0.9;">จำนวนรวมทั้งหมด</div>
+                <div style="position: absolute; top: -20px; right: -20px; font-size: 80px; opacity: 0.1;">Σ</div>
+            `;
+            totalCard.onmouseover = () => totalCard.style.transform = 'translateY(-3px)';
+            totalCard.onmouseout = () => totalCard.style.transform = 'translateY(0)';
+            container.appendChild(totalCard);
+            
+            // เพิ่มการ์ดสถานะอื่นๆ
             Object.entries(statusCounts).forEach(([status, count]) => {
                 if (count > 0) {
                     const color = statusColors[status] || '#6c757d';
