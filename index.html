@@ -1351,18 +1351,27 @@
     <div id="daily-report-page" style="display: none; max-width: 1400px; margin: 0 auto; padding: 20px;">
         
         <!-- Performance Indicators -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px;">
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #28a745;">
-                <div style="color: #666; font-size: 14px; margin-bottom: 8px;">อัตราความสำเร็จ</div>
-                <div style="font-size: 24px; font-weight: bold; color: #28a745;" id="daily-success-rate">-%</div>
+        <div style="display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap;">
+            <div style="background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #28a745; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 36px; color: #28a745;">📈</div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">อัตราความสำเร็จ</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #28a745;" id="daily-success-rate">-%</div>
+                </div>
             </div>
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #17a2b8;">
-                <div style="color: #666; font-size: 14px; margin-bottom: 8px;">SLA เฉลี่ย</div>
-                <div style="font-size: 24px; font-weight: bold; color: #17a2b8;" id="daily-avg-sla">- วัน</div>
+            <div style="background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #17a2b8; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 36px; color: #17a2b8;">⏱️</div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">SLA เฉลี่ย</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #17a2b8;" id="daily-avg-sla">- วัน</div>
+                </div>
             </div>
-            <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #ffc107;">
-                <div style="color: #666; font-size: 14px; margin-bottom: 8px;">ประสิทธิภาพ</div>
-                <div style="font-size: 24px; font-weight: bold; color: #ffc107;" id="daily-efficiency">-</div>
+            <div style="background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-left: 4px solid #ffc107; flex: 1; min-width: 200px; display: flex; align-items: center; gap: 15px;">
+                <div style="font-size: 36px; color: #ffc107;">⚡</div>
+                <div>
+                    <div style="color: #666; font-size: 14px;">ประสิทธิภาพ</div>
+                    <div style="font-size: 24px; font-weight: bold; color: #ffc107;" id="daily-efficiency">-</div>
+                </div>
             </div>
         </div>
 
@@ -1806,7 +1815,7 @@
             
             // คำนวณ SLA เฉลี่ย
             const slaValues = todayData.map(row => parseFloat(row[37])).filter(val => !isNaN(val));
-            const avgSla = slaValues.length > 0 ? (slaValues.reduce((sum, val) => sum + val, 0) / slaValues.length).toFixed(1) : 0;
+            const avgSla = slaValues.length > 0 ? Math.floor(slaValues.reduce((sum, val) => sum + val, 0) / slaValues.length) : 0;
             
             // ประเมินประสิทธิภาพ
             let efficiency = 'ต่ำ';
@@ -1869,29 +1878,31 @@
             totalCard.onmouseout = () => totalCard.style.transform = 'translateY(0)';
             container.appendChild(totalCard);
             
-            // เพิ่มการ์ดสถานะอื่นๆ
-            Object.entries(statusCounts).forEach(([status, count]) => {
-                if (count > 0) {
-                    const color = statusColors[status] || '#6c757d';
-                    const card = document.createElement('div');
-                    card.style.cssText = `
-                        background: ${color};
-                        color: white;
-                        padding: 15px;
-                        border-radius: 8px;
-                        text-align: center;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                        cursor: pointer;
-                        transition: transform 0.2s;
-                    `;
-                    card.innerHTML = `
-                        <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">${count}</div>
-                        <div style="font-size: 12px; opacity: 0.9;">${status}</div>
-                    `;
-                    card.onmouseover = () => card.style.transform = 'translateY(-3px)';
-                    card.onmouseout = () => card.style.transform = 'translateY(0)';
-                    container.appendChild(card);
-                }
+            // เพิ่มการ์ดสถานะอื่นๆ - เรียงตามจำนวนจากมากไปน้อย
+            const sortedStatuses = Object.entries(statusCounts)
+                .filter(([status, count]) => count > 0)
+                .sort(([, a], [, b]) => b - a); // เรียงจากมากไปน้อย
+            
+            sortedStatuses.forEach(([status, count]) => {
+                const color = statusColors[status] || '#6c757d';
+                const card = document.createElement('div');
+                card.style.cssText = `
+                    background: ${color};
+                    color: white;
+                    padding: 15px;
+                    border-radius: 8px;
+                    text-align: center;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                `;
+                card.innerHTML = `
+                    <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">${count}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">${status}</div>
+                `;
+                card.onmouseover = () => card.style.transform = 'translateY(-3px)';
+                card.onmouseout = () => card.style.transform = 'translateY(0)';
+                container.appendChild(card);
             });
         }
 
@@ -2104,9 +2115,13 @@
             
             console.log('📊 Status counts สำหรับ pie chart:', statusCounts);
             
+            // เรียงลำดับสถานะตามจำนวนจากมากไปน้อย
+            const sortedStatuses = Object.entries(statusCounts)
+                .sort(([, a], [, b]) => b - a);
+            
             // เตรียมข้อมูลสำหรับกราฟ
-            const labels = Object.keys(statusCounts);
-            const data = Object.values(statusCounts);
+            const labels = sortedStatuses.map(([status]) => status);
+            const data = sortedStatuses.map(([, count]) => count);
             const total = todayData.length;
             
             // สร้างสีสำหรับแต่ละ status
