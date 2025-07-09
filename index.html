@@ -1904,25 +1904,41 @@
             updateDailyTrendChart();
         }
 
+        // เก็บข้อมูลต้นฉบับสำหรับการค้นหาและกรอง
+        let dailyTableOriginalData = [];
+        let dailyTableFilteredData = [];
+
         // ฟังก์ชันอัปเดตตาราง
         function updateDailyTable(todayData) {
             const tbody = document.getElementById('daily-detail-tbody');
             if (!tbody) return;
             
+            // เก็บข้อมูลต้นฉบับ
+            dailyTableOriginalData = todayData;
+            dailyTableFilteredData = todayData;
+            
+            renderDailyTableRows(todayData);
+        }
+        
+        // ฟังก์ชันแสดงแถวในตาราง
+        function renderDailyTableRows(data) {
+            const tbody = document.getElementById('daily-detail-tbody');
+            if (!tbody) return;
+            
             tbody.innerHTML = '';
             
-            if (todayData.length === 0) {
+            if (data.length === 0) {
                 const latestDate = getLatestEndDate();
                 const message = latestDate ? 
                     `ไม่มีข้อมูลในวันที่ล่าสุด (${latestDate})` : 
                     'ไม่มีข้อมูลที่มีวันสิ้นสุด';
                 tbody.innerHTML = `<tr><td colspan="16" style="text-align: center; padding: 20px; color: #666;">${message}</td></tr>`;
                 updateElement('daily-table-count', '0');
-                updateElement('daily-table-total', '0');
+                updateElement('daily-table-total', dailyTableOriginalData.length);
                 return;
             }
             
-            todayData.forEach((row, index) => {
+            data.forEach((row, index) => {
                 const tr = document.createElement('tr');
                 tr.style.cssText = 'border-bottom: 1px solid #dee2e6; font-size: 11px;';
                 
@@ -1966,8 +1982,53 @@
                 tbody.appendChild(tr);
             });
             
-            updateElement('daily-table-count', todayData.length);
-            updateElement('daily-table-total', todayData.length);
+            updateElement('daily-table-count', data.length);
+            updateElement('daily-table-total', dailyTableOriginalData.length);
+        }
+        
+        // ฟังก์ชันค้นหาในตารางรายงานประจำวัน
+        function searchDailyTable() {
+            const searchTerm = document.getElementById('daily-search-input').value.toLowerCase().trim();
+            const statusFilter = document.getElementById('daily-status-filter').value;
+            
+            let filteredData = dailyTableOriginalData;
+            
+            // กรองตามคำค้นหา
+            if (searchTerm) {
+                filteredData = filteredData.filter(row => {
+                    // ค้นหาในทุกคอลัมน์
+                    return row.some(cell => {
+                        if (cell === null || cell === undefined) return false;
+                        return cell.toString().toLowerCase().includes(searchTerm);
+                    });
+                });
+            }
+            
+            // กรองตามสถานะ
+            if (statusFilter) {
+                if (statusFilter === 'ขึ้นทะเบียนเรียบร้อย') {
+                    filteredData = filteredData.filter(row => row[34] === 'ขึ้นทะเบียนเรียบร้อย');
+                } else if (statusFilter === 'ต้องติดตาม') {
+                    const pendingStatuses = ['ตัวแทนยังไม่ส่งขึ้นทะเบียน', 'อยู่ระหว่างอบรมปฎิบัติ', 'เอกสารยังไม่ครบ', 
+                                            'อยู่ระหว่างอบรมทฤษฎี', 'ส่ง Gen ID', 'Print/ส่งบัตร', 'อยู่ระหว่างตรวจกองงาน', 
+                                            'อยู่ระหว่างขอ User', 'อยู่ระหว่างขออนุมัติรถ'];
+                    filteredData = filteredData.filter(row => pendingStatuses.includes(row[34]));
+                } else if (statusFilter === 'ไม่ต้องติดตาม') {
+                    const closedStatuses = ['ช่างลาออก', 'ติดประวัติอาชญากรรม', 'ไม่เข้าอบรม', 'ไม่ผ่านอบรม'];
+                    filteredData = filteredData.filter(row => closedStatuses.includes(row[34]));
+                }
+            }
+            
+            dailyTableFilteredData = filteredData;
+            renderDailyTableRows(filteredData);
+        }
+        
+        // ฟังก์ชันรีเซ็ตการค้นหาและกรอง
+        function resetDailyTableFilter() {
+            document.getElementById('daily-search-input').value = '';
+            document.getElementById('daily-status-filter').value = '';
+            dailyTableFilteredData = dailyTableOriginalData;
+            renderDailyTableRows(dailyTableOriginalData);
         }
 
         // ฟังก์ชันอัปเดตการวิเคราะห์
@@ -3491,7 +3552,31 @@
                 problemsDownloadButton.addEventListener('click', downloadProblemsTable);
             }
 
-
+            // Event Listeners สำหรับรายงานประจำวัน
+            const dailySearchInput = document.getElementById('daily-search-input');
+            const dailyStatusFilter = document.getElementById('daily-status-filter');
+            
+            if (dailySearchInput) {
+                // ค้นหาเมื่อพิมพ์
+                dailySearchInput.addEventListener('input', function() {
+                    searchDailyTable();
+                });
+                
+                // ค้นหาเมื่อกด Enter
+                dailySearchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchDailyTable();
+                    }
+                });
+            }
+            
+            if (dailyStatusFilter) {
+                // กรองเมื่อเปลี่ยนสถานะ
+                dailyStatusFilter.addEventListener('change', function() {
+                    searchDailyTable();
+                });
+            }
 
             
             // Initialize pagination display
