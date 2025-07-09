@@ -1406,44 +1406,20 @@
 
         <!-- Detailed Table Section -->
         <div style="background: white; border-radius: 12px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h3 style="color: #003366; margin: 0; font-size: 20px;">📋 รายละเอียดข้อมูล - วันที่ล่าสุด</h3>
-                <button onclick="exportDailyReport()" style="
-                    background: #28a745;
-                    color: white;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    transition: background 0.2s;
-                " onmouseover="this.style.background='#218838'" onmouseout="this.style.background='#28a745'">
-                    📥 Export Excel
-                </button>
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #003366; margin: 0; font-size: 20px;" id="daily-table-title">📋 รายละเอียดข้อมูล - วันที่ล่าสุด</h3>
             </div>
             
-            <!-- Search and Filter -->
-            <div style="margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap;">
+            <!-- Search -->
+            <div style="margin-bottom: 15px;">
                 <input type="text" id="daily-search-input" placeholder="🔍 ค้นหา..." style="
                     padding: 8px 12px;
                     border: 1px solid #ddd;
                     border-radius: 6px;
                     font-size: 14px;
-                    min-width: 250px;
-                    flex: 1;
+                    width: 100%;
+                    max-width: 400px;
                 ">
-                <select id="daily-status-filter" style="
-                    padding: 8px 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 6px;
-                    font-size: 14px;
-                    min-width: 200px;
-                ">
-                    <option value="">ทุกสถานะ</option>
-                    <option value="ขึ้นทะเบียนเรียบร้อย">ขึ้นทะเบียนเรียบร้อย</option>
-                    <option value="ต้องติดตาม">ต้องติดตาม</option>
-                    <option value="ไม่ต้องติดตาม">ไม่ต้องติดตาม</option>
-                </select>
             </div>
 
             <!-- Table Container -->
@@ -1557,6 +1533,24 @@
             updateNavbarStatus('❌ เกิดข้อผิดพลาดในการโหลดข้อมูล', false);
         }
 
+        // ฟังก์ชันอัปเดตหัวข้อตารางด้วยวันที่ปัจจุบัน
+        function updateDailyTableTitle() {
+            const titleElement = document.getElementById('daily-table-title');
+            if (titleElement) {
+                const now = new Date();
+                const day = now.getDate().toString().padStart(2, '0');
+                const monthNames = [
+                    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+                    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+                ];
+                const month = monthNames[now.getMonth()];
+                const year = now.getFullYear();
+                
+                const formattedDate = `${day}-${month}-${year}`;
+                titleElement.textContent = `📋 รายละเอียดข้อมูล - วันที่ล่าสุด (${formattedDate})`;
+            }
+        }
+
 
 
         // ฟังก์ชันสำหรับแสดงหน้าหลัก
@@ -1620,7 +1614,8 @@
             console.log('🔄 เริ่มประมวลผลข้อมูลรายงานประจำวัน...');
             console.log('📊 ข้อมูล filteredData2025:', filteredData2025 ? filteredData2025.length : 'ไม่มี', 'รายการ');
             
-
+            // อัปเดตหัวข้อตารางด้วยวันที่ปัจจุบัน
+            updateDailyTableTitle();
             
             // กรองข้อมูลตามวันที่ปัจจุบัน
             const todayData = getTodayData();
@@ -2000,7 +1995,6 @@
         // ฟังก์ชันค้นหาในตารางรายงานประจำวัน
         function searchDailyTable() {
             const searchTerm = document.getElementById('daily-search-input').value.toLowerCase().trim();
-            const statusFilter = document.getElementById('daily-status-filter').value;
             
             let filteredData = dailyTableOriginalData;
             
@@ -2015,29 +2009,13 @@
                 });
             }
             
-            // กรองตามสถานะ
-            if (statusFilter) {
-                if (statusFilter === 'ขึ้นทะเบียนเรียบร้อย') {
-                    filteredData = filteredData.filter(row => row[34] === 'ขึ้นทะเบียนเรียบร้อย');
-                } else if (statusFilter === 'ต้องติดตาม') {
-                    const pendingStatuses = ['ตัวแทนยังไม่ส่งขึ้นทะเบียน', 'อยู่ระหว่างอบรมปฎิบัติ', 'เอกสารยังไม่ครบ', 
-                                            'อยู่ระหว่างอบรมทฤษฎี', 'ส่ง Gen ID', 'Print/ส่งบัตร', 'อยู่ระหว่างตรวจกองงาน', 
-                                            'อยู่ระหว่างขอ User', 'อยู่ระหว่างขออนุมัติรถ'];
-                    filteredData = filteredData.filter(row => pendingStatuses.includes(row[34]));
-                } else if (statusFilter === 'ไม่ต้องติดตาม') {
-                    const closedStatuses = ['ช่างลาออก', 'ติดประวัติอาชญากรรม', 'ไม่เข้าอบรม', 'ไม่ผ่านอบรม'];
-                    filteredData = filteredData.filter(row => closedStatuses.includes(row[34]));
-                }
-            }
-            
             dailyTableFilteredData = filteredData;
             renderDailyTableRows(filteredData);
         }
         
-        // ฟังก์ชันรีเซ็ตการค้นหาและกรอง
+        // ฟังก์ชันรีเซ็ตการค้นหา
         function resetDailyTableFilter() {
             document.getElementById('daily-search-input').value = '';
-            document.getElementById('daily-status-filter').value = '';
             dailyTableFilteredData = dailyTableOriginalData;
             renderDailyTableRows(dailyTableOriginalData);
         }
@@ -2048,11 +2026,6 @@
 
 
 
-
-        // ฟังก์ชันสำหรับการ Export
-        function exportDailyReport() {
-            alert('ฟีเจอร์ Export Excel กำลังพัฒนา');
-        }
 
         // ฟังก์ชันสำหรับการพิมพ์
         function printDailyReport() {
@@ -3569,7 +3542,6 @@
 
             // Event Listeners สำหรับรายงานประจำวัน
             const dailySearchInput = document.getElementById('daily-search-input');
-            const dailyStatusFilter = document.getElementById('daily-status-filter');
             
             if (dailySearchInput) {
                 // ค้นหาเมื่อพิมพ์
@@ -3583,13 +3555,6 @@
                         e.preventDefault();
                         searchDailyTable();
                     }
-                });
-            }
-            
-            if (dailyStatusFilter) {
-                // กรองเมื่อเปลี่ยนสถานะ
-                dailyStatusFilter.addEventListener('change', function() {
-                    searchDailyTable();
                 });
             }
 
