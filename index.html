@@ -169,12 +169,12 @@
         }
         #chart-container {
             margin-left: 0px;
-            padding-left: 220px;
+            padding-left: 20px;
             position: relative;
             display: flex;
             flex-direction: column;
             gap: 5px; /* ลดจาก 15px เป็น 5px */
-            width: calc(100% - 220px);
+            width: calc(100% - 20px);
             margin-bottom: 0px; /* ลบ margin-bottom */
         }
         
@@ -182,8 +182,8 @@
         @media (max-width: 1200px) {
             #chart-container {
                 margin-left: 0;
-                padding-left: 220px;
-                width: calc(100% - 220px);
+                padding-left: 20px;
+                width: calc(100% - 20px);
             }
         }
         
@@ -389,7 +389,7 @@
                 }
         .legend-container {
             position: absolute;
-            left: -190px;
+            left: -10px;
             top: 50%;
             transform: translateY(-50%);
             display: flex !important;
@@ -609,7 +609,7 @@
 
         /* Group Code Chart Container */
         #group-code-chart-container {
-            margin-left: 320px;
+            margin-left: 20px;
             position: relative;
             display: flex;
             gap: 20px;
@@ -618,7 +618,7 @@
 
         #group-code-legend {
             position: absolute;
-            left: -200px;
+            left: -10px;
             top: 50%;
             transform: translateY(-50%);
             display: flex;
@@ -4760,13 +4760,13 @@
                      const dateString = formatDateForChart(endDate);
                      
                      if (dateString) {
-                         // กรองเฉพาะเดือน June (6) และ July (7)
-                         const dateMatch = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-                         if (dateMatch) {
-                             const month = parseInt(dateMatch[2]);
-                             
-                             // แสดงเฉพาะเดือน June (6) และ July (7)
-                             if (month === 6 || month === 7) {
+                                                 // กรองเฉพาะเดือน July (7)
+                        const dateMatch = dateString.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+                        if (dateMatch) {
+                            const month = parseInt(dateMatch[2]);
+                            
+                            // แสดงเฉพาะเดือน July (7)
+                            if (month === 7) {
                                  validDateCount++;
                                  allDates.add(dateString);
                                  
