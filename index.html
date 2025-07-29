@@ -1088,6 +1088,20 @@
         </div>
     </div>
 
+    <!-- Area-wise Status Chart Section -->
+    <div style="margin: 20px 0;">
+        <h4 id="area-chart-title" style="color: #003366; margin-bottom: 15px; text-align: center;">📊 สถานะช่างตามพื้นที่ (Stack Column Chart)</h4>
+        <div style="background-color: white; border-radius: 8px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #e9ecef;">
+            <!-- Legend for Area Status Chart - ย้ายไปด้านบน -->
+            <div id="area-status-legend" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px; background-color: #f8f9fa; border-radius: 6px; max-height: 120px; overflow-y: auto; margin-bottom: 15px;">
+                <!-- จะถูกสร้างด้วย JavaScript -->
+            </div>
+            <div style="position: relative; height: 450px; width: 100%; overflow-x: auto;">
+                <canvas id="areaStatusChart" style="width: 100%; height: 100%; min-width: 800px;"></canvas>
+            </div>
+        </div>
+    </div>
+
     <!-- SLA Analysis Section -->
     <div style="background-color: #f8f9fa; border: 2px solid #003366; border-radius: 8px; margin: -10px 0 20px 0; padding: 20px;">
         <h3 style="color: #003366; text-align: center; margin-bottom: 20px;">การวิเคราะห์ SLA (Service Level Agreement)</h3>
@@ -2527,6 +2541,458 @@
             console.log('✅ สร้าง Daily Trend Chart สำเร็จ');
         }
 
+        // ฟังก์ชันสร้างกราฟ Area Status Stack Column Chart
+        function createAreaStatusChart() {
+            console.log('🔄 เริ่มสร้าง Area Status Chart...');
+            
+            const canvas = document.getElementById('areaStatusChart');
+            if (!canvas) {
+                console.log('⚠️ ไม่พบ canvas element');
+                return;
+            }
+
+            // ตรวจสอบข้อมูล
+            if (!filteredData2025 || filteredData2025.length === 0) {
+                console.log('⚠️ ไม่มีข้อมูลสำหรับสร้างกราฟ');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#666';
+                ctx.fillText('ไม่มีข้อมูลสำหรับแสดง', canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            // ทำลายกราฟเก่า (ถ้ามี)
+            if (window.areaStatusChart && typeof window.areaStatusChart.destroy === 'function') {
+                try {
+                    window.areaStatusChart.destroy();
+                } catch (error) {
+                    console.warn('⚠️ ไม่สามารถทำลายกราฟเก่า:', error);
+                }
+            }
+
+            // หาวันที่ล่าสุดจากข้อมูล
+            const latestDate = getLatestEndDate();
+            
+            if (!latestDate) {
+                console.log('⚠️ ไม่พบวันที่ล่าสุดในข้อมูล');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#666';
+                ctx.fillText('ไม่พบข้อมูลวันที่ล่าสุด', canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            console.log('📅 กรองข้อมูลสำหรับวันที่:', latestDate);
+
+            // กรองข้อมูลเฉพาะวันที่ล่าสุด
+            const todayData = filteredData2025.filter(row => {
+                let endDate;
+                if (row.c) {
+                    endDate = row.c[36]?.v; // รูปแบบ Google Sheets
+                } else {
+                    endDate = row[36]; // รูปแบบ Array
+                }
+                return endDate && endDate.toString().trim() === latestDate;
+            });
+
+            console.log('📊 ข้อมูลวันที่ล่าสุด:', todayData.length, 'รายการ');
+
+            // อัปเดตหัวข้อกราฟให้แสดงวันที่และจำนวน
+            const titleElement = document.getElementById('area-chart-title');
+            if (titleElement) {
+                titleElement.textContent = `📊 สถานะช่างตามพื้นที่ ณ วันที่ ${latestDate} (จำนวน ${todayData.length} คน)`;
+            }
+
+            if (todayData.length === 0) {
+                console.log('⚠️ ไม่มีข้อมูลในวันที่ล่าสุด');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#666';
+                ctx.fillText(`ไม่มีข้อมูลในวันที่ ${latestDate}`, canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            // รวบรวมข้อมูลตามพื้นที่และสถานะ - ใช้เฉพาะข้อมูลวันที่ล่าสุด
+            const areaStatusData = {};
+            const allAreas = new Set();
+            const allStatuses = new Set();
+
+            // ประมวลผลข้อมูล - รองรับทั้งรูปแบบ Google Sheets และ Array
+            todayData.forEach(row => {
+                let area, status;
+                
+                if (row.c) {
+                    // รูปแบบ Google Sheets
+                    area = row.c[26]?.v || 'ไม่ระบุพื้นที่';  // คอลัมน์ AA (index 26)
+                    status = row.c[34]?.v || 'ไม่ระบุสถานะ'; // สถานะล่าสุด
+                } else {
+                    // รูปแบบ Array
+                    area = row[26] || 'ไม่ระบุพื้นที่';  // คอลัมน์ AA (index 26)
+                    status = row[34] || 'ไม่ระบุสถานะ'; // สถานะล่าสุด
+                }
+
+                allAreas.add(area);
+                allStatuses.add(status);
+
+                if (!areaStatusData[area]) {
+                    areaStatusData[area] = {};
+                }
+                
+                if (!areaStatusData[area][status]) {
+                    areaStatusData[area][status] = 0;
+                }
+                
+                areaStatusData[area][status]++;
+            });
+
+            console.log('📊 จำนวนข้อมูลทั้งหมด:', filteredData2025.length);
+            console.log('📊 พื้นที่ทั้งหมด:', Array.from(allAreas));
+            console.log('📊 สถานะทั้งหมด:', Array.from(allStatuses));
+            console.log('📊 ข้อมูลตัวอย่าง:', areaStatusData);
+
+            // ตรวจสอบว่ามีข้อมูลหรือไม่
+            if (allAreas.size === 0) {
+                console.log('⚠️ ไม่พบข้อมูลพื้นที่');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.font = '16px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#666';
+                ctx.fillText('ไม่พบข้อมูลพื้นที่', canvas.width/2, canvas.height/2);
+                return;
+            }
+
+            // เรียงลำดับพื้นที่
+            const sortedAreas = Array.from(allAreas).sort();
+            
+            // สถานะและสีที่กำหนดไว้
+            const statusConfig = {
+                'ขึ้นทะเบียนเรียบร้อย': '#006400',
+                'ช่างลาออก': '#FF6B00',
+                'ตัวแทนยังไม่ส่งขึ้นทะเบียน': '#FF1493',
+                'ติดประวัติอาชญากรรม': '#4169E1',
+                'อยู่ระหว่างอบรมปฎิบัติ': '#90EE90',
+                'เอกสารยังไม่ครบ': '#008080',
+                'อยู่ระหว่างอบรมทฤษฎี': '#4CA64C',
+                'ไม่เข้าอบรม': '#DC143C',
+                'ไม่ผ่านอบรม': '#FF69B4',
+                'ส่ง Gen ID': '#9932CC',
+                'Print/ส่งบัตร': '#FF8C00',
+                'อยู่ระหว่างตรวจกองงาน': '#32CD32',
+                'อยู่ระหว่างขอ User': '#FF4500',
+                'อยู่ระหว่างขออนุมัติรถ': '#00CED1'
+            };
+
+            // เตรียม datasets สำหรับกราฟ
+            const datasets = [];
+            const statusesInData = Array.from(allStatuses).filter(status => status !== 'ไม่ระบุสถานะ');
+            
+            // เรียงลำดับสถานะตามความสำคัญ
+            const statusOrder = [
+                'ขึ้นทะเบียนเรียบร้อย',
+                'อยู่ระหว่างอบรมทฤษฎี',
+                'อยู่ระหว่างอบรมปฎิบัติ',
+                'ส่ง Gen ID',
+                'Print/ส่งบัตร',
+                'อยู่ระหว่างตรวจกองงาน',
+                'อยู่ระหว่างขอ User',
+                'อยู่ระหว่างขออนุมัติรถ',
+                'เอกสารยังไม่ครบ',
+                'ตัวแทนยังไม่ส่งขึ้นทะเบียน',
+                'ไม่เข้าอบรม',
+                'ไม่ผ่านอบรม',
+                'ช่างลาออก',
+                'ติดประวัติอาชญากรรม'
+            ];
+
+            const sortedStatuses = statusOrder.filter(status => statusesInData.includes(status));
+
+            sortedStatuses.forEach(status => {
+                const data = sortedAreas.map(area => {
+                    return areaStatusData[area] && areaStatusData[area][status] 
+                        ? areaStatusData[area][status] 
+                        : 0;
+                });
+
+                datasets.push({
+                    label: status,
+                    data: data,
+                    backgroundColor: statusConfig[status] || '#6c757d',
+                    borderColor: statusConfig[status] || '#6c757d',
+                    borderWidth: 1
+                });
+            });
+
+            // สร้างกราฟ
+            const ctx = canvas.getContext('2d');
+            
+            // ตรวจสอบว่า ChartDataLabels plugin มีอยู่หรือไม่
+            const pluginsToUse = [];
+            const hasDataLabels = typeof ChartDataLabels !== 'undefined';
+            
+            if (hasDataLabels) {
+                pluginsToUse.push(ChartDataLabels);
+                console.log('✅ ChartDataLabels plugin พร้อมใช้งาน');
+            } else {
+                console.log('⚠️ ChartDataLabels plugin ไม่พร้อมใช้งาน - จะไม่แสดงตัวเลขในกราฟ');
+            }
+            
+            window.areaStatusChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedAreas,
+                    datasets: datasets
+                },
+                plugins: pluginsToUse,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    devicePixelRatio: 2, // เพิ่มความคมชัด
+                    layout: {
+                        padding: {
+                            top: 20,
+                            bottom: 60, // เพิ่มพื้นที่ด้านล่างสำหรับชื่อพื้นที่
+                            left: 15,
+                            right: 15
+                        }
+                    },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            categoryPercentage: 0.9, // ใช้พื้นที่ 90% ของหมวดหมู่
+                            barPercentage: 0.95, // ใช้พื้นที่ 95% ของแท่งกราฟ
+                            ticks: {
+                                color: '#333',
+                                maxRotation: 0, // ไม่หมุนข้อความ
+                                minRotation: 0,
+                                font: {
+                                    size: 9 // ลดขนาดตัวอักษรเล็กน้อยเพื่อให้พอดี
+                                },
+                                padding: 8,
+                                autoSkip: false, // ไม่ข้ามการแสดงผล
+                                maxTicksLimit: false, // ไม่จำกัดจำนวน ticks
+                                callback: function(value, index, values) {
+                                    // แสดงชื่อแบบเต็มทุกตัว
+                                    const label = this.getLabelForValue(value);
+                                    return label;
+                                }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'พื้นที่',
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                padding: 10
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: '#333',
+                                stepSize: 1,
+                                font: {
+                                    size: 10
+                                },
+                                padding: 5
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'จำนวน (คน)',
+                                color: '#333',
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                padding: 10
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: false
+                        },
+                        legend: {
+                            display: false // ปิด legend ของ Chart.js เพื่อใช้ legend กำหนดเอง
+                        },
+                        tooltip: {
+                            titleFont: {
+                                size: 12
+                            },
+                            bodyFont: {
+                                size: 11
+                            },
+                            callbacks: {
+                                title: function(context) {
+                                    return `พื้นที่: ${context[0].label}`;
+                                },
+                                label: function(context) {
+                                    const status = context.dataset.label;
+                                    const count = context.parsed.y;
+                                    return `${status}: ${count} คน`;
+                                }
+                            }
+                        },
+                        ...(typeof ChartDataLabels !== 'undefined' ? {
+                            datalabels: {
+                                display: function(context) {
+                                    try {
+                                        return context && context.parsed && context.parsed.y > 0;
+                                    } catch (error) {
+                                        return false;
+                                    }
+                                },
+                                color: '#fff',
+                                font: {
+                                    weight: 'bold',
+                                    size: 11
+                                },
+                                anchor: 'center',
+                                align: 'center',
+                                formatter: function(value, context) {
+                                    try {
+                                        return value && value > 0 ? value : '';
+                                    } catch (error) {
+                                        return '';
+                                    }
+                                },
+                                // เอาพื้นหลังออก
+                                textStrokeColor: '#000',
+                                textStrokeWidth: 2
+                            }
+                        } : {})
+                    },
+                    animation: {
+                        duration: 800,
+                        easing: 'easeInOutQuart',
+                        onComplete: function(animation) {
+                            // หาก ChartDataLabels plugin ไม่มี ใช้การแสดงตัวเลขแบบ manual
+                            if (!hasDataLabels) {
+                                const chart = animation.chart;
+                                const ctx = chart.ctx;
+                                
+                                ctx.save();
+                                ctx.font = 'bold 11px Arial';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillStyle = '#fff';
+                                ctx.strokeStyle = '#000';
+                                ctx.lineWidth = 2;
+                                
+                                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                                    const meta = chart.getDatasetMeta(datasetIndex);
+                                    if (!meta.hidden) {
+                                        dataset.data.forEach((value, index) => {
+                                            if (value > 0) {
+                                                const element = meta.data[index];
+                                                const x = element.x;
+                                                const y = element.y;
+                                                
+                                                // วาดข้อความพร้อมขอบดำ (ไม่มีพื้นหลัง)
+                                                ctx.strokeText(value.toString(), x, y);
+                                                ctx.fillText(value.toString(), x, y);
+                                            }
+                                        });
+                                    }
+                                });
+                                
+                                ctx.restore();
+                            }
+                        }
+                    }
+                }
+            });
+
+            // สร้าง custom legend
+            createAreaStatusLegend(sortedStatuses, statusConfig);
+
+            console.log('✅ สร้าง Area Status Chart สำเร็จ');
+        }
+
+        // ฟังก์ชันสร้าง Legend สำหรับกราฟ Area Status
+        function createAreaStatusLegend(statuses, statusConfig) {
+            const legendContainer = document.getElementById('area-status-legend');
+            if (!legendContainer) return;
+
+            legendContainer.innerHTML = '';
+
+            statuses.forEach(status => {
+                const legendItem = document.createElement('div');
+                legendItem.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                    font-size: 13px;
+                `;
+
+                legendItem.innerHTML = `
+                    <div style="
+                        width: 16px;
+                        height: 16px;
+                        background-color: ${statusConfig[status] || '#6c757d'};
+                        border-radius: 3px;
+                    "></div>
+                    <span style="color: #333;">${status}</span>
+                `;
+
+                // เพิ่ม hover effect
+                legendItem.addEventListener('mouseenter', () => {
+                    legendItem.style.backgroundColor = '#e9ecef';
+                });
+
+                legendItem.addEventListener('mouseleave', () => {
+                    legendItem.style.backgroundColor = 'transparent';
+                });
+
+                // เพิ่ม click handler สำหรับ toggle dataset
+                legendItem.addEventListener('click', () => {
+                    if (window.areaStatusChart) {
+                        const chart = window.areaStatusChart;
+                        const datasetIndex = chart.data.datasets.findIndex(ds => ds.label === status);
+                        
+                        if (datasetIndex !== -1) {
+                            const meta = chart.getDatasetMeta(datasetIndex);
+                            meta.hidden = !meta.hidden;
+                            chart.update();
+                            
+                            // อัปเดต visual ของ legend
+                            const colorBox = legendItem.querySelector('div');
+                            const textSpan = legendItem.querySelector('span');
+                            
+                            if (meta.hidden) {
+                                colorBox.style.opacity = '0.3';
+                                textSpan.style.color = '#999';
+                            } else {
+                                colorBox.style.opacity = '1';
+                                textSpan.style.color = '#333';
+                            }
+                        }
+                    }
+                });
+
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
         // ฟังก์ชันดึงข้อมูล 7 วันล่าสุด
         function getLast7DaysData() {
             if (!filteredData2025 || filteredData2025.length === 0) {
@@ -3307,6 +3773,9 @@
             
             // สร้างตารางรายชื่อช่างที่มีปัญหา
             createProblemsTable(juneRelatedData, problemStatuses);
+            
+            // สร้างกราฟ Area Status Chart
+            createAreaStatusChart();
         }
 
         // ฟังก์ชันคำนวณค่าเฉลี่ย SLA
