@@ -1096,7 +1096,7 @@
             <div id="area-status-legend" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px; background-color: #f8f9fa; border-radius: 6px; max-height: 120px; overflow-y: auto; margin-bottom: 15px;">
                 <!-- จะถูกสร้างด้วย JavaScript -->
             </div>
-            <div style="position: relative; height: 450px; width: 100%; overflow-x: auto;">
+            <div style="position: relative; height: 480px; width: 100%; overflow-x: auto;">
                 <canvas id="areaStatusChart" style="width: 100%; height: 100%; min-width: 800px;"></canvas>
             </div>
         </div>
@@ -2729,19 +2729,21 @@
                 });
             });
 
+            console.log('📊 Datasets data preview:', datasets.map(d => ({ label: d.label, data: d.data })));
+
             // สร้างกราฟ
             const ctx = canvas.getContext('2d');
             
             // ตรวจสอบว่า ChartDataLabels plugin มีอยู่หรือไม่
             const pluginsToUse = [];
-            const hasDataLabels = typeof ChartDataLabels !== 'undefined';
+            const hasDataLabels = false; // ปิดชั่วคราวเพื่อทดสอบ manual drawing
             
-            if (hasDataLabels) {
-                pluginsToUse.push(ChartDataLabels);
-                console.log('✅ ChartDataLabels plugin พร้อมใช้งาน');
-            } else {
-                console.log('⚠️ ChartDataLabels plugin ไม่พร้อมใช้งาน - จะไม่แสดงตัวเลขในกราฟ');
-            }
+            // if (hasDataLabels) {
+            //     pluginsToUse.push(ChartDataLabels);
+            //     console.log('✅ ChartDataLabels plugin พร้อมใช้งาน');
+            // } else {
+                console.log('⚠️ ใช้ manual drawing เท่านั้น - เพื่อป้องกันการแสดงเลข 0');
+            // }
             
             window.areaStatusChart = new Chart(ctx, {
                 type: 'bar',
@@ -2756,7 +2758,7 @@
                     devicePixelRatio: 2, // เพิ่มความคมชัด
                     layout: {
                         padding: {
-                            top: 20,
+                            top: 35, // เพิ่มพื้นที่ด้านบนสำหรับตัวเลขรวม
                             bottom: 60, // เพิ่มพื้นที่ด้านล่างสำหรับชื่อพื้นที่
                             left: 15,
                             right: 15
@@ -2849,15 +2851,35 @@
                             }
                         },
                         ...(typeof ChartDataLabels !== 'undefined' ? {
-                            datalabels: {
+                            datalabels: [{
+                                // ตัวเลขในแต่ละ stack (สีขาว)
                                 display: function(context) {
                                     try {
-                                        return context && context.parsed && context.parsed.y > 0;
+                                        // ตรวจสอบว่ามีข้อมูลและค่ามากกว่า 0
+                                        if (!context || !context.parsed) return false;
+                                        
+                                        const rawValue = context.dataset.data[context.dataIndex];
+                                        const parsedValue = context.parsed.y;
+                                        const numValue = Number(rawValue);
+                                        const numParsed = Number(parsedValue);
+                                        const stringRaw = String(rawValue);
+                                        const stringParsed = String(parsedValue);
+                                        
+                                        // ตรวจสอบเข้มงวด - ต้องไม่เป็น 0 ในทุกรูปแบบ
+                                        return numValue > 0 && numParsed > 0 && 
+                                               rawValue !== 0 && rawValue !== '0' && stringRaw !== '0' && stringRaw !== '0.0' &&
+                                               parsedValue !== 0 && parsedValue !== '0' && stringParsed !== '0' && stringParsed !== '0.0' &&
+                                               rawValue !== null && rawValue !== undefined &&
+                                               parsedValue !== null && parsedValue !== undefined &&
+                                               !isNaN(numValue) && isFinite(numValue) &&
+                                               !isNaN(numParsed) && isFinite(numParsed);
                                     } catch (error) {
                                         return false;
                                     }
                                 },
-                                color: '#fff',
+                                color: function(context) {
+                                    return '#ffffff'; // บังคับให้เป็นสีขาว
+                                },
                                 font: {
                                     weight: 'bold',
                                     size: 11
@@ -2866,53 +2888,273 @@
                                 align: 'center',
                                 formatter: function(value, context) {
                                     try {
-                                        return value && value > 0 ? value : '';
+                                        // ตรวจสอบทั้งค่า parsed และค่าดิบ
+                                        const rawValue = context.dataset.data[context.dataIndex];
+                                        const parsedValue = context.parsed ? context.parsed.y : value;
+                                        const numValue = Number(rawValue);
+                                        const numParsed = Number(parsedValue);
+                                        const stringRaw = String(rawValue);
+                                        const stringParsed = String(parsedValue);
+                                        
+                                        // Debug log เพื่อดูค่าที่ส่งเข้ามา
+                                        if (numValue === 0 || numParsed === 0) {
+                                            console.log('🚫 Found zero value:', {
+                                                rawValue, parsedValue, numValue, numParsed, 
+                                                stringRaw, stringParsed, 
+                                                dataset: context.dataset.label,
+                                                dataIndex: context.dataIndex
+                                            });
+                                        }
+                                        
+                                        // ตรวจสอบเข้มงวด - ต้องไม่เป็น 0 ในทุกรูปแบบ
+                                        if (numValue > 0 && numParsed > 0 && 
+                                            rawValue !== 0 && rawValue !== '0' && stringRaw !== '0' && stringRaw !== '0.0' &&
+                                            parsedValue !== 0 && parsedValue !== '0' && stringParsed !== '0' && stringParsed !== '0.0' &&
+                                            rawValue !== null && rawValue !== undefined &&
+                                            parsedValue !== null && parsedValue !== undefined &&
+                                            !isNaN(numValue) && isFinite(numValue) &&
+                                            !isNaN(numParsed) && isFinite(numParsed)) {
+                                            return numValue.toString();
+                                        }
+                                        return ''; // ไม่แสดงถ้าค่าเป็น 0 หรือไม่มีค่า
                                     } catch (error) {
                                         return '';
                                     }
                                 },
-                                // เอาพื้นหลังออก
                                 textStrokeColor: '#000',
                                 textStrokeWidth: 2
-                            }
+                            }, {
+                                // ตัวเลขรวมบนแท่งกราฟ (สีดำ)
+                                display: function(context) {
+                                    // แสดงเฉพาะในแท่งบนสุด (dataset สุดท้ายที่มีข้อมูล)
+                                    try {
+                                        if (!context || !context.parsed || context.parsed.y <= 0) return false;
+                                        
+                                        const chart = context.chart;
+                                        const dataIndex = context.dataIndex;
+                                        
+                                        // คำนวณผลรวมก่อนเพื่อตรวจสอบว่าต้องแสดงหรือไม่
+                                        let total = 0;
+                                        chart.data.datasets.forEach((dataset, i) => {
+                                            const meta = chart.getDatasetMeta(i);
+                                            if (!meta.hidden) {
+                                                const rawValue = dataset.data[dataIndex];
+                                                const numValue = Number(rawValue);
+                                                if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined) {
+                                                    total += numValue;
+                                                }
+                                            }
+                                        });
+                                        
+                                        // ไม่แสดงถ้าผลรวมเป็น 0
+                                        if (total === 0) return false;
+                                        
+                                        // หาว่า dataset นี้เป็น dataset บนสุดหรือไม่
+                                        for (let i = chart.data.datasets.length - 1; i >= 0; i--) {
+                                            const meta = chart.getDatasetMeta(i);
+                                            if (!meta.hidden) {
+                                                const rawValue = chart.data.datasets[i].data[dataIndex];
+                                                const numValue = Number(rawValue);
+                                                if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined) {
+                                                    return i === context.datasetIndex;
+                                                }
+                                            }
+                                        }
+                                        return false;
+                                    } catch (error) {
+                                        return false;
+                                    }
+                                },
+                                color: '#000', // สีดำ
+                                backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                                borderColor: '#fff',
+                                borderWidth: 2,
+                                font: {
+                                    weight: 'bold',
+                                    size: 12
+                                },
+                                anchor: 'end',
+                                align: 'top',
+                                offset: 8,
+                                formatter: function(value, context) {
+                                    try {
+                                        // คำนวณผลรวมของแท่งนี้
+                                        const chart = context.chart;
+                                        const dataIndex = context.dataIndex;
+                                        let total = 0;
+                                        
+                                        chart.data.datasets.forEach((dataset, i) => {
+                                            const meta = chart.getDatasetMeta(i);
+                                            if (!meta.hidden) {
+                                                const rawValue = dataset.data[dataIndex];
+                                                const numValue = Number(rawValue);
+                                                if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined) {
+                                                    total += numValue;
+                                                }
+                                            }
+                                        });
+                                        
+                                        // ไม่แสดงถ้าผลรวมเป็น 0
+                                        if (total > 0) {
+                                            return total.toString();
+                                        }
+                                        return '';
+                                    } catch (error) {
+                                        return '';
+                                    }
+                                },
+                                padding: 4,
+                                borderRadius: 4
+                            }]
                         } : {})
                     },
                     animation: {
                         duration: 800,
                         easing: 'easeInOutQuart',
                         onComplete: function(animation) {
-                            // หาก ChartDataLabels plugin ไม่มี ใช้การแสดงตัวเลขแบบ manual
+                            const chart = animation.chart;
+                            const ctx = chart.ctx;
+                            
+                            // คำนวณผลรวมของแต่ละแท่งกราฟ
+                            const totalsPerBar = [];
+                            for (let i = 0; i < chart.data.labels.length; i++) {
+                                let total = 0;
+                                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                                    const meta = chart.getDatasetMeta(datasetIndex);
+                                    if (!meta.hidden) {
+                                        const rawValue = dataset.data[i];
+                                        const numValue = Number(rawValue);
+                                        if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined) {
+                                            total += numValue;
+                                        }
+                                    }
+                                });
+                                totalsPerBar[i] = total;
+                            }
+                            
+                            ctx.save();
+                            
+                            // วาดตัวเลขในแต่ละ stack (หาก ChartDataLabels plugin ไม่มี) - สีขาว
                             if (!hasDataLabels) {
-                                const chart = animation.chart;
-                                const ctx = chart.ctx;
-                                
-                                ctx.save();
                                 ctx.font = 'bold 11px Arial';
                                 ctx.textAlign = 'center';
                                 ctx.textBaseline = 'middle';
-                                ctx.fillStyle = '#fff';
-                                ctx.strokeStyle = '#000';
+                                ctx.fillStyle = '#ffffff'; // บังคับให้เป็นสีขาว
+                                ctx.strokeStyle = '#000000';
                                 ctx.lineWidth = 2;
                                 
                                 chart.data.datasets.forEach((dataset, datasetIndex) => {
                                     const meta = chart.getDatasetMeta(datasetIndex);
                                     if (!meta.hidden) {
                                         dataset.data.forEach((value, index) => {
-                                            if (value > 0) {
+                                            // แปลงเป็นตัวเลขและตรวจสอบว่ามากกว่า 0
+                                            const numValue = Number(value);
+                                            const stringValue = String(value);
+                                            
+                                            // Debug log เพื่อดูค่าที่อาจเป็น 0
+                                            if (numValue === 0 || value === 0 || value === '0' || stringValue === '0') {
+                                                console.log('🚫 Manual draw - Found zero:', {
+                                                    value, numValue, stringValue, 
+                                                    dataset: dataset.label, index,
+                                                    type: typeof value
+                                                });
+                                            }
+                                            
+                                            // ตรวจสอบอย่างเข้มงวด - ไม่แสดงค่า 0 ในทุกรูปแบบ
+                                            if (numValue > 0 && 
+                                                value !== 0 && value !== '0' && 
+                                                stringValue !== '0' && stringValue !== '0.0' &&
+                                                value !== null && value !== undefined && value !== '' &&
+                                                !isNaN(numValue) && isFinite(numValue)) {
                                                 const element = meta.data[index];
-                                                const x = element.x;
-                                                const y = element.y;
-                                                
-                                                // วาดข้อความพร้อมขอบดำ (ไม่มีพื้นหลัง)
-                                                ctx.strokeText(value.toString(), x, y);
-                                                ctx.fillText(value.toString(), x, y);
+                                                if (element) {
+                                                    const x = element.x;
+                                                    
+                                                    // คำนวณตำแหน่งกลางของแท่งย่อย (stack segment)
+                                                    let y;
+                                                    if (element.base !== undefined && element.y !== undefined) {
+                                                        // หาจุดกลางระหว่าง base (ด้านล่าง) และ y (ด้านบน)
+                                                        y = (element.base + element.y) / 2;
+                                                    } else {
+                                                        // ใช้ตำแหน่งเดิมหากไม่มี base
+                                                        y = element.y;
+                                                    }
+                                                    
+                                                    console.log('✅ Manual draw - Drawing value:', numValue, 'at x:', x, 'y:', y, 'element:', {
+                                                        top: element.y, 
+                                                        base: element.base, 
+                                                        calculated: y
+                                                    });
+                                                    
+                                                    // วาดข้อความสีขาวพร้อมขอบดำ ตรงกลางของแท่ง
+                                                    ctx.strokeText(numValue.toString(), x, y);
+                                                    ctx.fillText(numValue.toString(), x, y);
+                                                }
                                             }
                                         });
                                     }
                                 });
-                                
-                                ctx.restore();
                             }
+                            
+                            // วาดตัวเลขรวมบนแท่งกราฟ (สีดำ)
+                            ctx.font = 'bold 12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'bottom';
+                            ctx.fillStyle = '#000'; // สีดำ
+                            ctx.strokeStyle = '#fff';
+                            ctx.lineWidth = 2;
+                            
+                            // หาจุดสูงสุดของแต่ละแท่งกราฟ
+                            const barTops = [];
+                            for (let i = 0; i < chart.data.labels.length; i++) {
+                                let minY = chart.chartArea.bottom;
+                                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                                    const meta = chart.getDatasetMeta(datasetIndex);
+                                    if (!meta.hidden) {
+                                        const rawValue = dataset.data[i];
+                                        const numValue = Number(rawValue);
+                                        if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined) {
+                                            const element = meta.data[i];
+                                            if (element && element.y < minY) {
+                                                minY = element.y;
+                                            }
+                                        }
+                                    }
+                                });
+                                barTops[i] = { x: null, y: minY };
+                            }
+                            
+                            // หา x position ของแต่ละแท่ง
+                            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                                const meta = chart.getDatasetMeta(datasetIndex);
+                                if (!meta.hidden) {
+                                    dataset.data.forEach((value, index) => {
+                                        const rawValue = value;
+                                        const numValue = Number(rawValue);
+                                        if (numValue > 0 && rawValue !== 0 && rawValue !== '0' && rawValue !== null && rawValue !== undefined && barTops[index].x === null) {
+                                            const element = meta.data[index];
+                                            if (element) {
+                                                barTops[index].x = element.x;
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                            
+                            // วาดตัวเลขรวมที่ด้านบนของแต่ละแท่ง
+                            barTops.forEach((barTop, index) => {
+                                // ไม่แสดงถ้าค่าเป็น 0 หรือไม่มีตำแหน่ง
+                                if (barTop.x !== null && totalsPerBar[index] > 0) {
+                                    const x = barTop.x;
+                                    const y = barTop.y - 8; // เหนือแท่งกราฟ 8px
+                                    
+                                    // วาดขอบขาวให้ตัวเลขเด่นชัด (สีดำ)
+                                    ctx.strokeText(totalsPerBar[index].toString(), x, y);
+                                    ctx.fillText(totalsPerBar[index].toString(), x, y);
+                                }
+                            });
+                            
+                            ctx.restore();
                         }
                     }
                 }
