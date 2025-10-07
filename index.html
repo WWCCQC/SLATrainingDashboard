@@ -913,6 +913,10 @@
         <!-- กราฟสถานะช่างอบรม by Month -->
         <div class="chart-wrapper" style="flex: 1;">
             <h3 style="color: #003366; margin-bottom: 15px; text-align: center;">📊 Training Registration vs Completion by Month</h3>
+            <!-- Legend for Month Chart -->
+            <div id="month-chart-legend" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 10px; background-color: #f8f9fa; border-radius: 6px; margin-bottom: 15px;">
+                <!-- จะถูกสร้างด้วย JavaScript -->
+            </div>
             <div id="chart-label"></div>
             <canvas id="myChart" width="400" height="400"></canvas>
         </div>
@@ -3300,6 +3304,101 @@
             });
         }
 
+        // ฟังก์ชันสร้าง Legend สำหรับกราฟ Month
+        function createMonthChartLegend(chartData) {
+            const legendContainer = document.getElementById('month-chart-legend');
+            if (!legendContainer || !chartData || !chartData.datasets) return;
+
+            legendContainer.innerHTML = '';
+
+            chartData.datasets.forEach((dataset, index) => {
+                const legendItem = document.createElement('div');
+                legendItem.className = 'legend-item';
+                legendItem.style.cssText = `
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 5px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.2s;
+                    font-size: 13px;
+                    background-color: white;
+                    border: 1px solid #ddd;
+                `;
+
+                // กำหนดสีตามประเภทของ dataset - ใช้สีเดียวกับในกราฟ
+                let color = '#4CAF50'; // default color
+                if (dataset.label === 'ลงทะเบียนอบรม') {
+                    color = '#203864'; // สีน้ำเงินเข้มเดียวกับกราฟแท่ง
+                } else if (dataset.label === 'ขึ้นทะเบียนเรียบร้อย') {
+                    color = '#0EAD69'; // สีเขียวเดียวกับกราฟเส้น
+                } else if (dataset.label === 'อยู่ระหว่างอบรมทฤษฎี/ปฏิบัติ') {
+                    color = '#2196F3';
+                } else if (dataset.label === 'อยู่ระหว่างOJT/สอบประเมินความพร้อม') {
+                    color = '#FF9800';
+                } else if (dataset.label === 'ตัวแทนยังไม่ส่งขึ้นทะเบียน') {
+                    color = '#9C27B0';
+                } else if (dataset.label === 'ไม่ผ่านอบรม') {
+                    color = '#F44336';
+                } else if (dataset.label === 'ไม่เข้าอบรม') {
+                    color = '#E91E63';
+                } else if (dataset.label === 'ช่างลาออก') {
+                    color = '#FF5722';
+                } else if (dataset.label === 'ติดประวัติอาชญากรรม') {
+                    color = '#607D8B';
+                } else if (dataset.label === 'เอกสารยังไม่ครบ') {
+                    color = '#795548';
+                } else if (dataset.label === 'ส่ง Gen ID') {
+                    color = '#673AB7';
+                } else if (dataset.label === 'Print/ส่งบัตร') {
+                    color = '#FFC107';
+                }
+
+                legendItem.innerHTML = `
+                    <div style="
+                        width: 16px;
+                        height: 16px;
+                        background-color: ${color};
+                        border-radius: 2px;
+                        flex-shrink: 0;
+                    "></div>
+                    <span>${dataset.label}</span>
+                `;
+
+                // เพิ่ม event listener สำหรับการคลิก
+                legendItem.addEventListener('click', () => {
+                    if (chart) {
+                        const meta = chart.getDatasetMeta(index);
+                        meta.hidden = !meta.hidden;
+                        chart.update();
+                        
+                        // อัปเดต visual ของ legend
+                        updateMonthLegendVisuals();
+                    }
+                });
+
+                legendContainer.appendChild(legendItem);
+            });
+        }
+
+        // ฟังก์ชันอัปเดต visual ของ Month Legend
+        function updateMonthLegendVisuals() {
+            if (!chart) return;
+            
+            const legendItems = document.querySelectorAll('#month-chart-legend .legend-item');
+            legendItems.forEach((item, index) => {
+                const meta = chart.getDatasetMeta(index);
+                if (meta.hidden) {
+                    item.style.opacity = '0.5';
+                    item.style.backgroundColor = '#f5f5f5';
+                } else {
+                    item.style.opacity = '1';
+                    item.style.backgroundColor = 'white';
+                }
+            });
+        }
+
         // ฟังก์ชันแสดงทุกสถานะ
         function showAllStatuses(chart) {
             chart.data.datasets.forEach((dataset, index) => {
@@ -4725,6 +4824,9 @@
                 },
                 plugins: [ChartDataLabels]
             });
+
+            // สร้าง Legend สำหรับกราฟ Month
+            createMonthChartLegend(mixedChartData);
 
             // อัพเดทเฉพาะตาราง Pivot ไม่กระทบตารางหลัก
                         updatePivotTable(filteredRows);
